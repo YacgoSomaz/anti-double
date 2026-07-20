@@ -4,6 +4,8 @@ export function drawPlayerSprite(ctx, sprite, source, player) {
   if (player.gravity < 0) {
     ctx.save();
     ctx.translate(player.x + PLAYER_FRAME_WIDTH / 2, player.y + PLAYER_FRAME_HEIGHT / 2);
+    // In the original SwitchGravity(), angle becomes 180° *and* facing changes
+    // from LEFT to RIGHT. The two sprite transforms compose to a vertical flip.
     ctx.scale(1, -1);
     ctx.drawImage(sprite, source.x, source.y, source.width, source.height, -PLAYER_FRAME_WIDTH / 2, -PLAYER_FRAME_HEIGHT / 2, PLAYER_FRAME_WIDTH, PLAYER_FRAME_HEIGHT);
     ctx.restore();

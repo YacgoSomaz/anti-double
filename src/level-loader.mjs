@@ -6,11 +6,15 @@ const levelFiles = new Map([
   ['mp03', '../src/data/mp03.json'],
   ['mp04', '../src/data/mp04.json']
 ]);
+// A full course rotation uses every recovered multiplayer map.  Run it twice
+// so a completed online race is long enough without introducing fabricated
+// obstacles or additional visual assets.
+const marathonCourseOrder = ['mp02', 'mp03', 'mp04', 'mp02', 'mp03', 'mp04'];
 const multiplayerSpawns = [
-  { x: 316, y: 103, gravity: -1, speedX: 211.6983 },
-  { x: 316, y: 325, gravity: 1, speedX: 211.6983 },
-  { x: 316, y: 240, gravity: -1, speedX: 211.6983 },
-  { x: 316, y: 188, gravity: 1, speedX: 211.6983 }
+  { x: 316, y: 103, gravity: 1, speedX: 211.6983 },
+  { x: 316, y: 325, gravity: -1, speedX: 211.6983 },
+  { x: 316, y: 240, gravity: 1, speedX: 211.6983 },
+  { x: 316, y: 188, gravity: -1, speedX: 211.6983 }
 ];
 
 const world = { cellSize: 34, originY: 425 };
@@ -35,14 +39,29 @@ function loadMarathon() {
   const colliders = [];
   const segments = [];
   let firstLevel;
-  for (const id of levelFiles.keys()) {
+  for (const [index, id] of marathonCourseOrder.entries()) {
     const data = readLevel(id);
     if (!firstLevel) firstLevel = data;
     const furthestCell = Math.max(...data.colliders.map((collider) => collider.x));
     const lengthCells = furthestCell + 2;
     const startX = offsetCells * world.cellSize;
-    colliders.push(...data.colliders.map((collider) => ({ ...collider, x: collider.x + offsetCells })));
-    segments.push({ id, startX, endX: (offsetCells + lengthCells) * world.cellSize });
+    const opensPreviousSeam = index > 0;
+    const opensNextSeam = index < marathonCourseOrder.length - 1;
+    const fullHeightWalls = new Set(
+      [...new Set(data.colliders.map((collider) => collider.x))].filter((cell) =>
+        Array.from({ length: 11 }, (_, index) => index + 1)
+          .every((row) => data.colliders.some((collider) => collider.x === cell && collider.y === row))
+      )
+    );
+    // The recovered maps contain several full-height columns inside their
+    // closing tunnel, not only the final column.  They are end gates rather
+    // than playable obstacles, so intermediate marathon segments must drop
+    // the complete group to leave a continuous route to the next map.
+    const isClosingWall = (collider) => collider.y >= 1 && collider.y <= 11
+      && ((opensPreviousSeam && collider.x === 0)
+        || (opensNextSeam && collider.x > 0 && fullHeightWalls.has(collider.x)));
+    colliders.push(...data.colliders.filter((collider) => !isClosingWall(collider)).map((collider) => ({ ...collider, x: collider.x + offsetCells })));
+    segments.push({ id, startX, endX: (offsetCells + lengthCells) * world.cellSize, isFinal: index === marathonCourseOrder.length - 1 });
     offsetCells += lengthCells;
   }
   return {

@@ -1,5 +1,5 @@
 import { createHash, randomUUID } from 'node:crypto';
-import { createReadStream, statSync } from 'node:fs';
+import { createReadStream, readFileSync, statSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { extname, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -14,8 +14,20 @@ const mimeTypes = new Map([
   ['.js', 'text/javascript; charset=utf-8'],
   ['.css', 'text/css; charset=utf-8'],
   ['.json', 'application/json; charset=utf-8'],
-  ['.png', 'image/png']
+  ['.png', 'image/png'],
+  ['.mp3', 'audio/mpeg']
 ]);
+const cacheableMediaExtensions = new Set(['.png', '.mp3']);
+const etagCache = new Map();
+
+function etagFor(file, metadata) {
+  const revision = `${metadata.size}:${metadata.mtimeMs}`;
+  const cached = etagCache.get(file);
+  if (cached?.revision === revision) return cached.value;
+  const value = `"${createHash('sha256').update(readFileSync(file)).digest('base64url')}"`;
+  etagCache.set(file, { revision, value });
+  return value;
+}
 
 function accept(key) {
   return createHash('sha1').update(key + GUID).digest('base64');
@@ -51,7 +63,9 @@ function decode(buffer) {
 function parseInput(value) {
   try {
     const data = JSON.parse(value);
-    if (data?.type === 'join' && typeof data.room === 'string') return { type: 'join', room: data.room };
+    if (data?.type === 'join' && typeof data.room === 'string' && (data.name === undefined || typeof data.name === 'string')) return { type: 'join', room: data.room, name: data.name };
+    if (data?.type === 'ready') return { type: 'ready' };
+    if (data?.type === 'start') return { type: 'start' };
     if (data?.type === 'flip' && Number.isInteger(data.sequence) && data.sequence > 0 && data.sequence <= 1000000000) return { type: 'flip', sequence: data.sequence };
     if (data?.type === 'ping') return { type: 'ping' };
   } catch {}
@@ -67,6 +81,10 @@ function stateMessage(snapshot) {
   return {
     type: 'state',
     tick: snapshot.tick,
+    phase: snapshot.phase,
+    hostSlot: snapshot.hostSlot,
+    cameraX: snapshot.cameraX,
+    cameraSpeed: snapshot.cameraSpeed,
     players: snapshot.players.map(({ id, ...player }) => player)
   };
 }
@@ -82,14 +100,30 @@ export function createRealtimeServer({ level, autoTick = true }) {
       return response.end('{"ok":true}');
     }
     if (request.method !== 'GET' && request.method !== 'HEAD') return response.writeHead(405).end();
-    let pathname;
-    try { pathname = decodeURIComponent(new URL(request.url, 'http://local').pathname); } catch { return response.writeHead(404).end(); }
+    let pathname; let requestUrl;
+    try {
+      requestUrl = new URL(request.url, 'http://local');
+      pathname = decodeURIComponent(requestUrl.pathname);
+    } catch { return response.writeHead(404).end(); }
     const candidate = resolve(publicDir, pathname === '/' ? 'index.html' : pathname.replace(/^\/+/, ''));
     if (!candidate.startsWith(publicDir + sep) || !mimeTypes.has(extname(candidate))) return response.writeHead(404).end();
     try {
       const metadata = statSync(candidate);
       if (!metadata.isFile()) return response.writeHead(404).end();
-      response.writeHead(200, { 'Content-Type': mimeTypes.get(extname(candidate)), 'Content-Length': metadata.size, 'Cache-Control': 'no-store' });
+      const extension = extname(candidate);
+      const cacheable = cacheableMediaExtensions.has(extension) || extension === '.json';
+      const cacheControl = cacheableMediaExtensions.has(extension) && requestUrl.searchParams.has('v')
+        ? 'public, max-age=31536000, immutable'
+        : cacheable
+          ? 'public, max-age=0, must-revalidate'
+          : 'no-store';
+      const etag = cacheable ? etagFor(candidate, metadata) : undefined;
+      const headers = { 'Content-Type': mimeTypes.get(extension), 'Content-Length': metadata.size, 'Cache-Control': cacheControl, ...(etag ? { ETag: etag } : {}) };
+      if (etag && request.headers['if-none-match'] === etag) {
+        response.writeHead(304, { 'Cache-Control': cacheControl, ETag: etag });
+        return response.end();
+      }
+      response.writeHead(200, headers);
       if (request.method === 'HEAD') return response.end();
       createReadStream(candidate).pipe(response);
     } catch { response.writeHead(404).end(); }
@@ -98,7 +132,8 @@ export function createRealtimeServer({ level, autoTick = true }) {
     const client = clients.get(id);
     if (client?.socket.writable) client.socket.write(textFrame(message));
   };
-  const tick = () => matches.tick(1 / 40).forEach((update) => update.recipients.forEach((id) => send(id, stateMessage(update.snapshot))));
+  const broadcast = (update) => update?.recipients.forEach((id) => send(id, stateMessage(update.snapshot)));
+  const tick = () => matches.tick(1 / 40).filter((update) => update.snapshot.phase === 'playing').forEach((update) => update.recipients.forEach((id) => send(id, stateMessage(update.snapshot))));
   const timer = autoTick ? setInterval(tick, 1000 / 40) : null;
 
   server.on('upgrade', (request, socket, head) => {
@@ -126,11 +161,27 @@ export function createRealtimeServer({ level, autoTick = true }) {
           const input = parseInput(frame.value);
           if (!input) { send(id, { type: 'error', error: 'invalid_message' }); continue; }
           if (input.type === 'join') {
-            const result = matches.join(input.room, id);
+            const result = matches.join(input.room, id, input.name, false);
             if (!result.ok) send(id, { type: 'error', error: result.error });
             else {
               const { id: ignored, ...player } = result.player;
               send(id, { type: 'joined', room: result.room, player });
+              broadcast(matches.roomState(result.room));
+            }
+          } else if (input.type === 'ready') {
+            const result = matches.setReady(id);
+            if (!result.ok) send(id, { type: 'error', error: result.error });
+            else {
+              send(id, { type: 'ready_ok' });
+              broadcast(matches.roomState(result.room));
+            }
+          } else if (input.type === 'start') {
+            const result = matches.start(id);
+            if (!result.ok) send(id, { type: 'error', error: result.error });
+            else {
+              const update = matches.roomState(result.room);
+              update.recipients.forEach((recipient) => send(recipient, { type: 'started', tick: update.snapshot.tick, hostSlot: update.snapshot.hostSlot }));
+              broadcast(update);
             }
           } else if (input.type === 'flip') {
             const result = matches.input(id, input);
@@ -143,7 +194,7 @@ export function createRealtimeServer({ level, autoTick = true }) {
     };
     if (client.buffer.length) receive(Buffer.alloc(0));
     socket.on('data', receive);
-    socket.on('close', () => { matches.leave(id); clients.delete(id); });
+    socket.on('close', () => { const room = matches.leave(id); clients.delete(id); broadcast(matches.roomState(room)); });
     socket.on('error', () => socket.destroy());
   });
   return { server, tick, close: () => { if (timer) clearInterval(timer); for (const client of clients.values()) client.socket.destroy(); server.close(); } };

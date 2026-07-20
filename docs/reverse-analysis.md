@@ -28,7 +28,7 @@ Recovered `Player` state fields include `_jumpPower`, `_up`, `_down`, `_restart`
 - **304** lossless bitmap assets, exported under `assets/reverse/bitmaps/` with class-to-file mapping in `bitmap-manifest.json`.
 - **31** original MP3 sounds, exported under `assets/reverse/sounds/` with mapping in `sound-manifest.json`.
 - Four original runner animation atlases: blue, red, green, yellow; each **975 × 693 px**.
-- Atlas layout is a fixed **13 × 11 grid** of **75 × 63 px** frames. Frames 0–112 are populated except frame 64; rows 9–10 are unused. This supplies exact source rectangles for the browser renderer.
+- `Player.loadGraphic(..., 65, 77)` splits each atlas into a fixed **15 × 9 grid** of **65 × 77 px** frames. Frames 0–112 are populated except frame 64. These are the exact source rectangles for the browser renderer; the earlier 13 × 11 / 75 × 63 interpretation was incorrect.
 
 ## Original level data
 
@@ -73,7 +73,7 @@ The constructor loads exact atlas frame sequences: `run` 0–12, `fall` 19–22 
 - The `run`/`runfast` animation rate is `velocity.x * 0.088`; push/slide use `velocity.x * 0.03`; landing is fixed at 67 FPS-equivalent. In multiplayer the runner is killed when it leaves the camera-safe X range or Y range -60…500.
 - `hurt()` ignores repeat hits while flickering, plays the original hurt sound, flickers for 1.3 seconds, deducts up to 1000 score, and knocks horizontal velocity to the appropriate signed maximum. `kill()` records the finishing standing and increments the correct P1–P4 win counter.
 
-The deployed network prototype now uses a **40 Hz** server-authoritative `GameRoom`, recovered acceleration constants, dynamic multiplayer Y offsets (19/9), narrow foot contact and out-of-stage elimination. It remains a fidelity prototype rather than a full state-machine recreation: buffered input, complete animation transitions and all `FlxU` collision edge cases are not yet implemented.
+The deployed network prototype now uses a **40 Hz** server-authoritative `GameRoom`, recovered acceleration constants, dynamic multiplayer Y offsets (19/9), narrow foot contact, side-wall sweep blocking, original-camera-equivalent out-of-stage elimination and stable multiplayer box bodies. For network stability, tied horizontal bodies retain a deterministic prior-frame order; same-gravity stacks share vertical movement, while opposite-gravity bodies in contact cancel vertical velocity. This is an intentional authoritative adaptation around the recovered `collideMovingPlayers()` evidence, not a claim of bit-for-bit Flixel parity. It exposes recovered `SndMenuMusic` in the menu/lobby, `SndMusic` during the race, and `SndSwitch` after a user gesture. Buffered input, complete animation transitions and all `FlxU` collision edge cases are not yet implemented.
 
 ## PlayState collision pipeline decoded
 
@@ -90,8 +90,8 @@ The embedded course collision records are converted by the original game into fi
 
 ## Current implementation gap and next reverse targets
 
-1. Recreate the complete `collideMovingPlayers` response: current code has stable server-side vertical separation, but not the original rewind, `height - 8`, or side-by-side `1.1 × width` rule.
-2. Decode `PlayState.create` further to extract MP03/MP04 decorative placements; their real collision layouts are already used in the deployed marathon, but their visuals still use generic block rendering.
+1. Compare the player-pair callback against a live SWF trace, especially its collision flags and facing transitions. The server keeps the recovered box dimensions and side-by-side `1.1 × width` spacing, but uses a deterministic network-safe contact response rather than claiming every surrounding `FlxU` detail.
+2. MP02/MP03/MP04 decorative placement lists have been exported from their embedded plist files. The browser projects each list with its marathon segment offset; retain the raw source lists and generation path when changing visuals.
 3. Implement the recovered Player buffered-input and animation state machine at a fixed 40 FPS, with fixtures for every transition.
 4. Decode and implement ranking, end-state timing, checkpoints, sounds and enemy systems only after adding behaviour-specific tests.
 

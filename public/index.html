@@ -18,9 +18,20 @@
           <div id="loading-panel"><span>正在加载</span><i></i></div>
           <div id="menu-panel">
             <div class="menu-title-mask"><strong>重力小子</strong><span>联机版</span></div>
-            <p>最多 4 人 · 点击或按 <kbd>空格</kbd> 反转重力</p>
+            <p>最多 4 人 · 房主开始比赛后，点击或按 <kbd>空格</kbd> 反转重力</p>
             <label>房间码 <input id="room" maxlength="12" value="RUN4" autocomplete="off"></label>
-            <button id="menu-start">开始联机</button>
+            <label>昵称 <input id="nickname" maxlength="12" value="玩家" autocomplete="nickname"></label>
+            <button id="menu-start" disabled>加载赛道资源…</button>
+          </div>
+          <div id="lobby-panel" aria-live="polite">
+            <div class="lobby-card">
+              <span class="lobby-kicker">等待大厅</span>
+              <strong>房间 <span id="lobby-room">—</span></strong>
+              <p id="lobby-hint">正在同步房间成员…</p>
+              <div id="lobby-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="lobby-progress-label">赛道资源 0%</span><i><b id="lobby-progress-bar"></b></i></div>
+              <ol id="lobby-players"></ol>
+              <button id="lobby-start" disabled>房主开始比赛</button>
+            </div>
           </div>
         </div>
         <div id="overlay" hidden><strong>正在加入房间</strong><span>正在建立联机连接…</span></div>
@@ -30,7 +41,8 @@
       </section>
       <section class="controls">
         <button id="flip" disabled>反转重力 <kbd>Space</kbd></button>
-        <span>赛道：MP02 → MP03 → MP04</span>
+        <button id="sound-toggle" type="button" aria-pressed="false">音乐：关</button>
+        <span id="course-status">赛道：MP02 → MP03 → MP04</span>
         <span id="players">等待玩家</span>
       </section>
     </main>

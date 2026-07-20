@@ -1,0 +1,13 @@
+[header]
+fileSize=15832130
+version=10
+compression=ZLIB
+encrypted=false
+gfx=false
+displayRect=[0, 0, 12800, 10020]
+width=12800
+widthPx=640
+height=10020
+heightPx=501
+frameCount=2
+frameRate=40

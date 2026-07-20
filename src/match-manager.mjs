@@ -11,12 +11,13 @@ export class MatchManager {
     this.#level = level;
   }
 
-  join(roomCode, id) {
+  join(roomCode, id, name, ready = true) {
     const room = String(roomCode ?? '').trim().toUpperCase();
     if (!ROOM_CODE.test(room)) return { ok: false, error: 'invalid_room' };
+    if (this.#memberships.get(id) === room) return { ...this.#rooms.get(room).join(id, name, ready), room };
     this.leave(id);
     const game = this.#rooms.get(room) ?? new GameRoom(this.#level);
-    const result = game.join(id);
+    const result = game.join(id, name, ready);
     if (!result.ok) return result;
     this.#rooms.set(room, game);
     this.#memberships.set(id, room);
@@ -38,6 +39,28 @@ export class MatchManager {
     const room = this.#memberships.get(id);
     if (!room) return { ok: false, error: 'not_in_match' };
     return this.#rooms.get(room).input(id, event);
+  }
+
+  start(id) {
+    const room = this.#memberships.get(id);
+    if (!room) return { ok: false, error: 'not_in_match' };
+    return { ...this.#rooms.get(room).start(id), room };
+  }
+
+  setReady(id) {
+    const room = this.#memberships.get(id);
+    if (!room) return { ok: false, error: 'not_in_match' };
+    return { ...this.#rooms.get(room).setReady(id), room };
+  }
+
+  roomState(room) {
+    const game = this.#rooms.get(room);
+    if (!game) return null;
+    return {
+      room,
+      recipients: [...this.#memberships.entries()].filter(([, membership]) => membership === room).map(([id]) => id),
+      snapshot: game.snapshot()
+    };
   }
 
   tick(seconds) {

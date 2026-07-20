@@ -13,12 +13,15 @@ const tinyLevel = {
   ]
 };
 
-test('keeps players in isolated four-player matches and broadcasts an authoritative state', () => {
+test('keeps players in isolated four-player lobbies and broadcasts play only after the host starts', () => {
   const matches = new MatchManager(tinyLevel);
   assert.equal(matches.join('ROOM1', 'a').player.slot, 1);
   assert.equal(matches.join('ROOM1', 'b').player.slot, 2);
   assert.equal(matches.join('ROOM2', 'c').player.slot, 1);
 
+  assert.equal(matches.input('b', { type: 'flip', sequence: 1 }).error, 'waiting_for_host');
+  assert.equal(matches.start('b').error, 'not_host');
+  assert.equal(matches.start('a').ok, true);
   assert.equal(matches.input('b', { type: 'flip', sequence: 1 }).ok, true);
   const updates = matches.tick(1 / 30);
 

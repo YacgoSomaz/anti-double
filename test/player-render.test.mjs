@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { drawPlayerSprite } from '../public/player-render.js';
 
-test('draws an inverted player around its own centre instead of the canvas origin', () => {
+test('mirrors an inverted player vertically around its own centre', () => {
   const calls = [];
   const ctx = {
     save: () => calls.push(['save']),

@@ -77,7 +77,7 @@ async function rejectedUpgrade(port, request) {
   return response;
 }
 
-test('accepts two remote players and sends the same authoritative state to both', async (context) => {
+test('keeps remote players in a host-controlled lobby, then starts one authoritative match', async (context) => {
   const realtime = createRealtimeServer({ level: tinyLevel, autoTick: false });
   realtime.server.listen(0, '127.0.0.1');
   await once(realtime.server, 'listening');
@@ -86,18 +86,35 @@ test('accepts two remote players and sends the same authoritative state to both'
   const two = await client(port);
   context.after(() => { one.close(); two.close(); realtime.close(); });
 
-  one.send({ type: 'join', room: 'LIVE1' });
-  assert.equal((await one.waitFor((message) => message.type === 'joined')).player.slot, 1);
-  two.send({ type: 'join', room: 'LIVE1' });
+  one.send({ type: 'join', room: 'LIVE1', name: '蓝队长' });
+  const firstJoin = await one.waitFor((message) => message.type === 'joined');
+  assert.equal(firstJoin.player.slot, 1);
+  assert.equal(firstJoin.player.name, '蓝队长');
+  assert.equal((await one.waitFor((message) => message.type === 'state')).phase, 'lobby');
+  two.send({ type: 'join', room: 'LIVE1', name: '绿队员' });
   assert.equal((await two.waitFor((message) => message.type === 'joined')).player.slot, 2);
+  const lobby = await two.waitFor((message) => message.type === 'state' && message.players.length === 2);
+  assert.equal(lobby.hostSlot, 1);
+  assert.deepEqual(lobby.players.map((player) => player.name), ['蓝队长', '绿队员']);
+  assert.equal(lobby.players.every((player) => player.ready === false), true);
+  one.send({ type: 'ready' });
+  two.send({ type: 'ready' });
+  assert.equal((await one.waitFor((message) => message.type === 'state' && message.players.length === 2 && message.players.every((player) => player.ready))).phase, 'lobby');
+  two.send({ type: 'start' });
+  assert.equal((await two.waitFor((message) => message.error === 'not_host')).error, 'not_host');
+  one.send({ type: 'start' });
+  assert.equal((await one.waitFor((message) => message.type === 'started')).hostSlot, 1);
   two.send({ type: 'flip', sequence: 1 });
   await two.waitFor((message) => message.type === 'input_ok');
   realtime.tick();
 
-  const first = await one.waitFor((message) => message.type === 'state');
-  const second = await two.waitFor((message) => message.type === 'state');
+  const first = await one.waitFor((message) => message.type === 'state' && message.phase === 'playing' && message.players[1].gravity === 1);
+  const second = await two.waitFor((message) => message.type === 'state' && message.phase === 'playing' && message.players[1].gravity === 1);
   assert.deepEqual(first, second);
   assert.equal(first.players[1].gravity, 1);
+  assert.equal(typeof first.cameraX, 'number');
+  assert.equal(typeof first.cameraSpeed, 'number');
+  assert.equal(first.cameraSpeed > 0, true);
 });
 
 test('validates WebSocket messages without exposing internal errors', async (context) => {
