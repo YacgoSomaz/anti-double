@@ -1,0 +1,219 @@
+[
+  {
+    "characterId": 1,
+    "className": "org.flixel.FlxGame_SndFlixel",
+    "format": "mp3",
+    "file": "001_FlxGame_SndFlixel.mp3",
+    "bytes": 39710
+  },
+  {
+    "characterId": 2,
+    "className": "org.flixel.FlxGame_SndBeep",
+    "format": "mp3",
+    "file": "002_FlxGame_SndBeep.mp3",
+    "bytes": 1675
+  },
+  {
+    "characterId": 3,
+    "className": "SndClick",
+    "format": "mp3",
+    "file": "003_SndClick.mp3",
+    "bytes": 3289
+  },
+  {
+    "characterId": 25,
+    "className": "SndMusic",
+    "format": "mp3",
+    "file": "025_SndMusic.mp3",
+    "bytes": 2652547
+  },
+  {
+    "characterId": 26,
+    "className": "SndAccelLoop",
+    "format": "mp3",
+    "file": "026_SndAccelLoop.mp3",
+    "bytes": 49072
+  },
+  {
+    "characterId": 27,
+    "className": "SndShip",
+    "format": "mp3",
+    "file": "027_SndShip.mp3",
+    "bytes": 20079
+  },
+  {
+    "characterId": 28,
+    "className": "SndCaught",
+    "format": "mp3",
+    "file": "028_SndCaught.mp3",
+    "bytes": 13144
+  },
+  {
+    "characterId": 29,
+    "className": "SndSonicBoomLoop",
+    "format": "mp3",
+    "file": "029_SndSonicBoomLoop.mp3",
+    "bytes": 41764
+  },
+  {
+    "characterId": 30,
+    "className": "SndSlide",
+    "format": "mp3",
+    "file": "030_SndSlide.mp3",
+    "bytes": 19579
+  },
+  {
+    "characterId": 31,
+    "className": "SndLevelCleared",
+    "format": "mp3",
+    "file": "031_SndLevelCleared.mp3",
+    "bytes": 10224
+  },
+  {
+    "characterId": 32,
+    "className": "SndMenuMusic",
+    "format": "mp3",
+    "file": "032_SndMenuMusic.mp3",
+    "bytes": 640237
+  },
+  {
+    "characterId": 33,
+    "className": "SndLand",
+    "format": "mp3",
+    "file": "033_SndLand.mp3",
+    "bytes": 2559
+  },
+  {
+    "characterId": 34,
+    "className": "SndPopupDisappear",
+    "format": "mp3",
+    "file": "034_SndPopupDisappear.mp3",
+    "bytes": 10954
+  },
+  {
+    "characterId": 35,
+    "className": "SndAccelTrigger",
+    "format": "mp3",
+    "file": "035_SndAccelTrigger.mp3",
+    "bytes": 14969
+  },
+  {
+    "characterId": 36,
+    "className": "SndSwitch",
+    "format": "mp3",
+    "file": "036_SndSwitch.mp3",
+    "bytes": 4384
+  },
+  {
+    "characterId": 37,
+    "className": "SndWin",
+    "format": "mp3",
+    "file": "037_SndWin.mp3",
+    "bytes": 28474
+  },
+  {
+    "characterId": 38,
+    "className": "SndPopupAppear",
+    "format": "mp3",
+    "file": "038_SndPopupAppear.mp3",
+    "bytes": 14239
+  },
+  {
+    "characterId": 39,
+    "className": "SndMorph",
+    "format": "mp3",
+    "file": "039_SndMorph.mp3",
+    "bytes": 15699
+  },
+  {
+    "characterId": 40,
+    "className": "com.miniclip.GSwitch.MenuState_SndHit2",
+    "format": "mp3",
+    "file": "040_MenuState_SndHit2.mp3",
+    "bytes": 27589
+  },
+  {
+    "characterId": 41,
+    "className": "com.miniclip.GSwitch.Enemy_SndExplode2",
+    "format": "mp3",
+    "file": "041_Enemy_SndExplode2.mp3",
+    "bytes": 18812
+  },
+  {
+    "characterId": 42,
+    "className": "com.miniclip.GSwitch.Enemy_SndJump",
+    "format": "mp3",
+    "file": "042_Enemy_SndJump.mp3",
+    "bytes": 1675
+  },
+  {
+    "characterId": 43,
+    "className": "com.miniclip.GSwitch.Enemy_SndLand",
+    "format": "mp3",
+    "file": "043_Enemy_SndLand.mp3",
+    "bytes": 1257
+  },
+  {
+    "characterId": 44,
+    "className": "com.miniclip.GSwitch.Enemy_SndJam",
+    "format": "mp3",
+    "file": "044_Enemy_SndJam.mp3",
+    "bytes": 2511
+  },
+  {
+    "characterId": 45,
+    "className": "com.miniclip.GSwitch.Enemy_SndHurt",
+    "format": "mp3",
+    "file": "045_Enemy_SndHurt.mp3",
+    "bytes": 3765
+  },
+  {
+    "characterId": 46,
+    "className": "com.miniclip.GSwitch.Enemy_SndExplode",
+    "format": "mp3",
+    "file": "046_Enemy_SndExplode.mp3",
+    "bytes": 7527
+  },
+  {
+    "characterId": 47,
+    "className": "com.miniclip.GSwitch.Player_SndJam",
+    "format": "mp3",
+    "file": "047_Player_SndJam.mp3",
+    "bytes": 2511
+  },
+  {
+    "characterId": 48,
+    "className": "com.miniclip.GSwitch.Player_SndJump",
+    "format": "mp3",
+    "file": "048_Player_SndJump.mp3",
+    "bytes": 1675
+  },
+  {
+    "characterId": 49,
+    "className": "com.miniclip.GSwitch.Player_SndExplode2",
+    "format": "mp3",
+    "file": "049_Player_SndExplode2.mp3",
+    "bytes": 18812
+  },
+  {
+    "characterId": 50,
+    "className": "com.miniclip.GSwitch.Player_SndLand",
+    "format": "mp3",
+    "file": "050_Player_SndLand.mp3",
+    "bytes": 1257
+  },
+  {
+    "characterId": 51,
+    "className": "com.miniclip.GSwitch.Player_SndHurt",
+    "format": "mp3",
+    "file": "051_Player_SndHurt.mp3",
+    "bytes": 3765
+  },
+  {
+    "characterId": 52,
+    "className": "com.miniclip.GSwitch.Player_SndExplode",
+    "format": "mp3",
+    "file": "052_Player_SndExplode.mp3",
+    "bytes": 7527
+  }
+]

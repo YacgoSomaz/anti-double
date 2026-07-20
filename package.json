@@ -1,0 +1,11 @@
+{
+  "name": "gswitch-online-rebuild",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build:data": "node build/generate-marathon.mjs",
+    "start": "node src/server.mjs",
+    "test": "node --test",
+    "test:coverage": "node --test --experimental-test-coverage"
+  }
+}

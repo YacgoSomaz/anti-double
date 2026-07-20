@@ -1,0 +1,2130 @@
+[
+  {
+    "characterId": 4,
+    "className": "org.flixel.data.FlxMouse_ImgDefaultCursor",
+    "file": "004_FlxMouse_ImgDefaultCursor.png",
+    "width": 10,
+    "height": 10
+  },
+  {
+    "characterId": 5,
+    "className": "org.flixel.data.FlxPause_ImgResumeButtonOver",
+    "file": "005_FlxPause_ImgResumeButtonOver.png",
+    "width": 288,
+    "height": 85
+  },
+  {
+    "characterId": 6,
+    "className": "org.flixel.FlxPreloader_ImgLogoLight",
+    "file": "006_FlxPreloader_ImgLogoLight.png",
+    "width": 64,
+    "height": 64
+  },
+  {
+    "characterId": 7,
+    "className": "org.flixel.FlxPreloader_ImgLogoCorners",
+    "file": "007_FlxPreloader_ImgLogoCorners.png",
+    "width": 64,
+    "height": 64
+  },
+  {
+    "characterId": 8,
+    "className": "org.flixel.FlxPreloader_ImgLogo",
+    "file": "008_FlxPreloader_ImgLogo.png",
+    "width": 6,
+    "height": 6
+  },
+  {
+    "characterId": 9,
+    "className": "org.flixel.data.FlxPanel_ImgStumble",
+    "file": "009_FlxPanel_ImgStumble.png",
+    "width": 13,
+    "height": 13
+  },
+  {
+    "characterId": 10,
+    "className": "org.flixel.data.FlxPanel_ImgClose",
+    "file": "010_FlxPanel_ImgClose.png",
+    "width": 13,
+    "height": 13
+  },
+  {
+    "characterId": 12,
+    "className": "org.flixel.data.FlxPanel_ImgDonate",
+    "file": "012_FlxPanel_ImgDonate.png",
+    "width": 51,
+    "height": 13
+  },
+  {
+    "characterId": 13,
+    "className": "org.flixel.data.FlxPause_ImgResumeButton",
+    "file": "013_FlxPause_ImgResumeButton.png",
+    "width": 288,
+    "height": 85
+  },
+  {
+    "characterId": 14,
+    "className": "org.flixel.data.FlxPanel_ImgTwitter",
+    "file": "014_FlxPanel_ImgTwitter.png",
+    "width": 13,
+    "height": 13
+  },
+  {
+    "characterId": 15,
+    "className": "org.flixel.FlxPreloader_ImgBarBack",
+    "file": "015_FlxPreloader_ImgBarBack.png",
+    "width": 326,
+    "height": 14
+  },
+  {
+    "characterId": 17,
+    "className": "org.flixel.data.FlxPause_ImgMenuButtonOver",
+    "file": "017_FlxPause_ImgMenuButtonOver.png",
+    "width": 288,
+    "height": 82
+  },
+  {
+    "characterId": 18,
+    "className": "org.flixel.data.FlxPanel_ImgDigg",
+    "file": "018_FlxPanel_ImgDigg.png",
+    "width": 13,
+    "height": 13
+  },
+  {
+    "characterId": 19,
+    "className": "org.flixel.data.FlxPause_ImgPauseBackground",
+    "file": "019_FlxPause_ImgPauseBackground.png",
+    "width": 640,
+    "height": 501
+  },
+  {
+    "characterId": 20,
+    "className": "org.flixel.data.FlxPause_ImgMenuButton",
+    "file": "020_FlxPause_ImgMenuButton.png",
+    "width": 288,
+    "height": 82
+  },
+  {
+    "characterId": 21,
+    "className": "org.flixel.data.FlxPanel_ImgReddit",
+    "file": "021_FlxPanel_ImgReddit.png",
+    "width": 13,
+    "height": 13
+  },
+  {
+    "characterId": 24,
+    "className": "org.flixel.data.FlxPanel_ImgDelicious",
+    "file": "024_FlxPanel_ImgDelicious.png",
+    "width": 12,
+    "height": 12
+  },
+  {
+    "characterId": 53,
+    "className": "com.miniclip.GSwitch.PlayState_ImgDarkGlassTunnelHolder",
+    "file": "053_PlayState_ImgDarkGlassTunnelHolder.png",
+    "width": 53,
+    "height": 420
+  },
+  {
+    "characterId": 54,
+    "className": "com.miniclip.GSwitch.PlayState_ImgGlassTunnelSingleTop",
+    "file": "054_PlayState_ImgGlassTunnelSingleTop.png",
+    "width": 45,
+    "height": 38
+  },
+  {
+    "characterId": 56,
+    "className": "com.miniclip.GSwitch.MenuState_ImgLeftGuy",
+    "file": "056_MenuState_ImgLeftGuy.png",
+    "width": 195,
+    "height": 374
+  },
+  {
+    "characterId": 57,
+    "className": "com.miniclip.GSwitch.PlayState_ImgOrangeHolderFront",
+    "file": "057_PlayState_ImgOrangeHolderFront.png",
+    "width": 40,
+    "height": 115
+  },
+  {
+    "characterId": 58,
+    "className": "com.miniclip.GSwitch.PlayState_ImgDarkBridgeSingle",
+    "file": "058_PlayState_ImgDarkBridgeSingle.png",
+    "width": 60,
+    "height": 48
+  },
+  {
+    "characterId": 59,
+    "className": "com.miniclip.GSwitch.PlayState_ImgCreamyWallBottom",
+    "file": "059_PlayState_ImgCreamyWallBottom.png",
+    "width": 88,
+    "height": 150
+  },
+  {
+    "characterId": 60,
+    "className": "com.miniclip.GSwitch.MenuState_ImgPlayButton",
+    "file": "060_MenuState_ImgPlayButton.png",
+    "width": 250,
+    "height": 100
+  },
+  {
+    "characterId": 61,
+    "className": "com.miniclip.GSwitch.Enemy_ImgPlayer",
+    "file": "061_Enemy_ImgPlayer.png",
+    "width": 975,
+    "height": 693
+  },
+  {
+    "characterId": 62,
+    "className": "com.miniclip.GSwitch.Player_ImgPlayer",
+    "file": "062_Player_ImgPlayer.png",
+    "width": 975,
+    "height": 693
+  },
+  {
+    "characterId": 63,
+    "className": "com.miniclip.GSwitch.PlayState_ImgGlassTunnelMiddle",
+    "file": "063_PlayState_ImgGlassTunnelMiddle.png",
+    "width": 202,
+    "height": 36
+  },
+  {
+    "characterId": 64,
+    "className": "com.miniclip.GSwitch.PlayState_ImgEndButtonOver",
+    "file": "064_PlayState_ImgEndButtonOver.png",
+    "width": 128,
+    "height": 50
+  },
+  {
+    "characterId": 65,
+    "className": "com.miniclip.GSwitch.PlayState_ImgResultRed",
+    "file": "065_PlayState_ImgResultRed.png",
+    "width": 223,
+    "height": 283
+  },
+  {
+    "characterId": 66,
+    "className": "com.miniclip.GSwitch.PlayState_ImgYellow02",
+    "file": "066_PlayState_ImgYellow02.png",
+    "width": 79,
+    "height": 39
+  },
+  {
+    "characterId": 67,
+    "className": "com.miniclip.GSwitch.PlayState_ImgYellow03",
+    "file": "067_PlayState_ImgYellow03.png",
+    "width": 147,
+    "height": 38
+  },
+  {
+    "characterId": 69,
+    "className": "com.miniclip.GSwitch.PlayState_ImgBridgeBYLeftFRONT",
+    "file": "069_PlayState_ImgBridgeBYLeftFRONT.png",
+    "width": 42,
+    "height": 29
+  },
+  {
+    "characterId": 70,
+    "className": "com.miniclip.GSwitch.PlayState_ImgBuildingFullWallBlue",
+    "file": "070_PlayState_ImgBuildingFullWallBlue.png",
+    "width": 109,
+    "height": 466
+  },
+  {
+    "characterId": 71,
+    "className": "com.miniclip.GSwitch.PlayState_ImgDoubleGlassTop",
+    "file": "071_PlayState_ImgDoubleGlassTop.png",
+    "width": 219,
+    "height": 42
+  },
+  {
+    "characterId": 72,
+    "className": "com.miniclip.GSwitch.PlayState_ImgGlassTunnelBottomFront",
+    "file": "072_PlayState_ImgGlassTunnelBottomFront.png",
+    "width": 202,
+    "height": 35
+  },
+  {
+    "characterId": 73,
+    "className": "com.miniclip.GSwitch.PlayState_ImgCoverupR3_1",
+    "file": "073_PlayState_ImgCoverupR3_1.png",
+    "width": 86,
+    "height": 98
+  },
+  {
+    "characterId": 74,
+    "className": "com.miniclip.GSwitch.PlayState_ImgOrangePipeTop",
+    "file": "074_PlayState_ImgOrangePipeTop.png",
+    "width": 79,
+    "height": 28
+  },
+  {
+    "characterId": 75,
+    "className": "com.miniclip.GSwitch.PlayState_ImgCoverupR3_2",
+    "file": "075_PlayState_ImgCoverupR3_2.png",
+    "width": 157,
+    "height": 47
+  },
+  {
+    "characterId": 76,
+    "className": "com.miniclip.GSwitch.PlayState_ImgResultBlue",
+    "file": "076_PlayState_ImgResultBlue.png",
+    "width": 223,
+    "height": 283
+  },
+  {
+    "characterId": 77,
+    "className": "com.miniclip.GSwitch.MenuState_ImgMultiButton",
+    "file": "077_MenuState_ImgMultiButton.png",
+    "width": 232,
+    "height": 73
+  },
+  {
+    "characterId": 78,
+    "className": "com.miniclip.GSwitch.PlayState_ImgCoverupEnd",
+    "file": "078_PlayState_ImgCoverupEnd.png",
+    "width": 37,
+    "height": 30
+  },
+  {
+    "characterId": 79,
+    "className": "com.miniclip.GSwitch.PlayState_ImgshadowLeft",
+    "file": "079_PlayState_ImgshadowLeft.png",
+    "width": 25,
+    "height": 25
+  },
+  {
+    "characterId": 80,
+    "className": "com.miniclip.GSwitch.MenuState_ImgIntersticialBG",
+    "file": "080_MenuState_ImgIntersticialBG.png",
+    "width": 640,
+    "height": 510
+  },
+  {
+    "characterId": 81,
+    "className": "com.miniclip.GSwitch.PlayState_ImgDoubleDarkGlassSimpleBottom",
+    "file": "081_PlayState_ImgDoubleDarkGlassSimpleBottom.png",
+    "width": 221,
+    "height": 36
+  },
+  {
+    "characterId": 82,
+    "className": "com.miniclip.GSwitch.MenuState_ImgLoadingSplash",
+    "file": "082_MenuState_ImgLoadingSplash.png",
+    "width": 640,
+    "height": 501
+  },
+  {
+    "characterId": 83,
+    "className": "com.miniclip.GSwitch.PlayState_ImgGreyHolderFront",
+    "file": "083_PlayState_ImgGreyHolderFront.png",
+    "width": 38,
+    "height": 111
+  },
+  {
+    "characterId": 84,
+    "className": "com.miniclip.GSwitch.Player_ImgPlayerRed",
+    "file": "084_Player_ImgPlayerRed.png",
+    "width": 975,
+    "height": 693
+  },
+  {
+    "characterId": 85,
+    "className": "com.miniclip.GSwitch.PlayState_ImgOrangeVerticalMiddle",
+    "file": "085_PlayState_ImgOrangeVerticalMiddle.png",
+    "width": 44,
+    "height": 38
+  },
+  {
+    "characterId": 87,
+    "className": "com.miniclip.GSwitch.PlayState_Imgcredits_copyright",
+    "file": "087_PlayState_Imgcredits_copyright.png",
+    "width": 552,
+    "height": 41
+  },
+  {
+    "characterId": 88,
+    "className": "com.miniclip.GSwitch.PlayState_ImgResultNoneSmall",
+    "file": "088_PlayState_ImgResultNoneSmall.png",
+    "width": 90,
+    "height": 83
+  },
+  {
+    "characterId": 89,
+    "className": "com.miniclip.GSwitch.MenuState_ImgBackButtonOver",
+    "file": "089_MenuState_ImgBackButtonOver.png",
+    "width": 172,
+    "height": 49
+  },
+  {
+    "characterId": 90,
+    "className": "com.miniclip.GSwitch.PlayState_ImgKeyboard",
+    "file": "090_PlayState_ImgKeyboard.png",
+    "width": 271,
+    "height": 93
+  },
+  {
+    "characterId": 91,
+    "className": "com.miniclip.GSwitch.PlayState_Img004",
+    "file": "091_PlayState_Img004.png",
+    "width": 48,
+    "height": 68
+  },
+  {
+    "characterId": 92,
+    "className": "com.miniclip.GSwitch.PlayState_ImgCRLightCubeGray",
+    "file": "092_PlayState_ImgCRLightCubeGray.png",
+    "width": 45,
+    "height": 40
+  },
+  {
+    "characterId": 93,
+    "className": "com.miniclip.GSwitch.PlayState_Imgcredits_antonio2",
+    "file": "093_PlayState_Imgcredits_antonio2.png",
+    "width": 289,
+    "height": 192
+  },
+  {
+    "characterId": 94,
+    "className": "com.miniclip.GSwitch.MenuState_ImgContinueGame",
+    "file": "094_MenuState_ImgContinueGame.png",
+    "width": 640,
+    "height": 510
+  },
+  {
+    "characterId": 95,
+    "className": "com.miniclip.GSwitch.PlayState_ImgBlueVerticalMiddle",
+    "file": "095_PlayState_ImgBlueVerticalMiddle.png",
+    "width": 44,
+    "height": 38
+  },
+  {
+    "characterId": 96,
+    "className": "com.miniclip.GSwitch.PlayState_ImgTopShipBig",
+    "file": "096_PlayState_ImgTopShipBig.png",
+    "width": 346,
+    "height": 104
+  },
+  {
+    "characterId": 97,
+    "className": "com.miniclip.GSwitch.PlayState_ImgGreySingle",
+    "file": "097_PlayState_ImgGreySingle.png",
+    "width": 46,
+    "height": 44
+  },
+  {
+    "characterId": 98,
+    "className": "com.miniclip.GSwitch.PlayState_ImgBridgeBY003",
+    "file": "098_PlayState_ImgBridgeBY003.png",
+    "width": 47,
+    "height": 35
+  },
+  {
+    "characterId": 99,
+    "className": "com.miniclip.GSwitch.PlayState_ImgKeyboardM",
+    "file": "099_PlayState_ImgKeyboardM.png",
+    "width": 29,
+    "height": 29
+  },
+  {
+    "characterId": 100,
+    "className": "com.miniclip.GSwitch.PlayState_ImgBridgeBY002",
+    "file": "100_PlayState_ImgBridgeBY002.png",
+    "width": 47,
+    "height": 35
+  },
+  {
+    "characterId": 101,
+    "className": "com.miniclip.GSwitch.PlayState_ImgBridgeBY001",
+    "file": "101_PlayState_ImgBridgeBY001.png",
+    "width": 48,
+    "height": 35
+  },
+  {
+    "characterId": 102,
+    "className": "com.miniclip.GSwitch.PlayState_ImgKeyboardQ",
+    "file": "102_PlayState_ImgKeyboardQ.png",
+    "width": 29,
+    "height": 29
+  },
+  {
+    "characterId": 103,
+    "className": "com.miniclip.GSwitch.MenuState_ImgMultiButton3",
+    "file": "103_MenuState_ImgMultiButton3.png",
+    "width": 135,
+    "height": 114
+  },
+  {
+    "characterId": 104,
+    "className": "com.miniclip.GSwitch.PlayState_ImgSpeed",
+    "file": "104_PlayState_ImgSpeed.png",
+    "width": 329,
+    "height": 39
+  },
+  {
+    "characterId": 105,
+    "className": "com.miniclip.GSwitch.MenuState_ImgMultiButton2",
+    "file": "105_MenuState_ImgMultiButton2.png",
+    "width": 141,
+    "height": 114
+  },
+  {
+    "characterId": 106,
+    "className": "com.miniclip.GSwitch.PlayState_Imgcredits_special_thanx",
+    "file": "106_PlayState_Imgcredits_special_thanx.png",
+    "width": 286,
+    "height": 40
+  },
+  {
+    "characterId": 107,
+    "className": "com.miniclip.GSwitch.PlayState_ImgKeyboardP",
+    "file": "107_PlayState_ImgKeyboardP.png",
+    "width": 29,
+    "height": 28
+  },
+  {
+    "characterId": 108,
+    "className": "com.miniclip.GSwitch.MenuState_ImgMultiButton4",
+    "file": "108_MenuState_ImgMultiButton4.png",
+    "width": 140,
+    "height": 114
+  },
+  {
+    "characterId": 109,
+    "className": "com.miniclip.GSwitch.PlayState_ImgKeyboardX",
+    "file": "109_PlayState_ImgKeyboardX.png",
+    "width": 44,
+    "height": 37
+  },
+  {
+    "characterId": 110,
+    "className": "com.miniclip.GSwitch.PlayState_ImgBrownDoorLight",
+    "file": "110_PlayState_ImgBrownDoorLight.png",
+    "width": 210,
+    "height": 77
+  },
+  {
+    "characterId": 111,
+    "className": "com.miniclip.GSwitch.PlayState_Imgshadowright",
+    "file": "111_PlayState_Imgshadowright.png",
+    "width": 27,
+    "height": 27
+  },
+  {
+    "characterId": 112,
+    "className": "com.miniclip.GSwitch.PlayState_ImgGlassTunnelSingleMiddle",
+    "file": "112_PlayState_ImgGlassTunnelSingleMiddle.png",
+    "width": 8,
+    "height": 35
+  },
+  {
+    "characterId": 113,
+    "className": "com.miniclip.GSwitch.PlayState_ImgKeyX",
+    "file": "113_PlayState_ImgKeyX.png",
+    "width": 29,
+    "height": 28
+  },
+  {
+    "characterId": 114,
+    "className": "com.miniclip.GSwitch.PlayState_ImgCreamyWallTop",
+    "file": "114_PlayState_ImgCreamyWallTop.png",
+    "width": 88,
+    "height": 157
+  },
+  {
+    "characterId": 115,
+    "className": "com.miniclip.GSwitch.PlayState_ImgKeyM",
+    "file": "115_PlayState_ImgKeyM.png",
+    "width": 28,
+    "height": 28
+  },
+  {
+    "characterId": 116,
+    "className": "com.miniclip.GSwitch.PlayState_ImgGlassTunnelSingle",
+    "file": "116_PlayState_ImgGlassTunnelSingle.png",
+    "width": 45,
+    "height": 32
+  },
+  {
+    "characterId": 117,
+    "className": "com.miniclip.GSwitch.PlayState_ImgOrange03grey",
+    "file": "117_PlayState_ImgOrange03grey.png",
+    "width": 154,
+    "height": 38
+  },
+  {
+    "characterId": 118,
+    "className": "com.miniclip.GSwitch.PlayState_ImgEmptyTile",
+    "file": "118_PlayState_ImgEmptyTile.png",
+    "width": 34,
+    "height": 34
+  },
+  {
+    "characterId": 119,
+    "className": "com.miniclip.GSwitch.PlayState_ImgKeyQ",
+    "file": "119_PlayState_ImgKeyQ.png",
+    "width": 28,
+    "height": 28
+  },
+  {
+    "characterId": 120,
+    "className": "com.miniclip.GSwitch.PlayState_ImgKeyP",
+    "file": "120_PlayState_ImgKeyP.png",
+    "width": 29,
+    "height": 28
+  },
+  {
+    "characterId": 121,
+    "className": "com.miniclip.GSwitch.PlayState_ImgPauseButHL",
+    "file": "121_PlayState_ImgPauseButHL.png",
+    "width": 52,
+    "height": 29
+  },
+  {
+    "characterId": 122,
+    "className": "com.miniclip.GSwitch.MenuState_ImgNo",
+    "file": "122_MenuState_ImgNo.png",
+    "width": 148,
+    "height": 65
+  },
+  {
+    "characterId": 123,
+    "className": "com.miniclip.GSwitch.PlayState_ImgGlassTunnelMiddleFront",
+    "file": "123_PlayState_ImgGlassTunnelMiddleFront.png",
+    "width": 202,
+    "height": 36
+  },
+  {
+    "characterId": 124,
+    "className": "com.miniclip.GSwitch.PlayState_ImgOrangeSingle02",
+    "file": "124_PlayState_ImgOrangeSingle02.png",
+    "width": 45,
+    "height": 38
+  },
+  {
+    "characterId": 125,
+    "className": "com.miniclip.GSwitch.PlayState_ImgTOMALAQUEJAALMOCASTE",
+    "file": "125_PlayState_ImgTOMALAQUEJAALMOCASTE.png",
+    "width": 47,
+    "height": 14
+  },
+  {
+    "characterId": 126,
+    "className": "com.miniclip.GSwitch.PlayState_ImgBridgeBYholder",
+    "file": "126_PlayState_ImgBridgeBYholder.png",
+    "width": 48,
+    "height": 512
+  },
+  {
+    "characterId": 127,
+    "className": "com.miniclip.GSwitch.MenuState_ImgCreditsButton",
+    "file": "127_MenuState_ImgCreditsButton.png",
+    "width": 145,
+    "height": 34
+  },
+  {
+    "characterId": 128,
+    "className": "com.miniclip.GSwitch.PlayState_ImgGetIPhone",
+    "file": "128_PlayState_ImgGetIPhone.png",
+    "width": 396,
+    "height": 59
+  },
+  {
+    "characterId": 129,
+    "className": "com.miniclip.GSwitch.MenuState_ImgYesOver",
+    "file": "129_MenuState_ImgYesOver.png",
+    "width": 148,
+    "height": 65
+  },
+  {
+    "characterId": 130,
+    "className": "com.miniclip.GSwitch.PlayState_ImgContinue",
+    "file": "130_PlayState_ImgContinue.png",
+    "width": 224,
+    "height": 59
+  },
+  {
+    "characterId": 131,
+    "className": "com.miniclip.GSwitch.PlayState_ImgOrangeSingleLight",
+    "file": "131_PlayState_ImgOrangeSingleLight.png",
+    "width": 45,
+    "height": 38
+  },
+  {
+    "characterId": 132,
+    "className": "com.miniclip.GSwitch.PlayState_ImgGlassTunnelSingleBottomFront",
+    "file": "132_PlayState_ImgGlassTunnelSingleBottomFront.png",
+    "width": 38,
+    "height": 35
+  },
+  {
+    "characterId": 133,
+    "className": "com.miniclip.GSwitch.PlayState_ImgBlueLightHolder",
+    "file": "133_PlayState_ImgBlueLightHolder.png",
+    "width": 33,
+    "height": 102
+  },
+  {
+    "characterId": 134,
+    "className": "com.miniclip.GSwitch.PlayState_ImgGreyVerticalMiddle",
+    "file": "134_PlayState_ImgGreyVerticalMiddle.png",
+    "width": 44,
+    "height": 38
+  },
+  {
+    "characterId": 135,
+    "className": "com.miniclip.GSwitch.MenuState_ImgChooseNumberOfPlayers",
+    "file": "135_MenuState_ImgChooseNumberOfPlayers.png",
+    "width": 293,
+    "height": 49
+  },
+  {
+    "characterId": 136,
+    "className": "com.miniclip.GSwitch.PlayState_ImgGlassTunnelExtraTop",
+    "file": "136_PlayState_ImgGlassTunnelExtraTop.png",
+    "width": 22,
+    "height": 38
+  },
+  {
+    "characterId": 137,
+    "className": "com.miniclip.GSwitch.PlayState_ImgBuildingWallBrown001",
+    "file": "137_PlayState_ImgBuildingWallBrown001.png",
+    "width": 108,
+    "height": 70
+  },
+  {
+    "characterId": 138,
+    "className": "com.miniclip.GSwitch.PlayState_ImgGlassTunnelBottom",
+    "file": "138_PlayState_ImgGlassTunnelBottom.png",
+    "width": 209,
+    "height": 40
+  },
+  {
+    "characterId": 139,
+    "className": "com.miniclip.GSwitch.PlayState_ImgBlueLightCube",
+    "file": "139_PlayState_ImgBlueLightCube.png",
+    "width": 49,
+    "height": 45
+  },
+  {
+    "characterId": 141,
+    "className": "com.miniclip.GSwitch.PlayState_ImgLightCubeBrown",
+    "file": "141_PlayState_ImgLightCubeBrown.png",
+    "width": 45,
+    "height": 40
+  },
+  {
+    "characterId": 142,
+    "className": "com.miniclip.GSwitch.PlayState_ImgCreamy03",
+    "file": "142_PlayState_ImgCreamy03.png",
+    "width": 77,
+    "height": 38
+  },
+  {
+    "characterId": 143,
+    "className": "com.miniclip.GSwitch.PlayState_ImgCreamy02",
+    "file": "143_PlayState_ImgCreamy02.png",
+    "width": 77,
+    "height": 38
+  },
+  {
+    "characterId": 144,
+    "className": "com.miniclip.GSwitch.PlayState_ImgOrangeVerticalMiddleLight",
+    "file": "144_PlayState_ImgOrangeVerticalMiddleLight.png",
+    "width": 44,
+    "height": 38
+  },
+  {
+    "characterId": 145,
+    "className": "com.miniclip.GSwitch.PlayState_ImgCreamy01",
+    "file": "145_PlayState_ImgCreamy01.png",
+    "width": 77,
+    "height": 38
+  },
+  {
+    "characterId": 146,
+    "className": "com.miniclip.GSwitch.MenuState_ImgSoundButHL",
+    "file": "146_MenuState_ImgSoundButHL.png",
+    "width": 39,
+    "height": 27
+  },
+  {
+    "characterId": 147,
+    "className": "com.miniclip.GSwitch.PlayState_ImgAcceleratorSingle",
+    "file": "147_PlayState_ImgAcceleratorSingle.png",
+    "width": 47,
+    "height": 39
+  },
+  {
+    "characterId": 149,
+    "className": "com.miniclip.GSwitch.PlayState_ImgLight06",
+    "file": "149_PlayState_ImgLight06.png",
+    "width": 54,
+    "height": 45
+  },
+  {
+    "characterId": 150,
+    "className": "com.miniclip.GSwitch.PlayState_ImgCoverupR2_1",
+    "file": "150_PlayState_ImgCoverupR2_1.png",
+    "width": 64,
+    "height": 91
+  },
+  {
+    "characterId": 151,
+    "className": "com.miniclip.GSwitch.MenuState_ImgMenuBackground",
+    "file": "151_MenuState_ImgMenuBackground.png",
+    "width": 640,
+    "height": 495
+  },
+  {
+    "characterId": 152,
+    "className": "com.miniclip.GSwitch.PlayState_ImgLight07",
+    "file": "152_PlayState_ImgLight07.png",
+    "width": 38,
+    "height": 44
+  },
+  {
+    "characterId": 153,
+    "className": "com.miniclip.GSwitch.PlayState_ImgCheckpoint001",
+    "file": "153_PlayState_ImgCheckpoint001.png",
+    "width": 42,
+    "height": 40
+  },
+  {
+    "characterId": 154,
+    "className": "com.miniclip.GSwitch.PlayState_ImgCoverupR2_2",
+    "file": "154_PlayState_ImgCoverupR2_2.png",
+    "width": 105,
+    "height": 78
+  },
+  {
+    "characterId": 155,
+    "className": "com.miniclip.GSwitch.PlayState_Imgcredits_level_design",
+    "file": "155_PlayState_Imgcredits_level_design.png",
+    "width": 248,
+    "height": 40
+  },
+  {
+    "characterId": 156,
+    "className": "com.miniclip.GSwitch.PlayState_ImgLight08",
+    "file": "156_PlayState_ImgLight08.png",
+    "width": 28,
+    "height": 28
+  },
+  {
+    "characterId": 157,
+    "className": "com.miniclip.GSwitch.PlayState_ImgCheckpoint002",
+    "file": "157_PlayState_ImgCheckpoint002.png",
+    "width": 42,
+    "height": 41
+  },
+  {
+    "characterId": 158,
+    "className": "com.miniclip.GSwitch.PlayState_ImgCoverupR2_3",
+    "file": "158_PlayState_ImgCoverupR2_3.png",
+    "width": 38,
+    "height": 81
+  },
+  {
+    "characterId": 159,
+    "className": "com.miniclip.GSwitch.PlayState_ImgBackship",
+    "file": "159_PlayState_ImgBackship.png",
+    "width": 350,
+    "height": 51
+  },
+  {
+    "characterId": 160,
+    "className": "com.miniclip.GSwitch.PlayState_ImgLight09",
+    "file": "160_PlayState_ImgLight09.png",
+    "width": 117,
+    "height": 23
+  },
+  {
+    "characterId": 161,
+    "className": "com.miniclip.GSwitch.PlayState_ImgLight02",
+    "file": "161_PlayState_ImgLight02.png",
+    "width": 45,
+    "height": 45
+  },
+  {
+    "characterId": 162,
+    "className": "com.miniclip.GSwitch.PlayState_ImgLight03",
+    "file": "162_PlayState_ImgLight03.png",
+    "width": 54,
+    "height": 45
+  },
+  {
+    "characterId": 163,
+    "className": "com.miniclip.GSwitch.PlayState_ImgSoundButOn",
+    "file": "163_PlayState_ImgSoundButOn.png",
+    "width": 54,
+    "height": 29
+  },
+  {
+    "characterId": 164,
+    "className": "com.miniclip.GSwitch.MenuState_ImgSoundBut",
+    "file": "164_MenuState_ImgSoundBut.png",
+    "width": 39,
+    "height": 27
+  },
+  {
+    "characterId": 165,
+    "className": "com.miniclip.GSwitch.PlayState_ImgLight04",
+    "file": "165_PlayState_ImgLight04.png",
+    "width": 45,
+    "height": 47
+  },
+  {
+    "characterId": 166,
+    "className": "com.miniclip.GSwitch.PlayState_ImgLight05",
+    "file": "166_PlayState_ImgLight05.png",
+    "width": 40,
+    "height": 45
+  },
+  {
+    "characterId": 167,
+    "className": "com.miniclip.GSwitch.PlayState_Img000",
+    "file": "167_PlayState_Img000.png",
+    "width": 45,
+    "height": 38
+  },
+  {
+    "characterId": 168,
+    "className": "com.miniclip.GSwitch.PlayState_ImgGreyVerticalTop",
+    "file": "168_PlayState_ImgGreyVerticalTop.png",
+    "width": 45,
+    "height": 43
+  },
+  {
+    "characterId": 169,
+    "className": "com.miniclip.GSwitch.PlayState_ImgDoubleDarkGlassFrontBottom",
+    "file": "169_PlayState_ImgDoubleDarkGlassFrontBottom.png",
+    "width": 209,
+    "height": 35
+  },
+  {
+    "characterId": 170,
+    "className": "com.miniclip.GSwitch.PlayState_ImgDarkGlassMiddleRight",
+    "file": "170_PlayState_ImgDarkGlassMiddleRight.png",
+    "width": 18,
+    "height": 35
+  },
+  {
+    "characterId": 171,
+    "className": "com.miniclip.GSwitch.PlayState_ImgOrangeHolder",
+    "file": "171_PlayState_ImgOrangeHolder.png",
+    "width": 33,
+    "height": 102
+  },
+  {
+    "characterId": 172,
+    "className": "com.miniclip.GSwitch.PlayState_ImgLight01",
+    "file": "172_PlayState_ImgLight01.png",
+    "width": 29,
+    "height": 35
+  },
+  {
+    "characterId": 173,
+    "className": "com.miniclip.GSwitch.PlayState_ImgTheEnd",
+    "file": "173_PlayState_ImgTheEnd.png",
+    "width": 640,
+    "height": 510
+  },
+  {
+    "characterId": 174,
+    "className": "com.miniclip.GSwitch.PlayState_ImgcollisionBlock",
+    "file": "174_PlayState_ImgcollisionBlock.png",
+    "width": 45,
+    "height": 38
+  },
+  {
+    "characterId": 175,
+    "className": "com.miniclip.GSwitch.PlayState_ImgBlock",
+    "file": "175_PlayState_ImgBlock.png",
+    "width": 34,
+    "height": 34
+  },
+  {
+    "characterId": 176,
+    "className": "com.miniclip.GSwitch.PlayState_Imgcredits_mikael",
+    "file": "176_PlayState_Imgcredits_mikael.png",
+    "width": 203,
+    "height": 205
+  },
+  {
+    "characterId": 177,
+    "className": "com.miniclip.GSwitch.PlayState_ImgFinalTunnel",
+    "file": "177_PlayState_ImgFinalTunnel.png",
+    "width": 97,
+    "height": 102
+  },
+  {
+    "characterId": 178,
+    "className": "com.miniclip.GSwitch.PlayState_ImgBlueVerticalBottom",
+    "file": "178_PlayState_ImgBlueVerticalBottom.png",
+    "width": 45,
+    "height": 38
+  },
+  {
+    "characterId": 180,
+    "className": "com.miniclip.GSwitch.PlayState_ImgResultRedSmall",
+    "file": "180_PlayState_ImgResultRedSmall.png",
+    "width": 90,
+    "height": 83
+  },
+  {
+    "characterId": 181,
+    "className": "com.miniclip.GSwitch.PlayState_ImgBuildingFullWallBrown",
+    "file": "181_PlayState_ImgBuildingFullWallBrown.png",
+    "width": 109,
+    "height": 466
+  },
+  {
+    "characterId": 182,
+    "className": "com.miniclip.GSwitch.PlayState_Imgcredits_NunoMonteiro",
+    "file": "182_PlayState_Imgcredits_NunoMonteiro.png",
+    "width": 287,
+    "height": 198
+  },
+  {
+    "characterId": 183,
+    "className": "com.miniclip.GSwitch.PlayState_ImgBlueVerticalTop",
+    "file": "183_PlayState_ImgBlueVerticalTop.png",
+    "width": 45,
+    "height": 38
+  },
+  {
+    "characterId": 184,
+    "className": "com.miniclip.GSwitch.PlayState_ImgTopShipSmall",
+    "file": "184_PlayState_ImgTopShipSmall.png",
+    "width": 74,
+    "height": 27
+  },
+  {
+    "characterId": 185,
+    "className": "com.miniclip.GSwitch.PlayState_ImgOrangeSingle",
+    "file": "185_PlayState_ImgOrangeSingle.png",
+    "width": 45,
+    "height": 38
+  },
+  {
+    "characterId": 186,
+    "className": "com.miniclip.GSwitch.MenuState_ImgScoreButton",
+    "file": "186_MenuState_ImgScoreButton.png",
+    "width": 145,
+    "height": 34
+  },
+  {
+    "characterId": 187,
+    "className": "com.miniclip.GSwitch.PlayState_Imgcredits_Joana",
+    "file": "187_PlayState_Imgcredits_Joana.png",
+    "width": 266,
+    "height": 211
+  },
+  {
+    "characterId": 188,
+    "className": "com.miniclip.GSwitch.PlayState_Img001",
+    "file": "188_PlayState_Img001.png",
+    "width": 49,
+    "height": 45
+  },
+  {
+    "characterId": 189,
+    "className": "com.miniclip.GSwitch.PlayState_Img002",
+    "file": "189_PlayState_Img002.png",
+    "width": 212,
+    "height": 38
+  },
+  {
+    "characterId": 190,
+    "className": "com.miniclip.GSwitch.PlayState_Img003",
+    "file": "190_PlayState_Img003.png",
+    "width": 35,
+    "height": 102
+  },
+  {
+    "characterId": 192,
+    "className": "com.miniclip.GSwitch.PlayState_ImgDoubleGlassTopSingle",
+    "file": "192_PlayState_ImgDoubleGlassTopSingle.png",
+    "width": 54,
+    "height": 42
+  },
+  {
+    "characterId": 193,
+    "className": "com.miniclip.GSwitch.PlayState_ImgBlueDoorLight",
+    "file": "193_PlayState_ImgBlueDoorLight.png",
+    "width": 210,
+    "height": 77
+  },
+  {
+    "characterId": 194,
+    "className": "com.miniclip.GSwitch.PlayState_ImgFinalTunnelFront",
+    "file": "194_PlayState_ImgFinalTunnelFront.png",
+    "width": 120,
+    "height": 118
+  },
+  {
+    "characterId": 195,
+    "className": "com.miniclip.GSwitch.PlayState_ImgContinueIntOver",
+    "file": "195_PlayState_ImgContinueIntOver.png",
+    "width": 224,
+    "height": 59
+  },
+  {
+    "characterId": 196,
+    "className": "com.miniclip.GSwitch.PlayState_ImgCheckpointAnimation",
+    "file": "196_PlayState_ImgCheckpointAnimation.png",
+    "width": 88,
+    "height": 79
+  },
+  {
+    "characterId": 197,
+    "className": "com.miniclip.GSwitch.PlayState_ImgGrey03",
+    "file": "197_PlayState_ImgGrey03.png",
+    "width": 153,
+    "height": 48
+  },
+  {
+    "characterId": 198,
+    "className": "com.miniclip.GSwitch.PlayState_ImgDoubleDarkGlassTop",
+    "file": "198_PlayState_ImgDoubleDarkGlassTop.png",
+    "width": 222,
+    "height": 42
+  },
+  {
+    "characterId": 199,
+    "className": "com.miniclip.GSwitch.PlayState_ImgGrey02",
+    "file": "199_PlayState_ImgGrey02.png",
+    "width": 81,
+    "height": 46
+  },
+  {
+    "characterId": 200,
+    "className": "com.miniclip.GSwitch.PlayState_ImgDoubleGlassBottom",
+    "file": "200_PlayState_ImgDoubleGlassBottom.png",
+    "width": 218,
+    "height": 45
+  },
+  {
+    "characterId": 201,
+    "className": "com.miniclip.GSwitch.PlayState_ImgDoubleDarkGlassTopSingle",
+    "file": "201_PlayState_ImgDoubleDarkGlassTopSingle.png",
+    "width": 58,
+    "height": 42
+  },
+  {
+    "characterId": 202,
+    "className": "com.miniclip.GSwitch.PlayState_ImgOrangeVerticalBottom02",
+    "file": "202_PlayState_ImgOrangeVerticalBottom02.png",
+    "width": 45,
+    "height": 38
+  },
+  {
+    "characterId": 203,
+    "className": "com.miniclip.GSwitch.PlayState_ImgDarkWallBottom",
+    "file": "203_PlayState_ImgDarkWallBottom.png",
+    "width": 88,
+    "height": 170
+  },
+  {
+    "characterId": 204,
+    "className": "com.miniclip.GSwitch.PlayState_Imgshadow",
+    "file": "204_PlayState_Imgshadow.png",
+    "width": 120,
+    "height": 27
+  },
+  {
+    "characterId": 205,
+    "className": "com.miniclip.GSwitch.PlayState_ImgDarkPipe001png",
+    "file": "205_PlayState_ImgDarkPipe001png.png",
+    "width": 119,
+    "height": 78
+  },
+  {
+    "characterId": 206,
+    "className": "com.miniclip.GSwitch.PlayState_Imgcredits_graphics",
+    "file": "206_PlayState_Imgcredits_graphics.png",
+    "width": 175,
+    "height": 40
+  },
+  {
+    "characterId": 207,
+    "className": "com.miniclip.GSwitch.PlayState_ImgGlassTunnelHolder",
+    "file": "207_PlayState_ImgGlassTunnelHolder.png",
+    "width": 44,
+    "height": 420
+  },
+  {
+    "characterId": 208,
+    "className": "com.miniclip.GSwitch.PlayState_ImgBlueLightCubeDark",
+    "file": "208_PlayState_ImgBlueLightCubeDark.png",
+    "width": 49,
+    "height": 45
+  },
+  {
+    "characterId": 209,
+    "className": "com.miniclip.GSwitch.MenuState_ImgMiniclipHL",
+    "file": "209_MenuState_ImgMiniclipHL.png",
+    "width": 300,
+    "height": 100
+  },
+  {
+    "characterId": 210,
+    "className": "com.miniclip.GSwitch.PlayState_ImgLevelCleared",
+    "file": "210_PlayState_ImgLevelCleared.png",
+    "width": 233,
+    "height": 71
+  },
+  {
+    "characterId": 211,
+    "className": "com.miniclip.GSwitch.PlayState_ImgSHADOWUNIY",
+    "file": "211_PlayState_ImgSHADOWUNIY.png",
+    "width": 36,
+    "height": 27
+  },
+  {
+    "characterId": 212,
+    "className": "com.miniclip.GSwitch.PlayState_ImgBridgeBYRightFRONT",
+    "file": "212_PlayState_ImgBridgeBYRightFRONT.png",
+    "width": 42,
+    "height": 29
+  },
+  {
+    "characterId": 213,
+    "className": "com.miniclip.GSwitch.PlayState_ImgSun",
+    "file": "213_PlayState_ImgSun.png",
+    "width": 198,
+    "height": 198
+  },
+  {
+    "characterId": 214,
+    "className": "com.miniclip.GSwitch.PlayState_ImgSonicBoom",
+    "file": "214_PlayState_ImgSonicBoom.png",
+    "width": 101,
+    "height": 72
+  },
+  {
+    "characterId": 215,
+    "className": "com.miniclip.GSwitch.PlayState_ImgDarkWallLight01",
+    "file": "215_PlayState_ImgDarkWallLight01.png",
+    "width": 29,
+    "height": 129
+  },
+  {
+    "characterId": 216,
+    "className": "com.miniclip.GSwitch.PlayState_ImggilsusWalks",
+    "file": "216_PlayState_ImggilsusWalks.png",
+    "width": 371,
+    "height": 110
+  },
+  {
+    "characterId": 217,
+    "className": "com.miniclip.GSwitch.PlayState_ImgScreenshot2",
+    "file": "217_PlayState_ImgScreenshot2.png",
+    "width": 197,
+    "height": 132
+  },
+  {
+    "characterId": 218,
+    "className": "com.miniclip.GSwitch.PlayState_ImgDarkWallLight04",
+    "file": "218_PlayState_ImgDarkWallLight04.png",
+    "width": 10,
+    "height": 10
+  },
+  {
+    "characterId": 219,
+    "className": "com.miniclip.GSwitch.PlayState_ImgScreenshot3",
+    "file": "219_PlayState_ImgScreenshot3.png",
+    "width": 197,
+    "height": 132
+  },
+  {
+    "characterId": 220,
+    "className": "com.miniclip.GSwitch.PlayState_ImgBackground2",
+    "file": "220_PlayState_ImgBackground2.png",
+    "width": 444,
+    "height": 162
+  },
+  {
+    "characterId": 221,
+    "className": "com.miniclip.GSwitch.PlayState_ImgDarkWallLight02",
+    "file": "221_PlayState_ImgDarkWallLight02.png",
+    "width": 41,
+    "height": 20
+  },
+  {
+    "characterId": 222,
+    "className": "com.miniclip.GSwitch.PlayState_ImgGlassTunnelTop",
+    "file": "222_PlayState_ImgGlassTunnelTop.png",
+    "width": 209,
+    "height": 38
+  },
+  {
+    "characterId": 223,
+    "className": "com.miniclip.GSwitch.PlayState_ImgResultBlueSmall",
+    "file": "223_PlayState_ImgResultBlueSmall.png",
+    "width": 90,
+    "height": 83
+  },
+  {
+    "characterId": 224,
+    "className": "com.miniclip.GSwitch.PlayState_ImgDarkWallLight03",
+    "file": "224_PlayState_ImgDarkWallLight03.png",
+    "width": 13,
+    "height": 20
+  },
+  {
+    "characterId": 225,
+    "className": "com.miniclip.GSwitch.PlayState_ImgBackground1",
+    "file": "225_PlayState_ImgBackground1.png",
+    "width": 427,
+    "height": 247
+  },
+  {
+    "characterId": 226,
+    "className": "com.miniclip.GSwitch.PlayState_ImgBuildingWallBlue001",
+    "file": "226_PlayState_ImgBuildingWallBlue001.png",
+    "width": 108,
+    "height": 70
+  },
+  {
+    "characterId": 227,
+    "className": "com.miniclip.GSwitch.PlayState_ImgOrangeLight02",
+    "file": "227_PlayState_ImgOrangeLight02.png",
+    "width": 45,
+    "height": 44
+  },
+  {
+    "characterId": 228,
+    "className": "com.miniclip.GSwitch.PlayState_ImgResultGreenSmall",
+    "file": "228_PlayState_ImgResultGreenSmall.png",
+    "width": 90,
+    "height": 83
+  },
+  {
+    "characterId": 229,
+    "className": "com.miniclip.GSwitch.PlayState_ImgGlassTunnelSingleBottom",
+    "file": "229_PlayState_ImgGlassTunnelSingleBottom.png",
+    "width": 45,
+    "height": 65
+  },
+  {
+    "characterId": 230,
+    "className": "com.miniclip.GSwitch.PlayState_ImgOrangeLight03",
+    "file": "230_PlayState_ImgOrangeLight03.png",
+    "width": 12,
+    "height": 17
+  },
+  {
+    "characterId": 231,
+    "className": "com.miniclip.GSwitch.PlayState_Imgvasco",
+    "file": "231_PlayState_Imgvasco.png",
+    "width": 250,
+    "height": 203
+  },
+  {
+    "characterId": 232,
+    "className": "com.miniclip.GSwitch.PlayState_ImgOrangeLight01",
+    "file": "232_PlayState_ImgOrangeLight01.png",
+    "width": 41,
+    "height": 45
+  },
+  {
+    "characterId": 233,
+    "className": "com.miniclip.GSwitch.MenuState_ImgScoreButtonOver",
+    "file": "233_MenuState_ImgScoreButtonOver.png",
+    "width": 145,
+    "height": 34
+  },
+  {
+    "characterId": 234,
+    "className": "com.miniclip.GSwitch.PlayState_Img1st",
+    "file": "234_PlayState_Img1st.png",
+    "width": 78,
+    "height": 57
+  },
+  {
+    "characterId": 235,
+    "className": "com.miniclip.GSwitch.PlayState_ImgOrangeLight04",
+    "file": "235_PlayState_ImgOrangeLight04.png",
+    "width": 14,
+    "height": 13
+  },
+  {
+    "characterId": 236,
+    "className": "com.miniclip.GSwitch.PlayState_ImgGlassTunnelSingleMiddleFront",
+    "file": "236_PlayState_ImgGlassTunnelSingleMiddleFront.png",
+    "width": 38,
+    "height": 33
+  },
+  {
+    "characterId": 237,
+    "className": "com.miniclip.GSwitch.PlayState_ImgDarkBridge002",
+    "file": "237_PlayState_ImgDarkBridge002.png",
+    "width": 117,
+    "height": 44
+  },
+  {
+    "characterId": 238,
+    "className": "com.miniclip.GSwitch.PlayState_ImgHighInt",
+    "file": "238_PlayState_ImgHighInt.png",
+    "width": 200,
+    "height": 50
+  },
+  {
+    "characterId": 239,
+    "className": "com.miniclip.GSwitch.PlayState_ImgDarkBridge001",
+    "file": "239_PlayState_ImgDarkBridge001.png",
+    "width": 118,
+    "height": 53
+  },
+  {
+    "characterId": 240,
+    "className": "com.miniclip.GSwitch.PlayState_ImgVitorMarques",
+    "file": "240_PlayState_ImgVitorMarques.png",
+    "width": 419,
+    "height": 150
+  },
+  {
+    "characterId": 241,
+    "className": "com.miniclip.GSwitch.PlayState_ImgResultYellow",
+    "file": "241_PlayState_ImgResultYellow.png",
+    "width": 223,
+    "height": 283
+  },
+  {
+    "characterId": 242,
+    "className": "com.miniclip.GSwitch.MenuState_ImgNoOver",
+    "file": "242_MenuState_ImgNoOver.png",
+    "width": 148,
+    "height": 65
+  },
+  {
+    "characterId": 243,
+    "className": "com.miniclip.GSwitch.PlayState_ImgGetItNowOn",
+    "file": "243_PlayState_ImgGetItNowOn.png",
+    "width": 300,
+    "height": 111
+  },
+  {
+    "characterId": 244,
+    "className": "com.miniclip.GSwitch.PlayState_ImgNextButton",
+    "file": "244_PlayState_ImgNextButton.png",
+    "width": 128,
+    "height": 50
+  },
+  {
+    "characterId": 245,
+    "className": "com.miniclip.GSwitch.PlayState_ImgMultiEnd",
+    "file": "245_PlayState_ImgMultiEnd.png",
+    "width": 640,
+    "height": 501
+  },
+  {
+    "characterId": 246,
+    "className": "com.miniclip.GSwitch.MenuState_ImgCreditsButtonOver",
+    "file": "246_MenuState_ImgCreditsButtonOver.png",
+    "width": 145,
+    "height": 34
+  },
+  {
+    "characterId": 247,
+    "className": "com.miniclip.GSwitch.PlayState_ImgNextButtonOver",
+    "file": "247_PlayState_ImgNextButtonOver.png",
+    "width": 128,
+    "height": 50
+  },
+  {
+    "characterId": 248,
+    "className": "com.miniclip.GSwitch.PlayState_ImgBridgeCrossSingle",
+    "file": "248_PlayState_ImgBridgeCrossSingle.png",
+    "width": 49,
+    "height": 40
+  },
+  {
+    "characterId": 249,
+    "className": "com.miniclip.GSwitch.PlayState_ImgBlue03",
+    "file": "249_PlayState_ImgBlue03.png",
+    "width": 154,
+    "height": 38
+  },
+  {
+    "characterId": 250,
+    "className": "com.miniclip.GSwitch.PlayState_ImgBlue02",
+    "file": "250_PlayState_ImgBlue02.png",
+    "width": 81,
+    "height": 38
+  },
+  {
+    "characterId": 251,
+    "className": "com.miniclip.GSwitch.PlayState_ImgOrangeVerticalTop02",
+    "file": "251_PlayState_ImgOrangeVerticalTop02.png",
+    "width": 45,
+    "height": 38
+  },
+  {
+    "characterId": 252,
+    "className": "com.miniclip.GSwitch.MenuState_ImgCursor",
+    "file": "252_MenuState_ImgCursor.png",
+    "width": 10,
+    "height": 10
+  },
+  {
+    "characterId": 253,
+    "className": "com.miniclip.GSwitch.PlayState_ImgDoubleGlassBottomSingle",
+    "file": "253_PlayState_ImgDoubleGlassBottomSingle.png",
+    "width": 55,
+    "height": 36
+  },
+  {
+    "characterId": 254,
+    "className": "com.miniclip.GSwitch.PlayState_Imgcredits_DON_NUNO",
+    "file": "254_PlayState_Imgcredits_DON_NUNO.png",
+    "width": 280,
+    "height": 205
+  },
+  {
+    "characterId": 255,
+    "className": "com.miniclip.GSwitch.PlayState_ImgBlueLightHolderFront",
+    "file": "255_PlayState_ImgBlueLightHolderFront.png",
+    "width": 39,
+    "height": 113
+  },
+  {
+    "characterId": 256,
+    "className": "com.miniclip.GSwitch.PlayState_ImgGlassTunnelExtraBottom",
+    "file": "256_PlayState_ImgGlassTunnelExtraBottom.png",
+    "width": 33,
+    "height": 28
+  },
+  {
+    "characterId": 257,
+    "className": "com.miniclip.GSwitch.MenuState_ImgCoverup",
+    "file": "257_MenuState_ImgCoverup.png",
+    "width": 640,
+    "height": 501
+  },
+  {
+    "characterId": 258,
+    "className": "com.miniclip.GSwitch.PlayState_ImgGetIPhoneHL",
+    "file": "258_PlayState_ImgGetIPhoneHL.png",
+    "width": 459,
+    "height": 58
+  },
+  {
+    "characterId": 259,
+    "className": "com.miniclip.GSwitch.PlayState_ImgwhiteBG",
+    "file": "259_PlayState_ImgwhiteBG.png",
+    "width": 59,
+    "height": 59
+  },
+  {
+    "characterId": 260,
+    "className": "com.miniclip.GSwitch.PlayState_ImgGreenLightCube",
+    "file": "260_PlayState_ImgGreenLightCube.png",
+    "width": 45,
+    "height": 45
+  },
+  {
+    "characterId": 261,
+    "className": "com.miniclip.GSwitch.PlayState_ImgDarkGlassMiddleLeft",
+    "file": "261_PlayState_ImgDarkGlassMiddleLeft.png",
+    "width": 19,
+    "height": 35
+  },
+  {
+    "characterId": 262,
+    "className": "com.miniclip.GSwitch.PlayState_ImgControls",
+    "file": "262_PlayState_ImgControls.png",
+    "width": 640,
+    "height": 510
+  },
+  {
+    "characterId": 263,
+    "className": "com.miniclip.GSwitch.PlayState_ImgGreyHolder",
+    "file": "263_PlayState_ImgGreyHolder.png",
+    "width": 35,
+    "height": 102
+  },
+  {
+    "characterId": 264,
+    "className": "com.miniclip.GSwitch.MenuState_ImgYes",
+    "file": "264_MenuState_ImgYes.png",
+    "width": 148,
+    "height": 65
+  },
+  {
+    "characterId": 265,
+    "className": "com.miniclip.GSwitch.PlayState_Imgcredits_vasco",
+    "file": "265_PlayState_Imgcredits_vasco.png",
+    "width": 233,
+    "height": 211
+  },
+  {
+    "characterId": 266,
+    "className": "com.miniclip.GSwitch.PlayState_ImgHudBg",
+    "file": "266_PlayState_ImgHudBg.png",
+    "width": 640,
+    "height": 73
+  },
+  {
+    "characterId": 267,
+    "className": "com.miniclip.GSwitch.PlayState_ImgCheckpointBeamlight",
+    "file": "267_PlayState_ImgCheckpointBeamlight.png",
+    "width": 19,
+    "height": 84
+  },
+  {
+    "characterId": 268,
+    "className": "com.miniclip.GSwitch.PlayState_ImgYellowSingle",
+    "file": "268_PlayState_ImgYellowSingle.png",
+    "width": 45,
+    "height": 39
+  },
+  {
+    "characterId": 269,
+    "className": "com.miniclip.GSwitch.PlayState_ImgGlassTunnelMiddleHolderLeft",
+    "file": "269_PlayState_ImgGlassTunnelMiddleHolderLeft.png",
+    "width": 16,
+    "height": 35
+  },
+  {
+    "characterId": 270,
+    "className": "com.miniclip.GSwitch.PlayState_ImgRedPipe001png",
+    "file": "270_PlayState_ImgRedPipe001png.png",
+    "width": 113,
+    "height": 63
+  },
+  {
+    "characterId": 271,
+    "className": "com.miniclip.GSwitch.PlayState_ImgDarkPipeTop",
+    "file": "271_PlayState_ImgDarkPipeTop.png",
+    "width": 96,
+    "height": 36
+  },
+  {
+    "characterId": 272,
+    "className": "com.miniclip.GSwitch.PlayState_ImgContinueOver",
+    "file": "272_PlayState_ImgContinueOver.png",
+    "width": 224,
+    "height": 59
+  },
+  {
+    "characterId": 273,
+    "className": "com.miniclip.GSwitch.PlayState_ImgSoundBut",
+    "file": "273_PlayState_ImgSoundBut.png",
+    "width": 54,
+    "height": 29
+  },
+  {
+    "characterId": 274,
+    "className": "com.miniclip.GSwitch.PlayState_ImgSubmitScoreHL",
+    "file": "274_PlayState_ImgSubmitScoreHL.png",
+    "width": 115,
+    "height": 32
+  },
+  {
+    "characterId": 275,
+    "className": "com.miniclip.GSwitch.PlayState_ImgBackground",
+    "file": "275_PlayState_ImgBackground.png",
+    "width": 640,
+    "height": 367
+  },
+  {
+    "characterId": 276,
+    "className": "com.miniclip.GSwitch.PlayState_ImgBridgeBYCenterFRONT",
+    "file": "276_PlayState_ImgBridgeBYCenterFRONT.png",
+    "width": 38,
+    "height": 23
+  },
+  {
+    "characterId": 277,
+    "className": "com.miniclip.GSwitch.PlayState_ImgPuff",
+    "file": "277_PlayState_ImgPuff.png",
+    "width": 384,
+    "height": 256
+  },
+  {
+    "characterId": 278,
+    "className": "com.miniclip.GSwitch.PlayState_ImgFinalTunnelWindow",
+    "file": "278_PlayState_ImgFinalTunnelWindow.png",
+    "width": 20,
+    "height": 20
+  },
+  {
+    "characterId": 279,
+    "className": "com.miniclip.GSwitch.MenuState_ImgMultiButtonOver4",
+    "file": "279_MenuState_ImgMultiButtonOver4.png",
+    "width": 140,
+    "height": 114
+  },
+  {
+    "characterId": 280,
+    "className": "com.miniclip.GSwitch.MenuState_ImgMultiButtonOver3",
+    "file": "280_MenuState_ImgMultiButtonOver3.png",
+    "width": 135,
+    "height": 114
+  },
+  {
+    "characterId": 281,
+    "className": "com.miniclip.GSwitch.PlayState_Imgcredits_miniclip",
+    "file": "281_PlayState_Imgcredits_miniclip.png",
+    "width": 295,
+    "height": 129
+  },
+  {
+    "characterId": 282,
+    "className": "com.miniclip.GSwitch.MenuState_ImgMultiButtonOver2",
+    "file": "282_MenuState_ImgMultiButtonOver2.png",
+    "width": 141,
+    "height": 114
+  },
+  {
+    "characterId": 283,
+    "className": "com.miniclip.GSwitch.PlayState_ImgSubmitScore",
+    "file": "283_PlayState_ImgSubmitScore.png",
+    "width": 115,
+    "height": 32
+  },
+  {
+    "characterId": 284,
+    "className": "com.miniclip.GSwitch.PlayState_Imgcredits_andrew",
+    "file": "284_PlayState_Imgcredits_andrew.png",
+    "width": 299,
+    "height": 192
+  },
+  {
+    "characterId": 285,
+    "className": "com.miniclip.GSwitch.PlayState_Imgcredits_olesja",
+    "file": "285_PlayState_Imgcredits_olesja.png",
+    "width": 340,
+    "height": 192
+  },
+  {
+    "characterId": 286,
+    "className": "com.miniclip.GSwitch.PlayState_Imgcredits_sounds",
+    "file": "286_PlayState_Imgcredits_sounds.png",
+    "width": 148,
+    "height": 34
+  },
+  {
+    "characterId": 287,
+    "className": "com.miniclip.GSwitch.PlayState_ImgSoundButHL",
+    "file": "287_PlayState_ImgSoundButHL.png",
+    "width": 54,
+    "height": 29
+  },
+  {
+    "characterId": 288,
+    "className": "com.miniclip.GSwitch.PlayState_ImgCheckpointRayAnim",
+    "file": "288_PlayState_ImgCheckpointRayAnim.png",
+    "width": 1024,
+    "height": 1024
+  },
+  {
+    "characterId": 289,
+    "className": "com.miniclip.GSwitch.PlayState_ImgGlassTunnelBottomSingle",
+    "file": "289_PlayState_ImgGlassTunnelBottomSingle.png",
+    "width": 202,
+    "height": 35
+  },
+  {
+    "characterId": 290,
+    "className": "com.miniclip.GSwitch.PlayState_ImgGreyHolderLight",
+    "file": "290_PlayState_ImgGreyHolderLight.png",
+    "width": 35,
+    "height": 102
+  },
+  {
+    "characterId": 291,
+    "className": "com.miniclip.GSwitch.PlayState_ImgGetItNowOff",
+    "file": "291_PlayState_ImgGetItNowOff.png",
+    "width": 300,
+    "height": 111
+  },
+  {
+    "characterId": 292,
+    "className": "com.miniclip.GSwitch.PlayState_ImgPauseBut",
+    "file": "292_PlayState_ImgPauseBut.png",
+    "width": 52,
+    "height": 29
+  },
+  {
+    "characterId": 293,
+    "className": "com.miniclip.GSwitch.PlayState_ImgOrangeVerticalBottom",
+    "file": "293_PlayState_ImgOrangeVerticalBottom.png",
+    "width": 45,
+    "height": 38
+  },
+  {
+    "characterId": 294,
+    "className": "com.miniclip.GSwitch.PlayState_ImgCheckpointAnimationBlack",
+    "file": "294_PlayState_ImgCheckpointAnimationBlack.png",
+    "width": 88,
+    "height": 79
+  },
+  {
+    "characterId": 295,
+    "className": "com.miniclip.GSwitch.PlayState_ImgDarkBridgeHolder",
+    "file": "295_PlayState_ImgDarkBridgeHolder.png",
+    "width": 47,
+    "height": 354
+  },
+  {
+    "characterId": 296,
+    "className": "com.miniclip.GSwitch.PlayState_ImgRedPipeTop",
+    "file": "296_PlayState_ImgRedPipeTop.png",
+    "width": 77,
+    "height": 27
+  },
+  {
+    "characterId": 297,
+    "className": "com.miniclip.GSwitch.PlayState_ImgDoubleDarkGlassBottomSingle",
+    "file": "297_PlayState_ImgDoubleDarkGlassBottomSingle.png",
+    "width": 58,
+    "height": 36
+  },
+  {
+    "characterId": 299,
+    "className": "com.miniclip.GSwitch.PlayState_ImgBridgeCrossHolder",
+    "file": "299_PlayState_ImgBridgeCrossHolder.png",
+    "width": 49,
+    "height": 376
+  },
+  {
+    "characterId": 300,
+    "className": "com.miniclip.GSwitch.PlayState_ImgGlassTunnelMiddleHolderRight",
+    "file": "300_PlayState_ImgGlassTunnelMiddleHolderRight.png",
+    "width": 15,
+    "height": 35
+  },
+  {
+    "characterId": 302,
+    "className": "com.miniclip.GSwitch.PlayState_ImgOrange02grey",
+    "file": "302_PlayState_ImgOrange02grey.png",
+    "width": 81,
+    "height": 38
+  },
+  {
+    "characterId": 303,
+    "className": "com.miniclip.GSwitch.PlayState_ImgYellowVerticalBottom",
+    "file": "303_PlayState_ImgYellowVerticalBottom.png",
+    "width": 44,
+    "height": 40
+  },
+  {
+    "characterId": 304,
+    "className": "com.miniclip.GSwitch.PlayState_ImgCheckpointRay",
+    "file": "304_PlayState_ImgCheckpointRay.png",
+    "width": 34,
+    "height": 34
+  },
+  {
+    "characterId": 305,
+    "className": "com.miniclip.GSwitch.PlayState_Imgcredits_programming",
+    "file": "305_PlayState_Imgcredits_programming.png",
+    "width": 273,
+    "height": 40
+  },
+  {
+    "characterId": 307,
+    "className": "com.miniclip.GSwitch.PlayState_ImgSoundButOnHL",
+    "file": "307_PlayState_ImgSoundButOnHL.png",
+    "width": 54,
+    "height": 29
+  },
+  {
+    "characterId": 308,
+    "className": "com.miniclip.GSwitch.MenuState_ImgSoundButOn",
+    "file": "308_MenuState_ImgSoundButOn.png",
+    "width": 39,
+    "height": 27
+  },
+  {
+    "characterId": 309,
+    "className": "com.miniclip.GSwitch.PlayState_ImgBlueLightWall",
+    "file": "309_PlayState_ImgBlueLightWall.png",
+    "width": 74,
+    "height": 85
+  },
+  {
+    "characterId": 310,
+    "className": "com.miniclip.GSwitch.PlayState_ImgBridgeCross002",
+    "file": "310_PlayState_ImgBridgeCross002.png",
+    "width": 49,
+    "height": 40
+  },
+  {
+    "characterId": 311,
+    "className": "com.miniclip.GSwitch.PlayState_ImgsmallShadow",
+    "file": "311_PlayState_ImgsmallShadow.png",
+    "width": 2,
+    "height": 27
+  },
+  {
+    "characterId": 312,
+    "className": "com.miniclip.GSwitch.PlayState_ImgBridgeCross001",
+    "file": "312_PlayState_ImgBridgeCross001.png",
+    "width": 49,
+    "height": 40
+  },
+  {
+    "characterId": 313,
+    "className": "com.miniclip.GSwitch.PlayState_ImgHighIntOver",
+    "file": "313_PlayState_ImgHighIntOver.png",
+    "width": 200,
+    "height": 50
+  },
+  {
+    "characterId": 314,
+    "className": "com.miniclip.GSwitch.PlayState_ImgOrangeLightWallTop",
+    "file": "314_PlayState_ImgOrangeLightWallTop.png",
+    "width": 88,
+    "height": 150
+  },
+  {
+    "characterId": 315,
+    "className": "com.miniclip.GSwitch.PlayState_ImgGreySingleLight",
+    "file": "315_PlayState_ImgGreySingleLight.png",
+    "width": 59,
+    "height": 48
+  },
+  {
+    "characterId": 316,
+    "className": "com.miniclip.GSwitch.MenuState_ImgBackButton",
+    "file": "316_MenuState_ImgBackButton.png",
+    "width": 172,
+    "height": 49
+  },
+  {
+    "characterId": 317,
+    "className": "com.miniclip.GSwitch.PlayState_ImgDoubleDarkGlassFrontMiddle",
+    "file": "317_PlayState_ImgDoubleDarkGlassFrontMiddle.png",
+    "width": 209,
+    "height": 36
+  },
+  {
+    "characterId": 318,
+    "className": "com.miniclip.GSwitch.PlayState_ImgResultYellowSmall",
+    "file": "318_PlayState_ImgResultYellowSmall.png",
+    "width": 90,
+    "height": 83
+  },
+  {
+    "characterId": 319,
+    "className": "com.miniclip.GSwitch.PlayState_ImgOrangeVerticalTop",
+    "file": "319_PlayState_ImgOrangeVerticalTop.png",
+    "width": 45,
+    "height": 38
+  },
+  {
+    "characterId": 320,
+    "className": "com.miniclip.GSwitch.Player_ImgPlayerGreen",
+    "file": "320_Player_ImgPlayerGreen.png",
+    "width": 975,
+    "height": 693
+  },
+  {
+    "characterId": 321,
+    "className": "com.miniclip.GSwitch.PlayState_ImgContinueInt",
+    "file": "321_PlayState_ImgContinueInt.png",
+    "width": 224,
+    "height": 59
+  },
+  {
+    "characterId": 322,
+    "className": "com.miniclip.GSwitch.PlayState_ImgCheckpointMarker",
+    "file": "322_PlayState_ImgCheckpointMarker.png",
+    "width": 34,
+    "height": 34
+  },
+  {
+    "characterId": 323,
+    "className": "com.miniclip.GSwitch.PlayState_ImgResultGreen",
+    "file": "323_PlayState_ImgResultGreen.png",
+    "width": 223,
+    "height": 283
+  },
+  {
+    "characterId": 324,
+    "className": "com.miniclip.GSwitch.PlayState_ImgOrangeLightWallBottom",
+    "file": "324_PlayState_ImgOrangeLightWallBottom.png",
+    "width": 88,
+    "height": 166
+  },
+  {
+    "characterId": 325,
+    "className": "com.miniclip.GSwitch.Player_ImgPlayerYellow",
+    "file": "325_Player_ImgPlayerYellow.png",
+    "width": 975,
+    "height": 693
+  },
+  {
+    "characterId": 326,
+    "className": "com.miniclip.GSwitch.MenuState_ImgMultiButtonOver",
+    "file": "326_MenuState_ImgMultiButtonOver.png",
+    "width": 232,
+    "height": 73
+  },
+  {
+    "characterId": 327,
+    "className": "com.miniclip.GSwitch.PlayState_ImgOrangeVerticalMiddle02",
+    "file": "327_PlayState_ImgOrangeVerticalMiddle02.png",
+    "width": 44,
+    "height": 38
+  },
+  {
+    "characterId": 328,
+    "className": "com.miniclip.GSwitch.MenuState_ImgPlayButtonOver",
+    "file": "328_MenuState_ImgPlayButtonOver.png",
+    "width": 250,
+    "height": 100
+  },
+  {
+    "characterId": 329,
+    "className": "com.miniclip.GSwitch.MenuState_ImgMiniclip",
+    "file": "329_MenuState_ImgMiniclip.png",
+    "width": 300,
+    "height": 100
+  },
+  {
+    "characterId": 330,
+    "className": "com.miniclip.GSwitch.PlayState_ImgEndButton",
+    "file": "330_PlayState_ImgEndButton.png",
+    "width": 128,
+    "height": 50
+  },
+  {
+    "characterId": 331,
+    "className": "com.miniclip.GSwitch.PlayState_ImgIntersticial",
+    "file": "331_PlayState_ImgIntersticial.png",
+    "width": 640,
+    "height": 510
+  },
+  {
+    "characterId": 332,
+    "className": "com.miniclip.GSwitch.MenuState_ImgRightGuy",
+    "file": "332_MenuState_ImgRightGuy.png",
+    "width": 180,
+    "height": 362
+  },
+  {
+    "characterId": 333,
+    "className": "com.miniclip.GSwitch.PlayState_ImgDoubleGlassBottomSimple",
+    "file": "333_PlayState_ImgDoubleGlassBottomSimple.png",
+    "width": 218,
+    "height": 36
+  },
+  {
+    "characterId": 334,
+    "className": "com.miniclip.GSwitch.PlayState_ImgYellowVerticalTop",
+    "file": "334_PlayState_ImgYellowVerticalTop.png",
+    "width": 44,
+    "height": 38
+  },
+  {
+    "characterId": 335,
+    "className": "com.miniclip.GSwitch.PlayState_ImgOrangeVerticalTopLight",
+    "file": "335_PlayState_ImgOrangeVerticalTopLight.png",
+    "width": 45,
+    "height": 38
+  },
+  {
+    "characterId": 336,
+    "className": "com.miniclip.GSwitch.PlayState_ImgDontGetCaught",
+    "file": "336_PlayState_ImgDontGetCaught.png",
+    "width": 448,
+    "height": 230
+  },
+  {
+    "characterId": 337,
+    "className": "com.miniclip.GSwitch.PlayState_ImgDarkWallTop",
+    "file": "337_PlayState_ImgDarkWallTop.png",
+    "width": 88,
+    "height": 150
+  },
+  {
+    "characterId": 338,
+    "className": "com.miniclip.GSwitch.PlayState_ImgOrangePipe",
+    "file": "338_PlayState_ImgOrangePipe.png",
+    "width": 118,
+    "height": 71
+  },
+  {
+    "characterId": 339,
+    "className": "com.miniclip.GSwitch.PlayState_ImgOrange03",
+    "file": "339_PlayState_ImgOrange03.png",
+    "width": 154,
+    "height": 38
+  },
+  {
+    "characterId": 340,
+    "className": "com.miniclip.GSwitch.PlayState_ImgGreyVerticalBottom",
+    "file": "340_PlayState_ImgGreyVerticalBottom.png",
+    "width": 45,
+    "height": 43
+  },
+  {
+    "characterId": 341,
+    "className": "com.miniclip.GSwitch.MenuState_ImgSoundButOnHL",
+    "file": "341_MenuState_ImgSoundButOnHL.png",
+    "width": 39,
+    "height": 27
+  },
+  {
+    "characterId": 342,
+    "className": "com.miniclip.GSwitch.PlayState_ImgOrangeVerticalBottom02Light",
+    "file": "342_PlayState_ImgOrangeVerticalBottom02Light.png",
+    "width": 45,
+    "height": 38
+  },
+  {
+    "characterId": 343,
+    "className": "com.miniclip.GSwitch.PlayState_ImgOrange02light",
+    "file": "343_PlayState_ImgOrange02light.png",
+    "width": 81,
+    "height": 38
+  },
+  {
+    "characterId": 344,
+    "className": "com.miniclip.GSwitch.PlayState_ImgLightCubeGray",
+    "file": "344_PlayState_ImgLightCubeGray.png",
+    "width": 45,
+    "height": 40
+  },
+  {
+    "characterId": 345,
+    "className": "com.miniclip.GSwitch.PlayState_ImgYellowVerticalMiddle",
+    "file": "345_PlayState_ImgYellowVerticalMiddle.png",
+    "width": 42,
+    "height": 37
+  },
+  {
+    "characterId": 346,
+    "className": "com.miniclip.GSwitch.PlayState_ImgOrange03Light",
+    "file": "346_PlayState_ImgOrange03Light.png",
+    "width": 154,
+    "height": 38
+  },
+  {
+    "characterId": 347,
+    "className": "com.miniclip.GSwitch.PlayState_ImgBlueSingle",
+    "file": "347_PlayState_ImgBlueSingle.png",
+    "width": 45,
+    "height": 38
+  },
+  {
+    "characterId": 348,
+    "className": "com.miniclip.GSwitch.PlayState_ImgDoubleDarkGlassBottom",
+    "file": "348_PlayState_ImgDoubleDarkGlassBottom.png",
+    "width": 221,
+    "height": 45
+  },
+  {
+    "characterId": 350,
+    "className": "com.miniclip.GSwitch.MenuState_ImgLogoHL",
+    "file": "350_MenuState_ImgLogoHL.png",
+    "width": 166,
+    "height": 111
+  }
+]

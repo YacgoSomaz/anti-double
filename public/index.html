@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>G-Switch Online</title>
+    <link rel="stylesheet" href="/style.css">
+  </head>
+  <body>
+    <main>
+      <header>
+        <div><p class="eyebrow">原版多人赛道 · 中文联机复刻</p><h1>重力小子：联机版</h1></div>
+        <div class="status"><span id="dot"></span><span id="status">未连接</span><small id="ping">— ms</small></div>
+      </header>
+      <section class="game-shell" aria-label="多人赛道">
+        <canvas id="game" width="640" height="501" aria-label="G-Switch multiplayer course"></canvas>
+        <div id="front-screen" data-phase="loading">
+          <div id="loading-panel"><span>正在加载</span><i></i></div>
+          <div id="menu-panel">
+            <div class="menu-title-mask"><strong>重力小子</strong><span>联机版</span></div>
+            <p>最多 4 人 · 点击或按 <kbd>空格</kbd> 反转重力</p>
+            <label>房间码 <input id="room" maxlength="12" value="RUN4" autocomplete="off"></label>
+            <button id="menu-start">开始联机</button>
+          </div>
+        </div>
+        <div id="overlay" hidden><strong>正在加入房间</strong><span>正在建立联机连接…</span></div>
+        <div id="end-screen" hidden>
+          <div class="end-copy"><strong>本局结束</strong><span id="end-result">已完成全程</span><button id="back-menu">返回主菜单</button></div>
+        </div>
+      </section>
+      <section class="controls">
+        <button id="flip" disabled>反转重力 <kbd>Space</kbd></button>
+        <span>赛道：MP02 → MP03 → MP04</span>
+        <span id="players">等待玩家</span>
+      </section>
+    </main>
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>

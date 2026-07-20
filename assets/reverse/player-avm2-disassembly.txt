@@ -1,0 +1,1775 @@
+class com.miniclip.GSwitch.Player; initializer method #871
+
+=== constructor (method #871; 660 bytes; stack=24; locals=8) ===
+0000  getlocal0        
+0001  pushscope        
+0002  getlocal0        
+0003  jump             ->0011
+0007  decrement        
+0008  lessthan         
+0009  convert_o        
+000a  inclocal_i       4
+000c  coerce_s         
+000d  pushscope        
+000e  increment        
+000f  negate_i         
+0010  negate           
+0011  getlex           Player_ImgPlayer
+0014  initproperty     ImgPlayer
+0017  getlocal0        
+0018  getlex           Player_ImgPlayerYellow
+001b  initproperty     ImgPlayerYellow
+001e  getlocal0        
+001f  getlex           Player_ImgPlayerGreen
+0022  initproperty     ImgPlayerGreen
+0025  getlocal0        
+0026  getlex           Player_ImgPlayerRed
+0029  initproperty     ImgPlayerRed
+002c  getlocal0        
+002d  getlex           Player_SndJump
+0030  initproperty     SndJump
+0033  getlocal0        
+0034  getlex           Player_SndLand
+0037  initproperty     SndLand
+003a  getlocal0        
+003b  getlex           Player_SndExplode
+003e  initproperty     SndExplode
+0041  getlocal0        
+0042  getlex           Player_SndExplode2
+0045  initproperty     SndExplode2
+0048  getlocal0        
+0049  getlex           Player_SndHurt
+004c  initproperty     SndHurt
+004f  getlocal0        
+0050  getlex           Player_SndJam
+0053  initproperty     SndJam
+0056  getlocal0        
+0057  getlocal1        
+0058  getlocal2        
+0059  constructsuper   2
+005b  getlocal0        
+005c  getlocal         6
+005e  initproperty     wins
+0061  getlocal0        
+0062  getlocal         5
+0064  initproperty     _playerNum
+0067  getlocal         5
+0069  pushbyte         1
+006b  ifne             ->007e
+006f  findpropstrict   loadGraphic
+0071  getlocal0        
+0072  getproperty      ImgPlayer
+0075  pushtrue         
+0076  pushtrue         
+0077  pushbyte         65
+0079  pushbyte         77
+007b  callpropvoid     loadGraphic 5
+007e  getlocal         5
+0080  pushbyte         2
+0082  ifne             ->0095
+0086  findpropstrict   loadGraphic
+0088  getlocal0        
+0089  getproperty      ImgPlayerGreen
+008c  pushtrue         
+008d  pushtrue         
+008e  pushbyte         65
+0090  pushbyte         77
+0092  callpropvoid     loadGraphic 5
+0095  getlocal         5
+0097  pushbyte         3
+0099  ifne             ->00ac
+009d  findpropstrict   loadGraphic
+009f  getlocal0        
+00a0  getproperty      ImgPlayerYellow
+00a3  pushtrue         
+00a4  pushtrue         
+00a5  pushbyte         65
+00a7  pushbyte         77
+00a9  callpropvoid     loadGraphic 5
+00ac  getlocal         5
+00ae  pushbyte         4
+00b0  ifne             ->00c3
+00b4  findpropstrict   loadGraphic
+00b6  getlocal0        
+00b7  getproperty      ImgPlayerRed
+00ba  pushtrue         
+00bb  pushtrue         
+00bc  pushbyte         65
+00be  pushbyte         77
+00c0  callpropvoid     loadGraphic 5
+00c3  getlocal0        
+00c4  pushbyte         0
+00c6  initproperty     _restart
+00c9  findproperty     width
+00cb  pushbyte         42
+00cd  initproperty     width
+00cf  findproperty     height
+00d1  pushbyte         48
+00d3  initproperty     height
+00d5  getlex           offset
+00d7  pushbyte         10
+00d9  setproperty      x
+00db  getlex           offset
+00dd  pushbyte         17
+00df  setproperty      y
+00e1  getlex           FlxG
+00e3  getproperty      numPlayers
+00e5  pushbyte         1
+00e7  ifngt            ->00fd
+00eb  findproperty     width
+00ed  pushbyte         37
+00ef  initproperty     width
+00f1  getlex           offset
+00f3  pushbyte         16
+00f5  setproperty      x
+00f7  getlex           offset
+00f9  pushbyte         19
+00fb  setproperty      y
+00fd  getlocal0        
+00fe  getlocal3        
+00ff  initproperty     _savedXVel
+0102  getlex           velocity
+0104  pushdouble       0.0
+0106  setproperty      x
+0108  getlex           velocity
+010a  pushdouble       0.0
+010c  setproperty      y
+010e  pushbyte         80
+0110  convert_u        
+0111  setlocal         7
+0113  getlex           FlxG
+0115  getproperty      credits
+0117  iftrue           ->0125
+011b  getlex           acceleration
+011d  pushdouble       7.740191
+011f  setproperty      x
+0121  jump             ->012b
+0125  getlex           acceleration
+0127  pushdouble       0.0
+0129  setproperty      x
+012b  getlex           acceleration
+012d  pushshort        30000
+0131  setproperty      y
+0133  jump             ->0145
+0137  coerce_a         
+0138  increment        
+0139  declocal_i       2
+013b  getlocal         4
+013d  setlocal         4
+013f  rshift           
+0140  inclocal_i       3
+0142  declocal         4
+0144  equals           
+0145  getlocal0        
+0146  pushshort        200
+0149  initproperty     _jumpPower
+014c  getlex           maxVelocity
+014f  pushdouble       320.755
+0151  setproperty      y
+0153  findpropstrict   addAnimation
+0155  pushstring       'idle'
+0158  pushbyte         0
+015a  newarray         1
+015c  callpropvoid     addAnimation 2
+015f  findpropstrict   addAnimation
+0161  pushstring       'run'
+0164  pushbyte         0
+0166  pushbyte         1
+0168  pushbyte         2
+016a  pushbyte         3
+016c  pushbyte         4
+016e  pushbyte         5
+0170  pushbyte         6
+0172  pushbyte         7
+0174  pushbyte         8
+0176  pushbyte         9
+0178  pushbyte         10
+017a  pushbyte         11
+017c  pushbyte         12
+017e  newarray         13
+0180  pushbyte         20
+0182  callpropvoid     addAnimation 3
+0185  findpropstrict   addAnimation
+0187  pushstring       'fall'
+018a  pushbyte         19
+018c  pushbyte         20
+018e  pushbyte         21
+0190  pushbyte         22
+0192  pushbyte         13
+0194  pushbyte         14
+0196  pushbyte         15
+0198  pushbyte         16
+019a  pushbyte         17
+019c  pushbyte         18
+019e  newarray         10
+01a0  pushbyte         12
+01a2  callpropvoid     addAnimation 3
+01a5  findpropstrict   addAnimation
+01a7  pushstring       'morph'
+01a9  pushbyte         23
+01ab  pushbyte         24
+01ad  pushbyte         25
+01af  pushbyte         26
+01b1  pushbyte         27
+01b3  pushbyte         28
+01b5  pushbyte         29
+01b7  pushbyte         30
+01b9  pushbyte         31
+01bb  pushbyte         32
+01bd  pushbyte         33
+01bf  pushbyte         34
+01c1  pushbyte         35
+01c3  pushbyte         36
+01c5  pushbyte         37
+01c7  pushbyte         38
+01c9  pushbyte         39
+01cb  pushbyte         40
+01cd  pushbyte         41
+01cf  pushbyte         42
+01d1  pushbyte         43
+01d3  pushbyte         44
+01d5  newarray         22
+01d7  pushbyte         20
+01d9  callpropvoid     addAnimation 3
+01dc  findpropstrict   addAnimation
+01de  pushstring       'death'
+01e1  pushbyte         45
+01e3  pushbyte         46
+01e5  pushbyte         47
+01e7  pushbyte         48
+01e9  pushbyte         49
+01eb  pushbyte         50
+01ed  pushbyte         51
+01ef  newarray         7
+01f1  pushbyte         10
+01f3  pushfalse        
+01f4  callpropvoid     addAnimation 4
+01f7  findpropstrict   addAnimation
+01f9  pushstring       'switch'
+01fb  pushbyte         60
+01fd  pushbyte         62
+01ff  pushbyte         64
+0201  pushbyte         66
+0203  pushbyte         70
+0205  pushbyte         72
+0207  pushbyte         74
+0209  newarray         7
+020b  pushbyte         27
+020d  callpropvoid     addAnimation 3
+0210  findpropstrict   addAnimation
+0212  pushstring       'push'
+0214  pushbyte         52
+0216  pushbyte         53
+0218  pushbyte         54
+021a  pushbyte         55
+021c  pushbyte         56
+021e  pushbyte         57
+0220  pushbyte         58
+0222  newarray         7
+0224  pushbyte         15
+0226  callpropvoid     addAnimation 3
+0229  findpropstrict   addAnimation
+022b  pushstring       'landing'
+022e  pushbyte         76
+0230  pushbyte         78
+0232  pushbyte         80
+0234  pushbyte         82
+0236  pushbyte         84
+0238  pushbyte         86
+023a  newarray         6
+023c  pushbyte         30
+023e  callpropvoid     addAnimation 3
+0241  findpropstrict   addAnimation
+0243  pushstring       'slide'
+0246  pushbyte         89
+0248  newarray         1
+024a  pushbyte         20
+024c  callpropvoid     addAnimation 3
+024f  findpropstrict   addAnimation
+0251  pushstring       'runfast'
+0254  pushbyte         91
+0256  pushbyte         92
+0258  pushbyte         93
+025a  pushbyte         94
+025c  pushbyte         95
+025e  pushbyte         96
+0260  pushbyte         97
+0262  pushbyte         98
+0264  pushbyte         99
+0266  newarray         9
+0268  pushbyte         20
+026a  callpropvoid     addAnimation 3
+026d  findpropstrict   play
+026f  jump             ->027f
+0273  divide           
+0274  setlocal2        
+0275  negate           
+0276  astypelate       
+0277  inclocal_i       4
+0279  not              
+027a  convert_i        
+027b  inclocal         4
+027d  inclocal_i       5
+027f  pushstring       'morph'
+0281  callpropvoid     play 1
+0284  getlocal0        
+0285  pushtrue         
+0286  initproperty     myOnFloor
+0288  findpropstrict   addAnimationCallback
+028b  getlocal0        
+028c  getproperty      animationCallback
+028f  callpropvoid     addAnimationCallback 1
+0293  returnvoid       
+
+=== update (method #872; 1233 bytes; stack=4; locals=3) ===
+0000  getlocal0        
+0001  pushscope        
+0002  getlex           angle
+0004  jump             ->0011
+0008  coerce_a         
+0009  getlocal0        
+000a  urshift          
+000b  pop              
+000c  urshift          
+000d  pushundefined    
+000e  modulo           
+000f  pop              
+0010  increment        
+0011  pushbyte         0
+0013  ifnlt            ->0023
+0017  findproperty     angle
+0019  pushbyte         0
+001b  initproperty     angle
+001d  findproperty     angularVelocity
+001f  pushdouble       0.0
+0021  initproperty     angularVelocity
+0023  getlex           angle
+0025  pushshort        180
+0028  ifngt            ->0039
+002c  findproperty     angle
+002e  pushshort        180
+0031  initproperty     angle
+0033  findproperty     angularVelocity
+0035  pushdouble       0.0
+0037  initproperty     angularVelocity
+0039  getlex           _curAnim
+003b  getproperty      name
+003d  pushstring       'morph'
+003f  ifne             ->00b3
+0043  getlex           velocity
+0045  getproperty      x
+0047  pushdouble       0.0
+0049  equals           
+004a  not              
+004b  dup              
+004c  iffalse          ->0058
+0050  pop              
+0051  getlex           FlxG
+0053  getproperty      numPlayers
+0055  pushbyte         1
+0057  equals           
+0058  iffalse          ->006a
+005c  getlocal0        
+005d  getlex           velocity
+005f  getproperty      x
+0061  initproperty     _savedXVel
+0064  getlex           velocity
+0066  pushdouble       0.0
+0068  setproperty      x
+006a  getlex           FlxG
+006c  getproperty      tutorial
+006e  not              
+006f  dup              
+0070  iffalse          ->007b
+0074  pop              
+0075  getlex           FlxG
+0077  getproperty      showIntersticial
+007a  not              
+007b  iffalse          ->0083
+007f  getlocal0        
+0080  callsupervoid    update 0
+0083  getlex           FlxG
+0085  getproperty      tutorial
+0087  convert_b        
+0088  dup              
+0089  iffalse          ->0095
+008d  pop              
+008e  getlex           FlxG
+0090  getproperty      numPlayers
+0092  pushbyte         1
+0094  greaterthan      
+0095  dup              
+0096  iffalse          ->00a1
+009a  pop              
+009b  getlex           _curFrame
+009e  pushbyte         17
+00a0  lessthan         
+00a1  iffalse          ->00a9
+00a5  getlocal0        
+00a6  callsupervoid    update 0
+00a9  getlex           _curFrame
+00ac  pushbyte         17
+00ae  ifne             ->00b2
+00b2  returnvoid       
+00b3  getlex           _curAnim
+00b5  getproperty      name
+00b7  pushstring       'death'
+00ba  ifne             ->00cc
+00be  getlex           FlxG
+00c0  getproperty      showIntersticial
+00c3  iftrue           ->00cb
+00c7  getlocal0        
+00c8  callsupervoid    update 0
+00cb  returnvoid       
+00cc  getlex           dead
+00cf  iffalse          ->00d3
+00d3  getlex           FlxG
+00d5  getproperty      credits
+00d7  iftrue           ->00e1
+00db  getlex           acceleration
+00dd  pushdouble       6.9440061776
+00df  setproperty      x
+00e1  getlex           FlxG
+00e3  getproperty      mouse
+00e6  callproperty     justPressed 0
+00e9  convert_b        
+00ea  dup              
+00eb  iffalse          ->00fb
+00ef  pop              
+00f0  getlex           FlxG
+00f2  getproperty      stage
+00f5  getproperty      mouseY
+00f8  pushbyte         59
+00fa  greaterthan      
+00fb  dup              
+00fc  iftrue           ->010c
+0100  pop              
+0101  getlex           FlxG
+0103  getproperty      keys
+0105  pushstring       'X'
+0108  callproperty     justPressed 1
+010b  convert_b        
+010c  dup              
+010d  iftrue           ->011d
+0111  pop              
+0112  getlex           FlxG
+0114  getproperty      keys
+0116  pushstring       'SPACE'
+0119  callproperty     justPressed 1
+011c  convert_b        
+011d  dup              
+011e  iffalse          ->012a
+0122  pop              
+0123  getlocal0        
+0124  getproperty      _playerNum
+0127  pushbyte         1
+0129  equals           
+012a  dup              
+012b  iftrue           ->0148
+012f  pop              
+0130  getlex           FlxG
+0132  getproperty      keys
+0134  pushstring       'M'
+0137  callproperty     justPressed 1
+013a  convert_b        
+013b  dup              
+013c  iffalse          ->0148
+0140  pop              
+0141  getlocal0        
+0142  getproperty      _playerNum
+0145  pushbyte         2
+0147  equals           
+0148  dup              
+0149  iftrue           ->0166
+014d  pop              
+014e  getlex           FlxG
+0150  getproperty      keys
+0152  pushstring       'P'
+0155  callproperty     justPressed 1
+0158  convert_b        
+0159  dup              
+015a  iffalse          ->0166
+015e  pop              
+015f  getlocal0        
+0160  getproperty      _playerNum
+0163  pushbyte         3
+0165  equals           
+0166  dup              
+0167  iftrue           ->0184
+016b  pop              
+016c  getlex           FlxG
+016e  getproperty      keys
+0170  pushstring       'Q'
+0173  callproperty     justPressed 1
+0176  convert_b        
+0177  dup              
+0178  iffalse          ->0184
+017c  pop              
+017d  getlocal0        
+017e  getproperty      _playerNum
+0181  pushbyte         4
+0183  equals           
+0184  iffalse          ->01b1
+0188  getlex           velocity
+018a  getproperty      y
+018c  pushbyte         0
+018e  ifne             ->01a3
+0192  getlex           x
+0194  pushint          122400
+0196  ifnlt            ->019f
+019a  getlocal0        
+019b  callpropvoid     SwitchGravity 0
+019f  jump             ->01b1
+01a3  getlex           x
+01a5  pushint          122400
+01a7  ifnlt            ->01b1
+01ab  getlocal0        
+01ac  pushdouble       0.35
+01ae  initproperty     _clickDelay
+01b1  getlocal0        
+01b2  getproperty      _clickDelay
+01b5  pushdouble       0.0
+01b7  ifngt            ->01f6
+01bb  getlocal0        
+01bc  getlocal0        
+01bd  getproperty      _clickDelay
+01c0  getlex           FlxG
+01c2  getproperty      elapsed
+01c4  subtract         
+01c5  initproperty     _clickDelay
+01c8  getlocal0        
+01c9  getproperty      _clickDelay
+01cc  pushdouble       0.0
+01ce  ifnlt            ->01d8
+01d2  getlocal0        
+01d3  pushdouble       0.0
+01d5  initproperty     _clickDelay
+01d8  getlex           velocity
+01da  getproperty      y
+01dc  pushbyte         0
+01de  ifne             ->01f6
+01e2  getlocal0        
+01e3  callpropvoid     SwitchGravity 0
+01e7  getlex           FlxG
+01e9  getlocal0        
+01ea  getproperty      SndLand
+01ed  callpropvoid     play 1
+01f0  getlocal0        
+01f1  pushdouble       0.0
+01f3  initproperty     _clickDelay
+01f6  getlex           _curAnim
+01f8  getproperty      name
+01fa  pushstring       'slide'
+01fd  ifne             ->022b
+0201  findpropstrict   changeAnimFrameRate
+0203  pushstring       'slide'
+0206  getlex           velocity
+0208  getproperty      x
+020a  pushdouble       0.03
+020c  multiply         
+020d  callpropvoid     changeAnimFrameRate 2
+0210  getlex           FlxG
+0212  getproperty      mute
+0215  pushfalse        
+0216  ifne             ->0227
+021a  getlex           FlxG
+021c  getproperty      state
+021e  getlex           PlayState
+0220  astypelate       
+0221  getproperty      slideLoop
+0224  callpropvoid     play 0
+0227  jump             ->0249
+022b  getlex           FlxG
+022d  getproperty      state
+022f  getlex           PlayState
+0231  astypelate       
+0232  getproperty      slideLoop
+0235  getproperty      playing
+0238  iffalse          ->0249
+023c  getlex           FlxG
+023e  getproperty      state
+0240  getlex           PlayState
+0242  astypelate       
+0243  getproperty      slideLoop
+0246  callpropvoid     stop 0
+0249  getlex           velocity
+024b  getproperty      y
+024d  pushbyte         0
+024f  ifeq             ->02db
+0253  getlocal0        
+0254  pushfalse        
+0255  initproperty     myOnFloor
+0257  getlex           FlxG
+0259  jump             ->0266
+025d  checkfilter      
+025e  bitor            
+025f  subtract_i       
+0260  multiply         
+0261  lessequals       
+0262  getlocal1        
+0263  instanceof       
+0264  typeof           
+0265  setlocal2        
+0266  getproperty      numPlayers
+0268  pushbyte         1
+026a  equals           
+026b  dup              
+026c  iffalse          ->0279
+0270  pop              
+0271  getlex           _curAnim
+0273  getproperty      name
+0275  pushstring       'switch'
+0277  equals           
+0278  not              
+0279  iffalse          ->0289
+027d  findpropstrict   play
+027f  pushstring       'fall'
+0282  callpropvoid     play 1
+0285  jump             ->02d7
+0289  getlex           FlxG
+028b  getproperty      numPlayers
+028d  pushbyte         1
+028f  ifngt            ->02d7
+0293  getlocal0        
+0294  getproperty      playFallDelay
+0297  pushbyte         0
+0299  equals           
+029a  dup              
+029b  iffalse          ->02a8
+029f  pop              
+02a0  getlex           _curAnim
+02a2  getproperty      name
+02a4  pushstring       'switch'
+02a6  equals           
+02a7  not              
+02a8  dup              
+02a9  iftrue           ->02b6
+02ad  pop              
+02ae  getlex           _curAnim
+02b0  getproperty      name
+02b2  pushstring       'slide'
+02b5  equals           
+02b6  iffalse          ->02c6
+02ba  findpropstrict   play
+02bc  pushstring       'fall'
+02bf  callpropvoid     play 1
+02c2  jump             ->02d7
+02c6  getlocal0        
+02c7  dup              
+02c8  setlocal1        
+02c9  getproperty      playFallDelay
+02cc  decrement_i      
+02cd  setlocal2        
+02ce  getlocal1        
+02cf  getlocal2        
+02d0  setproperty      playFallDelay
+02d3  kill             2
+02d5  kill             1
+02d7  jump             ->0399
+02db  getlex           velocity
+02dd  getproperty      x
+02df  pushbyte         0
+02e1  ifne             ->02fb
+02e5  getlocal0        
+02e6  pushtrue         
+02e7  initproperty     myOnFloor
+02e9  getlocal0        
+02ea  pushbyte         4
+02ec  initproperty     playFallDelay
+02ef  findpropstrict   play
+02f1  pushstring       'idle'
+02f4  callpropvoid     play 1
+02f7  jump             ->0399
+02fb  getlex           velocity
+02fd  getproperty      y
+02ff  pushbyte         0
+0301  ifne             ->0399
+0305  getlex           _curAnim
+0307  getproperty      name
+0309  pushstring       'switch'
+030b  ifeq             ->0313
+030f  getlocal0        
+0310  pushtrue         
+0311  initproperty     myOnFloor
+0313  getlocal0        
+0314  pushtrue         
+0315  initproperty     myOnFloor
+0317  getlocal0        
+0318  pushbyte         4
+031a  initproperty     playFallDelay
+031d  getlex           _curAnim
+031f  getproperty      name
+0321  pushstring       'fall'
+0324  equals           
+0325  dup              
+0326  iffalse          ->0333
+032a  pop              
+032b  getlex           _curAnim
+032d  getproperty      name
+032f  pushstring       'switch'
+0331  equals           
+0332  not              
+0333  iffalse          ->034a
+0337  findpropstrict   play
+0339  pushstring       'landing'
+033c  callpropvoid     play 1
+033f  getlex           FlxG
+0341  getlocal0        
+0342  getproperty      SndLand
+0345  pushdouble       0.7
+0347  callpropvoid     play 2
+034a  getlex           _curAnim
+034c  getproperty      name
+034e  pushstring       'push'
+0350  equals           
+0351  not              
+0352  dup              
+0353  iffalse          ->0360
+0357  pop              
+0358  getlex           _curAnim
+035a  getproperty      name
+035c  pushstring       'switch'
+035e  equals           
+035f  not              
+0360  dup              
+0361  iffalse          ->036f
+0365  pop              
+0366  getlex           _curAnim
+0368  getproperty      name
+036a  pushstring       'landing'
+036d  equals           
+036e  not              
+036f  dup              
+0370  iffalse          ->037e
+0374  pop              
+0375  getlex           _curAnim
+0377  getproperty      name
+0379  pushstring       'slide'
+037c  equals           
+037d  not              
+037e  dup              
+037f  iffalse          ->038d
+0383  pop              
+0384  getlex           _curAnim
+0386  getproperty      name
+0388  pushstring       'runfast'
+038b  equals           
+038c  not              
+038d  iffalse          ->0399
+0391  findpropstrict   play
+0393  pushstring       'run'
+0396  callpropvoid     play 1
+0399  getlex           _curAnim
+039b  getproperty      name
+039d  pushstring       'run'
+03a0  ifne             ->03c5
+03a4  findpropstrict   changeAnimFrameRate
+03a6  pushstring       'run'
+03a9  getlex           velocity
+03ab  getproperty      x
+03ad  pushdouble       0.088
+03af  multiply         
+03b0  callpropvoid     changeAnimFrameRate 2
+03b3  getlex           velocity
+03b5  getproperty      x
+03b7  pushdouble       513.208
+03b9  ifnge            ->03c5
+03bd  findpropstrict   play
+03bf  pushstring       'runfast'
+03c2  callpropvoid     play 1
+03c5  getlex           _curAnim
+03c7  getproperty      name
+03c9  pushstring       'runfast'
+03cc  ifne             ->03f1
+03d0  findpropstrict   changeAnimFrameRate
+03d2  pushstring       'runfast'
+03d5  getlex           velocity
+03d7  getproperty      x
+03d9  pushdouble       0.088
+03db  multiply         
+03dc  callpropvoid     changeAnimFrameRate 2
+03df  getlex           velocity
+03e1  getproperty      x
+03e3  pushdouble       513.208
+03e5  ifnlt            ->03f1
+03e9  findpropstrict   play
+03eb  pushstring       'run'
+03ee  callpropvoid     play 1
+03f1  getlex           _curAnim
+03f3  getproperty      name
+03f5  pushstring       'push'
+03f7  ifne             ->0409
+03fb  findpropstrict   changeAnimFrameRate
+03fd  pushstring       'push'
+03ff  getlex           velocity
+0401  getproperty      x
+0403  pushdouble       0.03
+0405  multiply         
+0406  callpropvoid     changeAnimFrameRate 2
+0409  getlex           _curAnim
+040b  getproperty      name
+040d  pushstring       'slide'
+0410  ifne             ->0423
+0414  findpropstrict   changeAnimFrameRate
+0416  pushstring       'slide'
+0419  getlex           velocity
+041b  getproperty      x
+041d  pushdouble       0.03
+041f  multiply         
+0420  callpropvoid     changeAnimFrameRate 2
+0423  getlex           _curAnim
+0425  getproperty      name
+0427  pushstring       'landing'
+042a  ifne             ->0438
+042e  findpropstrict   changeAnimFrameRate
+0430  pushstring       'landing'
+0433  pushbyte         67
+0435  callpropvoid     changeAnimFrameRate 2
+0438  getlex           FlxG
+043a  getproperty      numPlayers
+043c  pushbyte         1
+043e  ifngt            ->0477
+0442  getlex           x
+0444  getlex           FlxG
+0446  getproperty      state
+0448  getlex           PlayState
+044a  astypelate       
+044b  getproperty      _camera
+044d  getproperty      x
+044f  pushshort        350
+0452  subtract         
+0453  ifnlt            ->045c
+0457  getlocal0        
+0458  callpropvoid     kill 0
+045c  getlex           y
+045e  pushshort        500
+0461  ifngt            ->046a
+0465  getlocal0        
+0466  callpropvoid     kill 0
+046a  getlex           y
+046c  pushbyte         -60
+046e  ifnlt            ->0477
+0472  getlocal0        
+0473  callpropvoid     kill 0
+0477  getlex           FlxG
+0479  getproperty      numPlayers
+047b  pushbyte         1
+047d  ifne             ->04aa
+0481  getlex           x
+0483  getlex           FlxG
+0485  getproperty      state
+0487  getlex           PlayState
+0489  astypelate       
+048a  getproperty      _camera
+048c  getproperty      x
+048e  pushshort        330
+0491  subtract         
+0492  lessthan         
+0493  dup              
+0494  iffalse          ->049e
+0498  pop              
+0499  getlex           FlxG
+049b  getproperty      credits
+049d  not              
+049e  iffalse          ->04aa
+04a2  findpropstrict   play
+04a4  pushstring       'death'
+04a7  callpropvoid     play 1
+04aa  getlex           FlxG
+04ac  getproperty      tutorial
+04ae  not              
+04af  jump             ->04bc
+04b3  increment_i      
+04b4  setlocal2        
+04b5  subtract         
+04b6  bitnot           
+04b7  setlocal3        
+04b8  getlocal1        
+04b9  convert_d        
+04ba  greaterthan      
+04bb  negate           
+04bc  dup              
+04bd  iffalse          ->04c8
+04c1  pop              
+04c2  getlex           FlxG
+04c4  getproperty      showIntersticial
+04c7  not              
+04c8  iffalse          ->04d0
+04cc  getlocal0        
+04cd  callsupervoid    update 0
+04d0  returnvoid       
+
+=== hitBottom (method #873; 23 bytes; stack=3; locals=3) ===
+0000  getlocal0        
+0001  pushscope        
+0002  getlocal0        
+0003  jump             ->0010
+0007  strictequals     
+0008  dxnslate         
+0009  convert_u        
+000a  bitxor           
+000b  getlocal2        
+000c  negate           
+000d  setlocal3        
+000e  bitor            
+000f  rshift           
+0010  getlocal1        
+0011  getlocal2        
+0012  callsuper        hitBottom 2
+0016  returnvalue      
+
+=== hurt (method #874; 138 bytes; stack=3; locals=2) ===
+0000  getlocal0        
+0001  pushscope        
+0002  pushbyte         0
+0004  jump             ->0011
+0008  equals           
+0009  getlocal2        
+000a  pushscope        
+000b  negate           
+000c  multiply         
+000d  coerce_s         
+000e  bitor            
+000f  strictequals     
+0010  pushscope        
+0011  convert_d        
+0012  setlocal1        
+0013  findpropstrict   flickering
+0016  callproperty     flickering 0
+001a  iffalse          ->001f
+001e  returnvoid       
+001f  getlex           FlxG
+0021  getlocal0        
+0022  getproperty      SndHurt
+0025  callpropvoid     play 1
+0028  findpropstrict   flicker
+002b  pushdouble       1.3
+002d  callpropvoid     flicker 1
+0031  getlex           FlxG
+0033  jump             ->0040
+0037  convert_d        
+0038  convert_u        
+0039  bitand           
+003a  getglobalscope   
+003b  getlocal0        
+003c  convert_s        
+003d  not              
+003e  convert_s        
+003f  bitxor           
+0040  getproperty      score
+0042  pushshort        1000
+0045  ifngt            ->0055
+0049  getlex           FlxG
+004b  getlex           FlxG
+004d  getproperty      score
+004f  pushshort        1000
+0052  subtract         
+0053  setproperty      score
+0055  getlex           velocity
+0057  getproperty      x
+0059  pushbyte         0
+005b  ifngt            ->007a
+005f  getlex           velocity
+0061  getlex           maxVelocity
+0064  getproperty      x
+0066  negate           
+0067  jump             ->0074
+006b  bitnot           
+006c  bitnot           
+006d  pushnull         
+006e  subtract         
+006f  dup              
+0070  equals           
+0071  checkfilter      
+0072  divide           
+0073  negate           
+0074  setproperty      x
+0076  jump             ->0083
+007a  getlex           velocity
+007c  getlex           maxVelocity
+007f  getproperty      x
+0081  setproperty      x
+0083  getlocal0        
+0084  getlocal1        
+0085  callsupervoid    hurt 1
+0089  returnvoid       
+
+=== kill (method #875; 247 bytes; stack=2; locals=3) ===
+0000  getlocal0        
+0001  pushscope        
+0002  getlex           dead
+0005  jump             ->0012
+0009  setlocal3        
+000a  increment_i      
+000b  convert_u        
+000c  pushnull         
+000d  istypelate       
+000e  modulo           
+000f  convert_o        
+0010  newactivation    
+0011  decrement_i      
+0012  iffalse          ->0017
+0016  returnvoid       
+0017  findproperty     solid
+001a  pushfalse        
+001b  initproperty     solid
+001e  findproperty     exists
+0020  pushtrue         
+0021  initproperty     exists
+0023  findproperty     visible
+0025  pushfalse        
+0026  initproperty     visible
+0028  getlex           FlxG
+002a  getproperty      numPlayers
+002c  pushbyte         1
+002e  ifngt            ->00f1
+0032  getlocal0        
+0033  getlex           currentStanding
+0036  initproperty     standing
+0039  getlocal0        
+003a  getproperty      standing
+003d  pushbyte         1
+003f  ifne             ->00d1
+0043  getlocal0        
+0044  getproperty      _playerNum
+0047  pushbyte         1
+0049  ifne             ->005f
+004d  getlex           PlayState
+004f  dup              
+0050  setlocal1        
+0051  getproperty      p1wins
+0054  increment        
+0055  setlocal2        
+0056  getlocal1        
+0057  getlocal2        
+0058  setproperty      p1wins
+005b  kill             2
+005d  kill             1
+005f  getlocal0        
+0060  getproperty      _playerNum
+0063  pushbyte         2
+0065  ifne             ->0088
+0069  getlex           PlayState
+006b  dup              
+006c  setlocal1        
+006d  getproperty      p2wins
+0070  increment        
+0071  setlocal2        
+0072  jump             ->007f
+0076  equals           
+0077  multiply_i       
+0078  pushnull         
+0079  newactivation    
+007a  hasnext          
+007b  convert_u        
+007c  decrement_i      
+007d  nextvalue        
+007e  checkfilter      
+007f  getlocal1        
+0080  getlocal2        
+0081  setproperty      p2wins
+0084  kill             2
+0086  kill             1
+0088  getlocal0        
+0089  getproperty      _playerNum
+008c  pushbyte         3
+008e  ifne             ->00a4
+0092  getlex           PlayState
+0094  dup              
+0095  setlocal1        
+0096  getproperty      p3wins
+0099  increment        
+009a  setlocal2        
+009b  getlocal1        
+009c  getlocal2        
+009d  setproperty      p3wins
+00a0  kill             2
+00a2  kill             1
+00a4  getlocal0        
+00a5  getproperty      _playerNum
+00a8  pushbyte         4
+00aa  ifne             ->00c0
+00ae  getlex           PlayState
+00b0  dup              
+00b1  setlocal1        
+00b2  getproperty      p4wins
+00b5  increment        
+00b6  setlocal2        
+00b7  getlocal1        
+00b8  getlocal2        
+00b9  setproperty      p4wins
+00bc  kill             2
+00be  kill             1
+00c0  getlocal0        
+00c1  dup              
+00c2  setlocal1        
+00c3  getproperty      wins
+00c6  increment        
+00c7  setlocal2        
+00c8  getlocal1        
+00c9  getlocal2        
+00ca  setproperty      wins
+00cd  kill             2
+00cf  kill             1
+00d1  findpropstrict   currentStanding
+00d4  dup              
+00d5  setlocal1        
+00d6  getproperty      currentStanding
+00d9  jump             ->00e6
+00dd  convert_o        
+00de  modulo           
+00df  swap             
+00e0  bitor            
+00e1  checkfilter      
+00e2  urshift          
+00e3  coerce_a         
+00e4  bitxor           
+00e5  setlocal3        
+00e6  decrement_i      
+00e7  setlocal2        
+00e8  getlocal1        
+00e9  getlocal2        
+00ea  setproperty      currentStanding
+00ed  kill             2
+00ef  kill             1
+00f1  getlocal0        
+00f2  callsupervoid    kill 0
+00f6  returnvoid       
+
+=== SwitchGravity (method #876; 587 bytes; stack=3; locals=3) ===
+0000  getlocal0        
+0001  pushscope        
+0002  getlex           _curAnim
+0004  jump             ->0011
+0008  convert_i        
+0009  getlocal2        
+000a  pushfalse        
+000b  pushnan          
+000c  greaterequals    
+000d  swap             
+000e  getlocal0        
+000f  getlocal3        
+0010  decrement_i      
+0011  getproperty      name
+0013  pushstring       'morph'
+0015  ifeq             ->0029
+0019  findpropstrict   play
+001b  pushstring       'switch'
+001d  pushtrue         
+001e  callpropvoid     play 2
+0021  getlex           FlxG
+0023  getlex           SndSwitch
+0026  callpropvoid     play 1
+0029  getlocal0        
+002a  pushfalse        
+002b  initproperty     myOnFloor
+002d  getlex           acceleration
+002f  getlex           acceleration
+0031  getproperty      y
+0033  pushbyte         -1
+0035  multiply         
+0036  setproperty      y
+0038  getlex           facing
+003a  getlex           LEFT
+003d  ifne             ->013f
+0041  findproperty     angle
+0043  pushshort        180
+0046  initproperty     angle
+0048  findproperty     facing
+004a  getlex           RIGHT
+004d  initproperty     facing
+004f  getlex           offset
+0051  pushbyte         17
+0053  setproperty      y
+0055  getlex           FlxG
+0057  getproperty      numPlayers
+0059  pushbyte         1
+005b  ifngt            ->0065
+005f  getlex           offset
+0061  pushbyte         19
+0063  setproperty      y
+0065  getlex           _curAnim
+0067  getproperty      name
+0069  pushstring       'morph'
+006b  ifeq             ->013b
+006f  getlex           FlxG
+0071  getproperty      state
+0073  getlex           PlayState
+0075  astypelate       
+0076  getproperty      puffs
+0078  getproperty      members
+007a  getlex           PlayState
+007c  getproperty      puffIndex
+007e  getproperty      mn#1445
+0081  pushtrue         
+0082  setproperty      org.flixel:FlxRect
+0085  getlex           FlxG
+0087  getproperty      state
+0089  getlex           PlayState
+008b  astypelate       
+008c  getproperty      puffs
+008e  getproperty      members
+0090  getlex           PlayState
+0092  getproperty      puffIndex
+0094  getproperty      mn#1445
+0097  pushstring       'puff'
+009a  pushtrue         
+009b  callpropvoid     org.flixel:FlxRect 2
+009f  getlex           FlxG
+00a1  getproperty      state
+00a3  getlex           PlayState
+00a5  astypelate       
+00a6  getproperty      puffs
+00a8  getproperty      members
+00aa  getlex           PlayState
+00ac  getproperty      puffIndex
+00ae  getproperty      mn#1445
+00b1  getlex           x
+00b3  pushbyte         37
+00b5  subtract         
+00b6  setproperty      org.flixel:FlxRect
+00b9  getlex           FlxG
+00bb  getproperty      state
+00bd  getlex           PlayState
+00bf  astypelate       
+00c0  getproperty      puffs
+00c2  getproperty      members
+00c4  getlex           PlayState
+00c6  getproperty      puffIndex
+00c8  getproperty      mn#1445
+00cb  getlex           y
+00cd  pushbyte         55
+00cf  subtract         
+00d0  setproperty      org.flixel:FlxRect
+00d3  getlex           FlxG
+00d5  getproperty      state
+00d7  getlex           PlayState
+00d9  astypelate       
+00da  getproperty      puffs
+00dc  getproperty      members
+00de  getlex           PlayState
+00e0  getproperty      puffIndex
+00e2  getproperty      mn#1445
+00e5  pushshort        180
+00e8  setproperty      org.flixel:FlxRect
+00eb  getlex           FlxG
+00ed  getproperty      state
+00ef  getlex           PlayState
+00f1  astypelate       
+00f2  getproperty      puffs
+00f4  getproperty      members
+00f6  getlex           PlayState
+00f8  getproperty      puffIndex
+00fa  getproperty      mn#1445
+00fd  getlex           LEFT
+0100  setproperty      org.flixel:FlxRect
+0103  getlex           PlayState
+0105  dup              
+0106  setlocal1        
+0107  getproperty      puffIndex
+0109  increment_i      
+010a  setlocal2        
+010b  getlocal1        
+010c  getlocal2        
+010d  setproperty      puffIndex
+010f  kill             2
+0111  kill             1
+0113  jump             ->0120
+0117  checkfilter      
+0118  bitand           
+0119  rshift           
+011a  lessequals       
+011b  getlocal0        
+011c  convert_u        
+011d  greaterequals    
+011e  dup              
+011f  pushwith         
+0120  getlex           PlayState
+0122  getproperty      puffIndex
+0124  getlex           FlxG
+0126  getproperty      state
+0128  getlex           PlayState
+012a  astypelate       
+012b  getproperty      puffs
+012d  getproperty      members
+012f  getproperty      length
+0131  ifnge            ->013b
+0135  getlex           PlayState
+0137  pushbyte         0
+0139  setproperty      puffIndex
+013b  jump             ->0237
+013f  findproperty     angle
+0141  pushbyte         0
+0143  initproperty     angle
+0145  findproperty     facing
+0147  getlex           LEFT
+014a  initproperty     facing
+014c  getlex           offset
+014e  pushbyte         7
+0150  setproperty      y
+0152  getlex           FlxG
+0154  getproperty      numPlayers
+0156  pushbyte         1
+0158  ifngt            ->0162
+015c  getlex           offset
+015e  pushbyte         9
+0160  setproperty      y
+0162  getlex           _curAnim
+0164  getproperty      name
+0166  pushstring       'morph'
+0168  ifeq             ->0237
+016c  getlex           FlxG
+016e  getproperty      state
+0170  getlex           PlayState
+0172  astypelate       
+0173  getproperty      puffs
+0175  getproperty      members
+0177  getlex           PlayState
+0179  getproperty      puffIndex
+017b  getproperty      mn#1445
+017e  pushtrue         
+017f  setproperty      org.flixel:FlxRect
+0182  getlex           FlxG
+0184  getproperty      state
+0186  getlex           PlayState
+0188  astypelate       
+0189  getproperty      puffs
+018b  getproperty      members
+018d  getlex           PlayState
+018f  getproperty      puffIndex
+0191  getproperty      mn#1445
+0194  pushstring       'puff'
+0197  pushtrue         
+0198  callpropvoid     org.flixel:FlxRect 2
+019c  getlex           FlxG
+019e  getproperty      state
+01a0  getlex           PlayState
+01a2  astypelate       
+01a3  getproperty      puffs
+01a5  getproperty      members
+01a7  getlex           PlayState
+01a9  getproperty      puffIndex
+01ab  getproperty      mn#1445
+01ae  getlex           x
+01b0  pushbyte         37
+01b2  subtract         
+01b3  setproperty      org.flixel:FlxRect
+01b6  getlex           FlxG
+01b8  getproperty      state
+01ba  getlex           PlayState
+01bc  astypelate       
+01bd  getproperty      puffs
+01bf  getproperty      members
+01c1  getlex           PlayState
+01c3  getproperty      puffIndex
+01c5  getproperty      mn#1445
+01c8  getlex           y
+01ca  pushbyte         20
+01cc  subtract         
+01cd  setproperty      org.flixel:FlxRect
+01d0  getlex           FlxG
+01d2  getproperty      state
+01d4  getlex           PlayState
+01d6  astypelate       
+01d7  getproperty      puffs
+01d9  getproperty      members
+01db  getlex           PlayState
+01dd  getproperty      puffIndex
+01df  getproperty      mn#1445
+01e2  pushbyte         0
+01e4  setproperty      org.flixel:FlxRect
+01e7  getlex           FlxG
+01e9  getproperty      state
+01eb  getlex           PlayState
+01ed  astypelate       
+01ee  getproperty      puffs
+01f0  getproperty      members
+01f2  getlex           PlayState
+01f4  getproperty      puffIndex
+01f6  getproperty      mn#1445
+01f9  getlex           RIGHT
+01fc  setproperty      org.flixel:FlxRect
+01ff  getlex           PlayState
+0201  dup              
+0202  setlocal1        
+0203  getproperty      puffIndex
+0205  increment_i      
+0206  setlocal2        
+0207  getlocal1        
+0208  getlocal2        
+0209  setproperty      puffIndex
+020b  kill             2
+020d  kill             1
+020f  getlex           PlayState
+0211  getproperty      puffIndex
+0213  getlex           FlxG
+0215  getproperty      state
+0217  getlex           PlayState
+0219  astypelate       
+021a  getproperty      puffs
+021c  getproperty      members
+021e  getproperty      length
+0220  ifnge            ->0237
+0224  getlex           PlayState
+0226  pushbyte         0
+0228  jump             ->0235
+022c  convert_o        
+022d  nextname         
+022e  convert_o        
+022f  lessthan         
+0230  lshift           
+0231  modulo           
+0232  coerce_s         
+0233  setlocal3        
+0234  lessthan         
+0235  setproperty      puffIndex
+0237  getlex           FlxG
+0239  getproperty      numPlayers
+023b  pushbyte         1
+023d  ifne             ->024a
+0241  getlex           FlxG
+0243  getproperty      enemySwitch
+0245  getlex           x
+0247  callpropvoid     push 1
+024a  returnvoid       
+
+=== animationCallback (method #877; 556 bytes; stack=3; locals=4) ===
+0000  getlocal0        
+0001  pushscope        
+0002  getlocal1        
+0003  jump             ->0012
+0007  kill             2
+0009  setlocal2        
+000a  setlocal2        
+000b  strictequals     
+000c  getlocal2        
+000d  setlocal2        
+000e  dxnslate         
+000f  convert_o        
+0010  kill             2
+0012  pushstring       'morph'
+0014  equals           
+0015  dup              
+0016  iffalse          ->001f
+001a  pop              
+001b  getlocal3        
+001c  pushbyte         24
+001e  equals           
+001f  iffalse          ->0035
+0023  getlocal0        
+0024  getproperty      _playerNum
+0027  pushbyte         1
+0029  ifne             ->0035
+002d  getlex           FlxG
+002f  getlex           SndMorph
+0032  callpropvoid     play 1
+0035  getlocal1        
+0036  pushstring       'morph'
+0038  equals           
+0039  dup              
+003a  iffalse          ->0043
+003e  pop              
+003f  getlocal3        
+0040  pushbyte         44
+0042  equals           
+0043  iffalse          ->0112
+0047  findpropstrict   play
+0049  pushstring       'run'
+004c  callpropvoid     play 1
+004f  getlocal0        
+0050  pushtrue         
+0051  initproperty     myOnFloor
+0053  getlex           FlxG
+0055  getproperty      useCam
+0058  iffalse          ->006d
+005c  getlex           FlxG
+005e  getlex           FlxG
+0060  getproperty      state
+0062  getlex           PlayState
+0064  astypelate       
+0065  getproperty      _camera
+0067  pushbyte         35
+0069  callpropvoid     follow 2
+006d  getlex           velocity
+006f  getlocal0        
+0070  getproperty      _savedXVel
+0073  setproperty      x
+0075  getlex           FlxG
+0077  getproperty      numPlayers
+0079  pushbyte         1
+007b  ifngt            ->0112
+007f  getlex           FlxG
+0081  getproperty      round
+0083  pushbyte         1
+0085  equals           
+0086  dup              
+0087  iftrue           ->0093
+008b  pop              
+008c  getlex           FlxG
+008e  getproperty      round
+0090  pushbyte         4
+0092  equals           
+0093  iffalse          ->00a6
+0097  getlex           FlxG
+0099  getproperty      state
+009b  getlex           PlayState
+009d  astypelate       
+009e  getproperty      _camera
+00a0  getproperty      velocity
+00a2  pushdouble       160.3775
+00a4  setproperty      x
+00a6  getlex           FlxG
+00a8  getproperty      round
+00aa  pushbyte         2
+00ac  equals           
+00ad  dup              
+00ae  iftrue           ->00ba
+00b2  pop              
+00b3  getlex           FlxG
+00b5  getproperty      round
+00b7  pushbyte         5
+00b9  equals           
+00ba  iffalse          ->00cd
+00be  getlex           FlxG
+00c0  getproperty      state
+00c2  getlex           PlayState
+00c4  astypelate       
+00c5  getproperty      _camera
+00c7  getproperty      velocity
+00c9  pushdouble       153.9624
+00cb  setproperty      x
+00cd  getlex           FlxG
+00cf  getproperty      round
+00d1  pushbyte         3
+00d3  equals           
+00d4  dup              
+00d5  iftrue           ->00e1
+00d9  pop              
+00da  getlex           FlxG
+00dc  getproperty      round
+00de  pushbyte         6
+00e0  equals           
+00e1  iffalse          ->0103
+00e5  getlex           FlxG
+00e7  getproperty      state
+00e9  getlex           PlayState
+00eb  astypelate       
+00ec  getproperty      _camera
+00ee  getproperty      velocity
+00f0  pushdouble       153.9624
+00f2  setproperty      x
+00f4  jump             ->0103
+00f8  setlocal3        
+00f9  pushtrue         
+00fa  getlocal2        
+00fb  equals           
+00fc  declocal         2
+00fe  kill             2
+0100  pushwith         
+0101  getlocal3        
+0102  increment_i      
+0103  getlex           FlxG
+0105  getproperty      state
+0107  getlex           PlayState
+0109  astypelate       
+010a  getproperty      _camera
+010c  getproperty      acceleration
+010e  pushdouble       7.740191
+0110  setproperty      x
+0112  getlocal1        
+0113  pushstring       'death'
+0116  equals           
+0117  dup              
+0118  iffalse          ->0121
+011c  pop              
+011d  getlocal3        
+011e  pushbyte         51
+0120  equals           
+0121  dup              
+0122  iffalse          ->012e
+0126  pop              
+0127  getlex           FlxG
+0129  getproperty      numPlayers
+012b  pushbyte         1
+012d  equals           
+012e  iffalse          ->0142
+0132  findproperty     visible
+0134  pushfalse        
+0135  initproperty     visible
+0137  getlocal0        
+0138  callpropvoid     kill 0
+013c  getlex           FlxG
+013e  pushdouble       1.6
+0140  setproperty      timeToReload
+0142  getlocal1        
+0143  pushstring       'landing'
+0146  equals           
+0147  dup              
+0148  iffalse          ->0151
+014c  pop              
+014d  getlocal3        
+014e  pushbyte         86
+0150  equals           
+0151  iffalse          ->015d
+0155  findpropstrict   play
+0157  pushstring       'run'
+015a  callpropvoid     play 1
+015d  getlocal1        
+015e  pushstring       'switch'
+0160  ifne             ->01fc
+0164  getlex           facing
+0166  getlex           RIGHT
+0169  ifne             ->0183
+016d  getlex           angle
+016f  pushbyte         0
+0171  ifngt            ->017f
+0175  findproperty     angularVelocity
+0177  pushshort        4294965496
+017d  initproperty     angularVelocity
+017f  jump             ->019c
+0183  getlex           facing
+0185  getlex           LEFT
+0188  ifne             ->019c
+018c  getlex           angle
+018e  pushshort        180
+0191  ifnlt            ->019c
+0195  findproperty     angularVelocity
+0197  pushshort        1800
+019a  initproperty     angularVelocity
+019c  getlocal3        
+019d  pushbyte         74
+019f  ifne             ->01b3
+01a3  findpropstrict   play
+01a5  pushstring       'fall'
+01a8  callpropvoid     play 1
+01ab  getlocal0        
+01ac  pushfalse        
+01ad  initproperty     myOnFloor
+01af  jump             ->01f8
+01b3  getlocal3        
+01b4  pushbyte         60
+01b6  greaterthan      
+01b7  dup              
+01b8  iffalse          ->01c1
+01bc  pop              
+01bd  getlocal0        
+01be  getproperty      myOnFloor
+01c0  convert_b        
+01c1  iffalse          ->01f8
+01c5  getlex           facing
+01c7  getlex           RIGHT
+01ca  ifne             ->01d8
+01ce  findproperty     angle
+01d0  pushbyte         0
+01d2  initproperty     angle
+01d4  jump             ->01df
+01d8  findproperty     angle
+01da  pushshort        180
+01dd  initproperty     angle
+01df  findproperty     angularVelocity
+01e1  pushdouble       0.0
+01e3  initproperty     angularVelocity
+01e5  findpropstrict   play
+01e7  pushstring       'landing'
+01ea  callpropvoid     play 1
+01ed  getlex           FlxG
+01ef  getlocal0        
+01f0  getproperty      SndLand
+01f3  pushdouble       0.7
+01f5  callpropvoid     play 2
+01f8  jump             ->022b
+01fc  getlex           facing
+01fe  getlex           RIGHT
+0201  ifne             ->021e
+0205  findproperty     angle
+0207  jump             ->0216
+020b  inclocal_i       2
+020d  declocal_i       2
+020f  negate_i         
+0210  getlocal2        
+0211  convert_b        
+0212  coerce_a         
+0213  convert_i        
+0214  getlocal2        
+0215  getlocal2        
+0216  pushbyte         0
+0218  initproperty     angle
+021a  jump             ->0225
+021e  findproperty     angle
+0220  pushshort        180
+0223  initproperty     angle
+0225  findproperty     angularVelocity
+0227  pushdouble       0.0
+0229  initproperty     angularVelocity
+022b  returnvoid       
+
+=== hitRight (method #878; 119 bytes; stack=2; locals=3) ===
+0000  getlocal0        
+0001  pushscope        
+0002  getlex           _curAnim
+0004  jump             ->0011
+0008  negate_i         
+0009  getglobalscope   
+000a  negate_i         
+000b  strictequals     
+000c  urshift          
+000d  swap             
+000e  decrement_i      
+000f  swap             
+0010  bitor            
+0011  getproperty      name
+0013  pushstring       'death'
+0016  equals           
+0017  not              
+0018  dup              
+0019  iffalse          ->0033
+001d  pop              
+001e  getlex           _curAnim
+0020  getproperty      name
+0022  pushstring       'switch'
+0024  equals           
+0025  jump             ->0032
+0029  coerce_s         
+002a  convert_o        
+002b  getlocal1        
+002c  newactivation    
+002d  equals           
+002e  divide           
+002f  convert_s        
+0030  dup              
+0031  coerce_a         
+0032  not              
+0033  iffalse          ->0076
+0037  getlocal0        
+0038  getproperty      myOnFloor
+003a  iffalse          ->0049
+003e  findpropstrict   play
+0040  pushstring       'push'
+0042  callpropvoid     play 1
+0045  jump             ->0076
+0049  getlocal0        
+004a  getproperty      playFallDelay
+004d  pushbyte         0
+004f  equals           
+0050  dup              
+0051  iftrue           ->006a
+0055  jump             ->0062
+0059  urshift          
+005a  increment        
+005b  instanceof       
+005c  pop              
+005d  setlocal3        
+005e  coerce_s         
+005f  coerce_a         
+0060  convert_u        
+0061  getlocal2        
+0062  pop              
+0063  getlex           FlxG
+0065  getproperty      numPlayers
+0067  pushbyte         1
+0069  equals           
+006a  iffalse          ->0076
+006e  findpropstrict   play
+0070  pushstring       'slide'
+0073  callpropvoid     play 1
+0076  returnvoid       
