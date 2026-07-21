@@ -69,6 +69,10 @@ main { width:min(960px,100%); padding:22px; } header,.controls { display:flex; a
   .lobby-card li b { right:3px; bottom:2px; font-size:8px; }
   #lobby-start { min-width:0; min-height:42px; width:min(220px,100%); padding:8px; }
 
-  .menu-title-mask { transform:translateX(-50%) scale(.82); transform-origin:top center; }
-  #menu-panel { padding-bottom:50px; gap:6px; }
+  .menu-title-mask { top:12px; transform:translateX(-50%) scale(.55); transform-origin:top center; }
+  #menu-panel { padding:0 8px 12px; gap:4px; }
+  #menu-panel p { display:none; }
+  #menu-panel label { padding:3px 6px; font-size:12px; }
+  #menu-panel input { width:126px; padding:4px 6px; }
+  #menu-start { min-width:160px; padding:8px 12px; }
 }

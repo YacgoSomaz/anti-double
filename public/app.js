@@ -34,6 +34,16 @@ const lobbyStart = document.querySelector('#lobby-start');
 const lobbyProgress = document.querySelector('#lobby-progress');
 const lobbyProgressLabel = document.querySelector('#lobby-progress-label');
 const lobbyProgressBar = document.querySelector('#lobby-progress-bar');
+const NICKNAME_STORAGE_KEY = 'gswitch-online:nickname';
+try {
+  const savedNickname = localStorage.getItem(NICKNAME_STORAGE_KEY);
+  if (savedNickname) nickname.value = savedNickname.slice(0, 12);
+  nickname.addEventListener('input', () => {
+    const value = nickname.value.trim();
+    if (value) localStorage.setItem(NICKNAME_STORAGE_KEY, value.slice(0, 12));
+    else localStorage.removeItem(NICKNAME_STORAGE_KEY);
+  });
+} catch {}
 const colors = ['#3ce6df', '#ff626c', '#7ee66b', '#ffd75d'];
 const spriteSources = ['player-blue.png', 'player-green.png', 'player-yellow.png', 'player-red.png'];
 const roleNames = ['蓝色重力小子', '绿色重力小子', '黄色重力小子', '红色重力小子'];
