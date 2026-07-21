@@ -416,24 +416,26 @@ test('cancels vertical movement when opposite gravity runners press together', (
   assert.equal(second.vy, 0);
 });
 
-test('shares vertical separation between opposite-gravity runners that press together', () => {
+test('keeps opposite-gravity runners at their existing stacked contact without either pushing the other away', () => {
   const room = new GameRoom({
     tileSize: 48,
     colliders: [],
     spawns: [
       { x: 100, y: 100, gravity: 1, speedX: 0 },
-      { x: 100, y: 144, gravity: -1, speedX: 0 }
+      // Their 37 x 48 hitboxes touch: 100 + 19 + 48 = 158 + 9.
+      { x: 100, y: 158, gravity: -1, speedX: 0 }
     ]
   });
   startRoom(room, 'a', 'b');
 
-  room.tick(1 / 40);
+  for (let frame = 0; frame < 4; frame += 1) room.tick(1 / 40);
 
   const [downwardRunner, invertedRunner] = room.snapshot().players;
-  // Both runners have the same capped vertical movement, so each absorbs half
-  // of the overlap correction.  Neither player is the other's position anchor.
-  assert.equal(downwardRunner.y, 93);
-  assert.equal(invertedRunner.y, 151);
+  // Their opposing gravity cancels while they are already stacked.  Keeping
+  // the prior contact position prevents either player from becoming the
+  // position anchor and pushing the other away frame after frame.
+  assert.equal(downwardRunner.y, 100);
+  assert.equal(invertedRunner.y, 158);
   assert.equal(downwardRunner.vy, 0);
   assert.equal(invertedRunner.vy, 0);
 });
