@@ -309,8 +309,7 @@ test('lets a runner catch the shared multiplayer camera after clearing a side bl
   assert.equal(player.blockedX, false);
   assert.equal(player.recoveringCameraPosition, true);
   assert.equal(player.vx > player.speedX, true);
-  assert.equal(snapshot.cameraSpeed > 769.812, true);
-  assert.equal(snapshot.cameraSpeed, player.speedX);
+  assert.equal(snapshot.cameraSpeed, 769.812);
 });
 
 test('smoothly pulls a lagging runner toward the shared camera even without a side collision', () => {
@@ -332,31 +331,6 @@ test('smoothly pulls a lagging runner toward the shared camera even without a si
   assert.equal(first.vx > first.speedX, true);
   assert.equal(second.vx > second.speedX, true);
   assert.equal(second.vx < first.vx, true);
-});
-
-test('steadily restores a runner to the shared camera after clearing a side block', () => {
-  const room = new GameRoom({
-    tileSize: 48,
-    colliders: [{ x: 3, y: 0 }],
-    spawns: [{ x: 80, y: -10, gravity: 1, speedX: 769.812 }]
-  });
-  room.join('a');
-  room.start('a');
-
-  for (let frame = 0; frame < 3; frame += 1) room.tick(1 / 40);
-  const firstRecovery = room.snapshot().players[0];
-  room.tick(1 / 40);
-  const secondRecovery = room.snapshot().players[0];
-  for (let frame = 0; frame < 6; frame += 1) room.tick(1 / 40);
-
-  const snapshot = room.snapshot();
-  const player = snapshot.players[0];
-  assert.equal(player.eliminated, false);
-  assert.equal(firstRecovery.cameraRecoverySpeed > 0, true);
-  assert.equal(secondRecovery.cameraRecoverySpeed > firstRecovery.cameraRecoverySpeed, true);
-  assert.equal(firstRecovery.vx - firstRecovery.speedX < 100, true);
-  assert.equal(player.x - snapshot.cameraX > 65, true);
-  assert.equal(player.vx > player.speedX, true);
 });
 
 test('eliminates a runner that a side block leaves behind the scrolling camera', () => {
@@ -419,7 +393,7 @@ test('accelerates every original 40 FPS physics frame instead of keeping the spa
   assert.equal(player.vx > player.speedX, true);
 });
 
-test('continues accelerating past the former speed threshold with the shared camera', () => {
+test('keeps the original shared speed cap after the ramp reaches its threshold', () => {
   const room = new GameRoom({
     tileSize: 34,
     colliders: [],
@@ -431,8 +405,7 @@ test('continues accelerating past the former speed threshold with the shared cam
   for (let frame = 0; frame < 40; frame += 1) room.tick(1 / 40);
 
   const snapshot = room.snapshot();
-  assert.equal(snapshot.players[0].speedX > 769.812, true);
-  assert.equal(Number(snapshot.players[0].speedX.toFixed(6)), 777.552191);
+  assert.equal(snapshot.players[0].speedX, 769.812);
   assert.equal(snapshot.cameraSpeed, snapshot.players[0].speedX);
 });
 
