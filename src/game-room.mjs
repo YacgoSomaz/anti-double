@@ -11,17 +11,13 @@ const GRAVITY = 30000;
 const MAX_VERTICAL_SPEED = 320.755;
 const MAX_STEP_SECONDS = 1 / 40;
 const HORIZONTAL_ACCELERATION = 7.740191;
+const MAX_HORIZONTAL_SPEED = 769.812;
 const CAMERA_TARGET_SCREEN_X = 320;
 // Player.as checks x < _camera.x - 350.  The recovered Flash camera sprite
 // is at the centre of the 640 px stage; #cameraX is the left edge, so the
 // equivalent left-edge threshold is 320 - 350 = -30 px.
 const MULTIPLAYER_LEFT_ESCAPE_SCREEN_X = CAMERA_TARGET_SCREEN_X - 350;
-// A runner moves at the same base speed as the shared camera.  After a brief
-// collision, it therefore needs an explicit (but swept) recovery speed to
-// return to the centre before the left-edge elimination rule catches it.
 const CAMERA_FOLLOW_GAIN = 0.2;
-const CAMERA_RECOVERY_ACCELERATION = 240;
-const CAMERA_MAX_RECOVERY_SPEED = 280;
 const CAMERA_TARGET_TOLERANCE = 4;
 const CHARACTERS = ['blue', 'green', 'yellow', 'red'];
 
@@ -61,7 +57,7 @@ export class GameRoom {
       id, slot, x: spawn.x, y: spawn.y, vx: spawn.speedX, vy: 0, startX: spawn.x, score: 0,
       previousX: spawn.x, previousY: spawn.y,
       speedX: spawn.speedX, character: CHARACTERS[slot - 1], name: playerName(name, slot), ready: Boolean(ready),
-      gravity: spawn.gravity, finished: false, eliminated: false, outcomeTick: null, blockedX: false, recoveringCameraPosition: false, cameraRecoveryBoost: false, cameraRecoverySpeed: 0, flipWallGuard: 0,
+      gravity: spawn.gravity, finished: false, eliminated: false, outcomeTick: null, blockedX: false, recoveringCameraPosition: false, flipWallGuard: 0,
       hitbox: { width: PLAYER_WIDTH, height: PLAYER_HEIGHT, offsetX: PLAYER_OFFSET_X, offsetY: spawn.gravity < 0 ? INVERTED_PLAYER_OFFSET_Y : NORMAL_PLAYER_OFFSET_Y }
     };
     this.#players.set(id, player);
@@ -138,44 +134,29 @@ export class GameRoom {
     if (player.finished || player.eliminated) return;
     player.previousX = player.x;
     player.previousY = player.y;
-    // The original race keeps escalating: runners and the shared camera gain
-    // the same horizontal speed on every recovered 40 FPS physics frame.
-    player.speedX += HORIZONTAL_ACCELERATION * dt;
+    if (player.speedX < MAX_HORIZONTAL_SPEED) player.speedX = Math.min(MAX_HORIZONTAL_SPEED, player.speedX + HORIZONTAL_ACCELERATION * dt);
     // Original multiplayer follows one shared camera runner, not the current
     // first-place player.  All runners may approach that centre, but none may
     // pass it.  A lagging runner receives a distance-proportional correction,
     // which smoothly fades to zero as it reaches the centre.
-    const nextCameraSpeed = this.#cameraSpeed + HORIZONTAL_ACCELERATION * dt;
+    const nextCameraSpeed = Math.min(MAX_HORIZONTAL_SPEED, this.#cameraSpeed + HORIZONTAL_ACCELERATION * dt);
     const cameraTargetX = this.#cameraX + nextCameraSpeed * dt + CAMERA_TARGET_SCREEN_X;
     player.vx = player.speedX;
-    const baseNextX = player.x + player.vx * dt;
-    const distanceToCentre = cameraTargetX - baseNextX;
-    // The normal pull stays smooth.  A player that was genuinely blocked then
-    // gains recovery speed a little every physics frame instead of snapping
-    // forward; the entire displacement is still collision-swept below.
-    const recoverySpeed = player.cameraRecoveryBoost
-      ? Math.min(CAMERA_MAX_RECOVERY_SPEED, player.cameraRecoverySpeed + CAMERA_RECOVERY_ACCELERATION * dt)
-      : 0;
-    const correction = distanceToCentre > CAMERA_TARGET_TOLERANCE
-      ? Math.min(distanceToCentre, distanceToCentre * CAMERA_FOLLOW_GAIN * dt + recoverySpeed * dt)
-      : 0;
-    const nextX = baseNextX + correction;
+    const nextX = player.x + player.vx * dt;
     const sideBlock = this.#firstSolidAhead(player, nextX);
     player.blockedX = Boolean(sideBlock);
     if (sideBlock) {
       player.recoveringCameraPosition = true;
-      player.cameraRecoveryBoost = true;
-      player.cameraRecoverySpeed = 0;
       player.x = sideBlock.x - player.hitbox.offsetX - PLAYER_WIDTH;
     } else {
       player.x = nextX;
-      player.cameraRecoverySpeed = recoverySpeed;
+      const distanceToCentre = cameraTargetX - player.x;
       if (distanceToCentre <= CAMERA_TARGET_TOLERANCE) {
         player.x = cameraTargetX;
         player.recoveringCameraPosition = false;
-        player.cameraRecoveryBoost = false;
-        player.cameraRecoverySpeed = 0;
       } else {
+        const correction = distanceToCentre * CAMERA_FOLLOW_GAIN * dt;
+        player.x += correction;
         player.vx += correction / dt;
         player.recoveringCameraPosition = true;
       }
@@ -201,7 +182,7 @@ export class GameRoom {
   #advanceCamera(dt) {
     const runners = [...this.#players.values()].filter((player) => !player.finished && !player.eliminated);
     if (!runners.length) return;
-    this.#cameraSpeed += HORIZONTAL_ACCELERATION * dt;
+    this.#cameraSpeed = Math.min(MAX_HORIZONTAL_SPEED, this.#cameraSpeed + HORIZONTAL_ACCELERATION * dt);
     this.#cameraX += this.#cameraSpeed * dt;
   }
 
