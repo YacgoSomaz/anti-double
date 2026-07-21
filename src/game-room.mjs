@@ -36,6 +36,7 @@ export class GameRoom {
   #cameraSpeed = 0;
   #phase = 'lobby';
   #hostId = null;
+  #results = [];
 
   constructor(level) {
     if (!level?.tileSize || !Array.isArray(level.colliders) || !Array.isArray(level.spawns)) throw new TypeError('Invalid level');
@@ -56,7 +57,7 @@ export class GameRoom {
       id, slot, x: spawn.x, y: spawn.y, vx: spawn.speedX, vy: 0,
       previousX: spawn.x, previousY: spawn.y,
       speedX: spawn.speedX, character: CHARACTERS[slot - 1], name: playerName(name, slot), ready: Boolean(ready),
-      gravity: spawn.gravity, finished: false, eliminated: false, blockedX: false, recoveringCameraPosition: false, flipWallGuard: 0,
+      gravity: spawn.gravity, finished: false, eliminated: false, outcomeTick: null, blockedX: false, recoveringCameraPosition: false, flipWallGuard: 0,
       hitbox: { width: PLAYER_WIDTH, height: PLAYER_HEIGHT, offsetX: PLAYER_OFFSET_X, offsetY: spawn.gravity < 0 ? INVERTED_PLAYER_OFFSET_Y : NORMAL_PLAYER_OFFSET_Y }
     };
     this.#players.set(id, player);
@@ -93,9 +94,9 @@ export class GameRoom {
   input(id, event) {
     const player = this.#players.get(id);
     if (!player || event?.type !== 'flip' || !Number.isInteger(event.sequence)) return { ok: false, error: 'invalid_input' };
-    if (this.#phase !== 'playing') return { ok: false, error: 'waiting_for_host' };
     if (player.eliminated) return { ok: false, error: 'eliminated' };
     if (player.finished) return { ok: false, error: 'finished' };
+    if (this.#phase !== 'playing') return { ok: false, error: 'waiting_for_host' };
     if (event.sequence <= this.#sequences.get(id)) return { ok: false, error: 'stale_input' };
     this.#sequences.set(id, event.sequence);
     const previousOffsetY = player.hitbox.offsetY;
@@ -124,7 +125,8 @@ export class GameRoom {
       cameraX: this.#cameraX,
       cameraSpeed: this.#cameraSpeed,
       hostSlot: this.#players.get(this.#hostId)?.slot ?? null,
-      players: [...this.#players.values()].map((player) => ({ ...player }))
+      players: [...this.#players.values()].map((player) => ({ ...player })),
+      results: this.#results.map((result) => ({ ...result }))
     };
   }
 
@@ -170,7 +172,10 @@ export class GameRoom {
       player.y = nextY;
     }
     if (player.flipWallGuard > 0) player.flipWallGuard -= 1;
-    if (this.#level.finishX && player.x >= this.#level.finishX) player.finished = true;
+    if (this.#level.finishX && player.x >= this.#level.finishX) {
+      player.finished = true;
+      player.outcomeTick = this.#tick;
+    }
   }
 
   #advanceCamera(dt) {
@@ -187,7 +192,23 @@ export class GameRoom {
       player.eliminated = true;
       player.vx = 0;
       player.vy = 0;
+      player.outcomeTick = this.#tick;
     }
+    this.#finishMatchIfComplete();
+  }
+
+  #finishMatchIfComplete() {
+    if (this.#phase !== 'playing' || [...this.#players.values()].some((player) => !player.finished && !player.eliminated)) return;
+    this.#phase = 'results';
+    this.#results = [...this.#players.values()]
+      .sort((left, right) => {
+        if (left.finished !== right.finished) return left.finished ? -1 : 1;
+        const tickOrder = left.finished
+          ? left.outcomeTick - right.outcomeTick
+          : right.outcomeTick - left.outcomeTick;
+        return tickOrder || left.slot - right.slot;
+      })
+      .map((player, index) => ({ slot: player.slot, rank: index + 1, outcome: player.finished ? 'finished' : 'eliminated' }));
   }
 
   #firstSolidUnder(player, nextY) {

@@ -205,7 +205,7 @@ test('keeps an eliminated runner in the authoritative match until results rank e
     colliders: [],
     spawns: [
       { x: 0, y: 500, gravity: 1, speedX: 0 },
-      { x: 0, y: 490, gravity: 1, speedX: 0 }
+      { x: 100, y: 490, gravity: 1, speedX: 0 }
     ]
   });
   room.join('first', '先淘汰');

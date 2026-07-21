@@ -6,6 +6,7 @@ import { drawPlayerSprite } from '/player-render.js';
 import { createFrameTimingMonitor, createPacketTimingMonitor, formatDiagnostics } from '/network-diagnostics.js';
 
 const canvas = document.querySelector('#game');
+const gameShell = document.querySelector('.game-shell');
 const ctx = canvas.getContext('2d');
 const room = document.querySelector('#room');
 const nickname = document.querySelector('#nickname');
@@ -16,7 +17,10 @@ const overlay = document.querySelector('#overlay');
 const frontScreen = document.querySelector('#front-screen');
 const endScreen = document.querySelector('#end-screen');
 const endResult = document.querySelector('#end-result');
+const endRankings = document.querySelector('#end-rankings');
 const backMenu = document.querySelector('#back-menu');
+const spectatorBanner = document.querySelector('#spectator-banner');
+const fullscreen = document.querySelector('#fullscreen');
 const status = document.querySelector('#status');
 const dot = document.querySelector('#dot');
 const ping = document.querySelector('#ping');
@@ -274,6 +278,7 @@ function decodeCompactRaceState(message) {
     cameraX: message.c[0] / 100,
     cameraSpeed: message.c[1] / 100,
     serverTickIntervalMs: Number.isInteger(message.d) ? message.d / 10 : undefined,
+    results: Array.isArray(message.r) ? message.r.map(([slot, rank, outcome]) => ({ slot, rank, outcome: outcome ? 'finished' : 'eliminated' })) : [],
     players: message.p.map(([slot, x, y, vx, vy, gravity, flags]) => ({
       ...knownPlayers.get(slot),
       slot, x: x / 100, y: y / 100, vx: vx / 100, vy: vy / 100, gravity,
@@ -286,14 +291,28 @@ function handle(message, connection = socket) {
   if (message.type === 'joined') { clearTimeout(joinTimeout); join.disabled = false; localSlot = message.player.slot; roomCode = message.room; cameraX = Math.max(0, message.player.x - canvas.width / 2); cameraUpdatedAt = performance.now(); overlay.hidden = true; frontScreen.hidden = false; frontScreen.dataset.phase = 'lobby'; flip.disabled = true; sendReady(); signalRaceReady(); playAudio(menuMusic); setStatus(raceReady ? `已进入 ${message.room} 等待大厅` : '正在后台加载赛道资源…', true); renderLobby(); return; }
   if (message.type === 'state') {
     state = message.compact ? decodeCompactRaceState(message) : message; stateReceivedAt = performance.now(); packetTiming.observe({ now: stateReceivedAt, tick: state.tick, serverTickIntervalMs: state.serverTickIntervalMs }); players.textContent = `${state.players.length}/4 玩家在线`;
-    if (state.phase === 'lobby') { frontScreen.hidden = false; frontScreen.dataset.phase = 'lobby'; flip.disabled = true; courseStatus.textContent = '等待房主开始比赛'; renderLobby(); }
-    else { frontScreen.hidden = true; flip.disabled = false; courseStatus.textContent = '赛道：MP02 → MP03 → MP04'; }
+    if (state.phase === 'lobby') { frontScreen.hidden = false; frontScreen.dataset.phase = 'lobby'; spectatorBanner.hidden = true; flip.disabled = true; courseStatus.textContent = '等待房主开始比赛'; renderLobby(); }
+    else { frontScreen.hidden = true; }
     const localPlayer = state.players.find((player) => player.slot === localSlot);
     // Compact race packets store the camera in `c`, which is decoded above.
     // Read the normalized state so lobby and compact packets follow one path.
     cameraX = Math.max(0, Number(state.cameraX) || 0);
     cameraUpdatedAt = stateReceivedAt;
-    if (localPlayer?.finished || localPlayer?.eliminated) showEndScreen(localPlayer);
+    if (state.phase === 'playing' && (localPlayer?.finished || localPlayer?.eliminated)) {
+      flip.disabled = true;
+      spectatorBanner.hidden = false;
+      spectatorBanner.textContent = localPlayer.finished ? '已完成赛道 · 正在观战，等待本局结束' : '已淘汰 · 正在观战，等待本局结束';
+      courseStatus.textContent = '观战中 · 共享镜头仍由服务器控制';
+    } else if (state.phase === 'results') {
+      spectatorBanner.hidden = true;
+      flip.disabled = true;
+      courseStatus.textContent = '本局排名已确定';
+      if (localPlayer) showEndScreen(localPlayer);
+    } else {
+      spectatorBanner.hidden = true;
+      flip.disabled = false;
+      courseStatus.textContent = '赛道：MP02 → MP03 → MP04';
+    }
     return;
   }
   if (message.type === 'ready_ok') return;
@@ -308,9 +327,24 @@ function showEndScreen(player) {
   showingEnd = true;
   flip.disabled = true;
   stopAudio(music);
-  setStatus(player.finished ? '已完成全程' : '已淘汰', true);
-  endResult.textContent = player.finished ? '你已完成全程' : '你已被淘汰';
+  const ownResult = state.results.find((result) => result.slot === player.slot);
+  setStatus(ownResult?.outcome === 'finished' ? '已完成全程' : '本局结束', true);
+  endResult.textContent = ownResult ? `第 ${ownResult.rank} 名 · ${ownResult.outcome === 'finished' ? '完成全程' : '淘汰出局'}` : '本局结束';
+  renderRankings(state.results);
   endScreen.hidden = false;
+}
+function renderRankings(results) {
+  endRankings.replaceChildren(...results.map((result) => {
+    const player = state.players.find((item) => item.slot === result.slot);
+    const item = document.createElement('li');
+    item.classList.toggle('local', result.slot === localSlot);
+    const label = document.createElement('span');
+    label.textContent = `第 ${result.rank} 名 · ${player?.name ?? `玩家 ${result.slot}`}`;
+    const outcome = document.createElement('b');
+    outcome.textContent = result.outcome === 'finished' ? '完成' : '淘汰';
+    item.append(label, outcome);
+    return item;
+  }));
 }
 function returnToMenu() {
   showingEnd = false;
@@ -319,6 +353,7 @@ function returnToMenu() {
   stopAudio(music);
   playAudio(menuMusic);
   endScreen.hidden = true; overlay.hidden = true; frontScreen.hidden = false; frontScreen.dataset.phase = 'menu';
+  spectatorBanner.hidden = true; endRankings.replaceChildren();
   players.textContent = '等待玩家'; setStatus('未连接');
 }
 function getDecorationImage(asset) {
@@ -405,6 +440,10 @@ function draw() {
   ctx.fillStyle='#fff'; ctx.font='bold 16px Arial'; ctx.fillText(String(Math.floor(state.tick ?? 0)).padStart(3, '0'), 590, 24);
 }
 join.addEventListener('click', connect); lobbyStart.addEventListener('click', startMatch); backMenu.addEventListener('click', returnToMenu); flip.addEventListener('click', sendFlip); soundToggle.addEventListener('click', toggleSound); canvas.addEventListener('click', sendFlip);
+fullscreen.addEventListener('click', () => {
+  if (document.fullscreenElement) document.exitFullscreen?.();
+  else gameShell.requestFullscreen?.();
+});
 addEventListener('keydown', (event) => { if(event.code==='Space'&&!event.repeat) {event.preventDefault();sendFlip();} });
 setInterval(() => { if(socket?.readyState===WebSocket.OPEN) { lastPing=performance.now(); socket.send(JSON.stringify({type:'ping'})); } }, 2000);
 function animationLoop(now) { frameTiming.observe(now); updateDiagnostics(now); draw(); requestAnimationFrame(animationLoop); }

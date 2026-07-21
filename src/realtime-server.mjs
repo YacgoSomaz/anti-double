@@ -86,7 +86,8 @@ function stateMessage(snapshot) {
     hostSlot: snapshot.hostSlot,
     cameraX: snapshot.cameraX,
     cameraSpeed: snapshot.cameraSpeed,
-    players: snapshot.players.map(({ id, ...player }) => player)
+    players: snapshot.players.map(({ id, ...player }) => player),
+    results: snapshot.results
   };
 }
 
@@ -105,6 +106,7 @@ export function encodeRaceState(snapshot, tickIntervalMs) {
     tick: snapshot.tick,
     c: [coordinate(snapshot.cameraX), coordinate(snapshot.cameraSpeed)],
     ...(Number.isFinite(tickIntervalMs) ? { d: Math.max(0, Math.round(tickIntervalMs * 10)) } : {}),
+    ...(snapshot.results?.length ? { r: snapshot.results.map(({ slot, rank, outcome }) => [slot, rank, outcome === 'finished' ? 1 : 0]) } : {}),
     p: snapshot.players.map((player) => [
       player.slot,
       coordinate(player.x), coordinate(player.y),
@@ -160,13 +162,18 @@ export function createRealtimeServer({ level, autoTick = true }) {
   };
   const broadcast = (update) => update?.recipients.forEach((id) => send(id, stateMessage(update.snapshot)));
   let lastTickAt = performance.now();
+  const resultTicksSent = new Map();
   const tick = () => {
     const now = performance.now();
     const tickIntervalMs = Math.max(0, now - lastTickAt);
     lastTickAt = now;
-    matches.tick(1 / 40)
-      .filter((update) => update.snapshot.phase === 'playing' && update.snapshot.tick % RACE_BROADCAST_EVERY_TICKS === 0)
-      .forEach((update) => update.recipients.forEach((id) => send(id, encodeRaceState(update.snapshot, tickIntervalMs))));
+    matches.tick(1 / 40).forEach((update) => {
+      const regularRacePacket = update.snapshot.phase === 'playing' && update.snapshot.tick % RACE_BROADCAST_EVERY_TICKS === 0;
+      const isNewResult = update.snapshot.phase === 'results' && resultTicksSent.get(update.room) !== update.snapshot.tick;
+      if (!regularRacePacket && !isNewResult) return;
+      if (isNewResult) resultTicksSent.set(update.room, update.snapshot.tick);
+      update.recipients.forEach((id) => send(id, encodeRaceState(update.snapshot, tickIntervalMs)));
+    });
   };
   const timer = autoTick ? setInterval(tick, 1000 / 40) : null;
 
