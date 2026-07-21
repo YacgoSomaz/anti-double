@@ -2,6 +2,8 @@
 
 > 交接版本：2026-07-21。目标是让新的 AI 或开发者在不依赖口头背景的情况下，能够安全运行、验证、部署并继续提高复刻精度。以本报告中“已实现”和“待验证”的分界为准，不要把联网适配层误写成 SWF 原生功能。
 
+> **本次接手前必读更新（2026-07-21）**：请先读 [运行与交接日志](RUNBOOK-2026-07-21.md)。其中记录了共享镜头、中线追赶、客户端预测和线上部署的最新结论；旧段落若与该日志冲突，以该日志和当前测试为准。
+
 ## 1. 项目目标与当前结论
 
 本项目是“重力小子”风格跑酷游戏的浏览器联机复刻。原工程丢失，因此实现以 Flash SWF 的静态资源、关卡 plist、AVM2 反汇编和可试玩版本为证据源。当前版本是可联机的原型，并非宣称 1:1 完全复刻。
@@ -120,7 +122,7 @@ loadLevel('marathon'): MP02 + MP03 + MP04
 | 脚部接触宽度 | `28` | 为防止角色跨过一格窄缝。 |
 | 淘汰范围 | `y < -60`、`y > 500` 或 `x < cameraX - 30` | 原版 multiplayer safe range；最后一项是原版镜头中心坐标换算后的值。 |
 
-当前世界碰撞是“脚部/头部跨越接触面”的连续检测，不做前方侧墙阻挡：这是为了避免跑酷向前时错误停在不可见竖直边。若改造完整 AABB 系统，先复现原版 `FlxU.collide` 的分离顺序，再移除这项近似。
+当前世界碰撞是“脚部/头部跨越接触面”加前方侧墙 sweep 的稳定联网适配。侧墙 sweep 仅在角色前缘实际跨过方块左边、且垂直重叠超过半个角色高度时阻挡；翻转后的四个物理帧允许细小外角重叠也阻挡，避免翻转穿墙。`blockedX` 只限制 X 坐标，不能丢弃已经算出的中线追赶速度；相关回归测试在 `test/game-room.test.mjs`。
 
 玩家互撞在 `#separateOverlappingPlayers()`：仅在两个存活玩家的 37 × 48 AABB 同时重叠时结算。横向同高接触按上一帧 X（同 X 用槽位）稳定决定前后，后方与前方保持 `1.1 × width` 间隙且不扣水平动能；浅层上下接触可堆叠。相同重力时上/下玩家继承承载方的竖直速度，向同一侧移动；相反重力且相向接触时两者 `vy=0`，保持贴合向前。它是为权威联网防止每帧交换领先者的适配，不应声称是 Flixel 每个边缘细节的 1:1 移植。完整原版回调证据见 `docs/reverse-analysis.md`。
 
@@ -183,25 +185,18 @@ worldY = 425 - collider.y * 34
 
 ## 7. 部署与运维
 
-当前部署目录：`/home/ubuntu/gswitch-online-20260720`，服务端口 `9500`。进程由 `app.pid` 记录，并以：
+当前生产域名为 `g.anyq.site`，应用位于 `/home/ubuntu/gswitch-online`，由 systemd 服务 `gswitch-online` 托管。不要将 IP、账号、密码、私钥或任何 token 写入仓库。健康检查：
 
 ```sh
-nohup node src/server.mjs > app.log 2>&1 < /dev/null &
-echo $! > app.pid
-```
-
-启动。健康检查：
-
-```sh
-curl -fsS http://127.0.0.1:9500/health
+curl -fsS http://127.0.0.1:1000/health
 ```
 
 安全发布顺序：
 
 1. 本地 `npm test && npm run test:coverage && npm run build:data`。
-2. 上传源文件和生成的 `public/data/marathon.json`。
-3. 仅在 `app.pid` 对应进程的工作目录确实等于部署目录时才停止它；避免误杀其他服务。
-4. 启动新进程，等待至少一秒，再用 `kill -0 $(cat app.pid)` 和 `/health` 验证。
+2. 只上传本次实际改变的文件；不要覆盖服务器上其他应用或把旧备份堆在生产目录。
+3. `sudo systemctl restart gswitch-online`，随后确认 `systemctl is-active gswitch-online` 输出 `active`。
+4. 先本机检查 `/health`，再使用域名从外部检查；确认反向代理和 WebSocket 都指向当前服务。
 5. 从外部浏览器加入一个新的房间码，确认菜单、WebSocket 和翻转按钮。
 
 凭据不能进入仓库、报告、截图或日志。若改为 HTTPS，请在前置反向代理中处理 TLS，并使客户端自动转为 `wss:`（`app.js` 已按页面协议选择 `ws/wss`）。
