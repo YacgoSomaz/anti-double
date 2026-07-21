@@ -1,10 +1,10 @@
 export const DEFAULT_SCROLL_SPEED = 211.6983;
 export const CAMERA_ACCELERATION = 7.740191;
 export const MAX_CAMERA_SPEED = 769.812;
-// The browser owns presentation between packets.  One second covers a normal
+// The browser owns presentation between packets. Three seconds absorbs a
 // mobile-radio stall without making the screen freeze; the server remains the
 // authority when the next state packet arrives.
-export const CAMERA_PREDICTION_WINDOW_MS = 1000;
+export const CAMERA_PREDICTION_WINDOW_MS = 3000;
 
 // The server owns race outcomes, but the browser integrates the recovered
 // shared-camera curve locally at display rate.  Deriving it from a particular

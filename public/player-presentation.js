@@ -1,5 +1,6 @@
+import { CAMERA_PREDICTION_WINDOW_MS } from './camera.js';
+
 const CORRECTION_RATE_PER_SECOND = 10;
-const PREDICTION_WINDOW_MS = 1000;
 
 export function presentationOffset(presented, authoritative) {
   return {
@@ -12,7 +13,7 @@ export function presentationOffset(presented, authoritative) {
 // Retain the old predicted position at receipt, then exponentially converge to
 // the new authority while the runner keeps moving at display rate.
 export function advancePresentation(player, elapsedMs) {
-  const elapsed = Math.min(PREDICTION_WINDOW_MS, Math.max(0, Number(elapsedMs) || 0)) / 1000;
+  const elapsed = Math.min(CAMERA_PREDICTION_WINDOW_MS, Math.max(0, Number(elapsedMs) || 0)) / 1000;
   const correction = Math.exp(-CORRECTION_RATE_PER_SECOND * elapsed);
   const offsetX = Number(player?.presentationOffsetX) || 0;
   const offsetY = Number(player?.presentationOffsetY) || 0;
