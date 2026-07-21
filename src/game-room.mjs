@@ -164,6 +164,10 @@ export class GameRoom {
     const correction = distanceToCentre > CAMERA_TARGET_TOLERANCE
       ? Math.max(percentageCorrection, minimumCorrection)
       : 0;
+    // Terrain constrains the position, not the runner's intended recovery
+    // velocity.  Retaining it makes the next clear frame resume catch-up
+    // immediately instead of restarting at the camera base speed.
+    player.vx += correction / dt;
     // Sweep the complete base-plus-recovery movement so catch-up cannot cross
     // a side block.
     const nextX = baseNextX + correction;
@@ -181,7 +185,6 @@ export class GameRoom {
         player.recoveringCameraPosition = false;
         player.cameraRecoveryBoost = false;
       } else {
-        player.vx += correction / dt;
         player.recoveringCameraPosition = true;
       }
     }
