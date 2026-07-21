@@ -23,6 +23,7 @@ const CAMERA_FOLLOW_GAIN = 0.2;
 // continuously to zero near the target and remains effective late in a race.
 const CAMERA_RECOVERY_MAX_SPEED_RATIO = 0.75;
 const CAMERA_TARGET_TOLERANCE = 4;
+const BLOCKED_CAMERA_SAFETY_FRAMES = 12;
 const CHARACTERS = ['blue', 'green', 'yellow', 'red'];
 
 function playerName(value, slot) {
@@ -61,7 +62,7 @@ export class GameRoom {
       id, slot, x: spawn.x, y: spawn.y, vx: spawn.speedX, vy: 0, startX: spawn.x, score: 0,
       previousX: spawn.x, previousY: spawn.y,
       speedX: spawn.speedX, character: CHARACTERS[slot - 1], name: playerName(name, slot), ready: Boolean(ready),
-      gravity: spawn.gravity, finished: false, eliminated: false, outcomeTick: null, blockedX: false, recoveringCameraPosition: false, cameraRecoveryBoost: false, flipWallGuard: 0,
+      gravity: spawn.gravity, finished: false, eliminated: false, outcomeTick: null, blockedX: false, recoveringCameraPosition: false, cameraRecoveryBoost: false, cameraSafetyFrames: 0, flipWallGuard: 0,
       hitbox: { width: PLAYER_WIDTH, height: PLAYER_HEIGHT, offsetX: PLAYER_OFFSET_X, offsetY: spawn.gravity < 0 ? INVERTED_PLAYER_OFFSET_Y : NORMAL_PLAYER_OFFSET_Y }
     };
     this.#players.set(id, player);
@@ -204,8 +205,9 @@ export class GameRoom {
     // A terrain side collision is not a failure condition.  Hold the shared
     // camera at the survivor boundary until that runner can clear the block,
     // then the existing percentage catch-up returns them to centre.
+    for (const player of runners) player.cameraSafetyFrames = player.blockedX ? player.cameraSafetyFrames + 1 : 0;
     const blockedSafetyX = Math.min(...runners
-      .filter((player) => player.blockedX)
+      .filter((player) => player.blockedX && player.cameraSafetyFrames <= BLOCKED_CAMERA_SAFETY_FRAMES)
       .map((player) => player.x - MULTIPLAYER_LEFT_ESCAPE_SCREEN_X));
     const safeCameraX = Number.isFinite(blockedSafetyX) ? Math.min(requestedCameraX, blockedSafetyX) : requestedCameraX;
     this.#cameraX = Math.max(this.#cameraX, safeCameraX);
