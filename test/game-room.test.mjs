@@ -395,7 +395,7 @@ test('scales a blocked runner catch-up bonus with the current shared speed', () 
   assert.equal(fasterBonus > slowerBonus * 1.8, true);
 });
 
-test('eliminates a runner that a side block leaves behind the scrolling camera', () => {
+test('holds the shared camera at the safety boundary while a side block pins a runner', () => {
   const room = new GameRoom({
     tileSize: 48,
     colliders: [{ x: 2, y: 0 }],
@@ -407,8 +407,8 @@ test('eliminates a runner that a side block leaves behind the scrolling camera',
   for (let frame = 0; frame < 8; frame += 1) room.tick(1 / 40);
 
   const snapshot = room.snapshot();
-  assert.equal(snapshot.cameraX > 75, true);
-  assert.equal(snapshot.players[0].eliminated, true);
+  assert.equal(snapshot.cameraX <= snapshot.players[0].x + 30, true);
+  assert.equal(snapshot.players[0].eliminated, false);
 });
 
 test('keeps advancing through the MP02 start instead of colliding with an invisible side wall', () => {
