@@ -353,6 +353,21 @@ test('binds every runner base speed to the shared camera before applying a catch
   assert.equal(lagging.vx > snapshot.cameraSpeed, true);
 });
 
+test('uses percentage recovery immediately when a runner falls behind the camera centre', () => {
+  const room = new GameRoom({
+    tileSize: 48,
+    colliders: [],
+    spawns: [{ x: 0, y: 100, gravity: 0, speedX: 474 }]
+  });
+  room.join('runner');
+  room.start('runner');
+
+  const snapshot = room.tick(1 / 40);
+  const player = snapshot.players[0];
+
+  assert.equal(player.vx - snapshot.cameraSpeed > snapshot.cameraSpeed * 0.7, true);
+});
+
 test('gives a substantially larger but continuously fading catch-up bonus farther from centre', () => {
   const room = new GameRoom({
     tileSize: 48,
