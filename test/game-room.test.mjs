@@ -309,7 +309,8 @@ test('lets a runner catch the shared multiplayer camera after clearing a side bl
   assert.equal(player.blockedX, false);
   assert.equal(player.recoveringCameraPosition, true);
   assert.equal(player.vx > player.speedX, true);
-  assert.equal(snapshot.cameraSpeed, 769.812);
+  assert.equal(snapshot.cameraSpeed > 769.812, true);
+  assert.equal(snapshot.cameraSpeed, player.speedX);
 });
 
 test('smoothly pulls a lagging runner toward the shared camera even without a side collision', () => {

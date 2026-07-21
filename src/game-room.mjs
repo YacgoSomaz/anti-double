@@ -11,7 +11,6 @@ const GRAVITY = 30000;
 const MAX_VERTICAL_SPEED = 320.755;
 const MAX_STEP_SECONDS = 1 / 40;
 const HORIZONTAL_ACCELERATION = 7.740191;
-const MAX_HORIZONTAL_SPEED = 769.812;
 const CAMERA_TARGET_SCREEN_X = 320;
 // Player.as checks x < _camera.x - 350.  The recovered Flash camera sprite
 // is at the centre of the 640 px stage; #cameraX is the left edge, so the
@@ -139,12 +138,14 @@ export class GameRoom {
     if (player.finished || player.eliminated) return;
     player.previousX = player.x;
     player.previousY = player.y;
-    if (player.speedX < MAX_HORIZONTAL_SPEED) player.speedX = Math.min(MAX_HORIZONTAL_SPEED, player.speedX + HORIZONTAL_ACCELERATION * dt);
+    // The original race keeps escalating: runners and the shared camera gain
+    // the same horizontal speed on every recovered 40 FPS physics frame.
+    player.speedX += HORIZONTAL_ACCELERATION * dt;
     // Original multiplayer follows one shared camera runner, not the current
     // first-place player.  All runners may approach that centre, but none may
     // pass it.  A lagging runner receives a distance-proportional correction,
     // which smoothly fades to zero as it reaches the centre.
-    const nextCameraSpeed = Math.min(MAX_HORIZONTAL_SPEED, this.#cameraSpeed + HORIZONTAL_ACCELERATION * dt);
+    const nextCameraSpeed = this.#cameraSpeed + HORIZONTAL_ACCELERATION * dt;
     const cameraTargetX = this.#cameraX + nextCameraSpeed * dt + CAMERA_TARGET_SCREEN_X;
     player.vx = player.speedX;
     const baseNextX = player.x + player.vx * dt;
@@ -200,7 +201,7 @@ export class GameRoom {
   #advanceCamera(dt) {
     const runners = [...this.#players.values()].filter((player) => !player.finished && !player.eliminated);
     if (!runners.length) return;
-    this.#cameraSpeed = Math.min(MAX_HORIZONTAL_SPEED, this.#cameraSpeed + HORIZONTAL_ACCELERATION * dt);
+    this.#cameraSpeed += HORIZONTAL_ACCELERATION * dt;
     this.#cameraX += this.#cameraSpeed * dt;
   }
 
