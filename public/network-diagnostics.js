@@ -17,16 +17,18 @@ function boundedPush(values, value, limit) {
 export function createPacketTimingMonitor(limit = 120) {
   const intervals = [];
   const tickGaps = [];
+  const serverTickIntervals = [];
   let lastNow;
   let lastTick;
 
   return {
-    observe({ now, tick }) {
+    observe({ now, tick, serverTickIntervalMs }) {
       if (!Number.isFinite(now)) return;
       if (Number.isFinite(lastNow)) boundedPush(intervals, Math.max(0, now - lastNow), limit);
       lastNow = now;
       if (Number.isInteger(tick) && Number.isInteger(lastTick) && tick > lastTick) boundedPush(tickGaps, tick - lastTick, limit);
       if (Number.isInteger(tick)) lastTick = tick;
+      if (Number.isFinite(serverTickIntervalMs)) boundedPush(serverTickIntervals, Math.max(0, serverTickIntervalMs), limit);
     },
     summary() {
       const skippedTicks = tickGaps.reduce((total, gap) => total + Math.max(0, gap - 2), 0);
@@ -36,7 +38,10 @@ export function createPacketTimingMonitor(limit = 120) {
         p95IntervalMs: rounded(percentile(intervals, 0.95)),
         maxIntervalMs: rounded(Math.max(0, ...intervals)),
         maxTickGap: Math.max(0, ...tickGaps),
-        skippedTicks
+        skippedTicks,
+        serverSamples: serverTickIntervals.length,
+        serverP95TickIntervalMs: rounded(percentile(serverTickIntervals, 0.95)),
+        serverMaxTickIntervalMs: rounded(Math.max(0, ...serverTickIntervals))
       };
     }
   };
@@ -70,6 +75,7 @@ export function formatDiagnostics(packet, frame) {
   const fps = Math.round(1000 / frame.averageFrameMs);
   const packetText = `包 ${packet.averageIntervalMs}/${packet.p95IntervalMs}/${packet.maxIntervalMs}ms`;
   const tickText = packet.skippedTicks ? `tick 跳 ${packet.skippedTicks}` : `tick 最大+${packet.maxTickGap}`;
+  const serverText = packet.serverSamples ? `服 p95 ${packet.serverP95TickIntervalMs}ms` : '服采样中';
   const frameText = `画面 ${fps}fps${frame.droppedFrames ? ` 掉帧${frame.droppedFrames}` : ''}`;
-  return `${packetText} · ${tickText} · ${frameText}`;
+  return `${packetText} · ${tickText} · ${serverText} · ${frameText}`;
 }

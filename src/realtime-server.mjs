@@ -98,12 +98,13 @@ function coordinate(value) {
 // forty times a second during a race wastes nearly all of a small uplink.  Race
 // packets contain only the fields that can change while the browser keeps the
 // player metadata it received in the lobby snapshot.
-export function encodeRaceState(snapshot) {
+export function encodeRaceState(snapshot, tickIntervalMs) {
   return {
     type: 'state',
     compact: true,
     tick: snapshot.tick,
     c: [coordinate(snapshot.cameraX), coordinate(snapshot.cameraSpeed)],
+    ...(Number.isFinite(tickIntervalMs) ? { d: Math.max(0, Math.round(tickIntervalMs * 10)) } : {}),
     p: snapshot.players.map((player) => [
       player.slot,
       coordinate(player.x), coordinate(player.y),
@@ -158,9 +159,15 @@ export function createRealtimeServer({ level, autoTick = true }) {
     if (client?.socket.writable) client.socket.write(textFrame(message));
   };
   const broadcast = (update) => update?.recipients.forEach((id) => send(id, stateMessage(update.snapshot)));
-  const tick = () => matches.tick(1 / 40)
-    .filter((update) => update.snapshot.phase === 'playing' && update.snapshot.tick % RACE_BROADCAST_EVERY_TICKS === 0)
-    .forEach((update) => update.recipients.forEach((id) => send(id, encodeRaceState(update.snapshot))));
+  let lastTickAt = performance.now();
+  const tick = () => {
+    const now = performance.now();
+    const tickIntervalMs = Math.max(0, now - lastTickAt);
+    lastTickAt = now;
+    matches.tick(1 / 40)
+      .filter((update) => update.snapshot.phase === 'playing' && update.snapshot.tick % RACE_BROADCAST_EVERY_TICKS === 0)
+      .forEach((update) => update.recipients.forEach((id) => send(id, encodeRaceState(update.snapshot, tickIntervalMs))));
+  };
   const timer = autoTick ? setInterval(tick, 1000 / 40) : null;
 
   server.on('upgrade', (request, socket, head) => {
