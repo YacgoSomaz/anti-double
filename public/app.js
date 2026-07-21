@@ -133,6 +133,10 @@ const FINAL_TUNNEL_ASSETS = new Set([
 // 首局只依赖完整碰撞地图、MP02 视觉、四个角色和五张公共场景图。
 // MP03/MP04 在后台预取，不能再把房间开始按钮卡在后续赛段资源上。
 const RACE_RESOURCE_TOTAL = 11;
+// Deliberately screen-space rather than world-space: this must remain fixed
+// while the course moves beneath it, so a run can prove whether the runner is
+// actually returning to the shared camera target.
+const CAMERA_DEBUG_SCREEN_X = 320;
 const packetTiming = createPacketTimingMonitor(); const frameTiming = createFrameTimingMonitor(); let lastDiagnosticsUpdate = 0;
 let socket; let joinTimeout; let sequence = 0; let state = { phase: 'lobby', players: [] }; let map; let visualMaps = new Map(); let lastPing = 0; let stateReceivedAt = performance.now(); let localSlot; let roomCode; let cameraX = 0; let cameraUpdatedAt = performance.now(); let showingEnd = false; let resourcesReady = false; let raceReady = false; let resourcesFailed = false; let readySent = false; let readySoundPlayed = false; let raceResourceLoaded = 0;
 const latestRaceState = createLatestRaceStateBuffer();
@@ -502,6 +506,22 @@ function drawPlayerName(player, x, y) {
   ctx.fillText(player.name, x + PLAYER_FRAME_WIDTH / 2, labelY);
   ctx.restore();
 }
+function drawCameraCentreDiagnostic() {
+  ctx.save();
+  ctx.setLineDash([7, 5]);
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = 'rgba(255, 54, 54, 0.92)';
+  ctx.beginPath();
+  ctx.moveTo(CAMERA_DEBUG_SCREEN_X, 60);
+  ctx.lineTo(CAMERA_DEBUG_SCREEN_X, canvas.height);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = '#ff4a4a';
+  ctx.font = 'bold 11px Arial';
+  ctx.textAlign = 'center';
+  ctx.fillText('中线', CAMERA_DEBUG_SCREEN_X, 74);
+  ctx.restore();
+}
 function draw() {
   ctx.fillStyle='#9bcde3'; ctx.fillRect(0, 0, canvas.width, canvas.height); if (!map) return;
   const now = performance.now();
@@ -521,6 +541,7 @@ function draw() {
     else { ctx.fillStyle = '#68727a'; ctx.fillRect(x, y, world.cellSize, world.cellSize); }
   }
   drawMarathonDecorations(camera, 'frontVisualInfo');
+  drawCameraCentreDiagnostic();
   for (const player of renderPlayers) {
     if (player.eliminated) continue;
     const x = player.x - camera;
