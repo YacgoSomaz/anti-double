@@ -133,10 +133,14 @@ test('uses the original result board with character slots and a next-round actio
   assert.match(html, /id="next-round"/);
   assert.doesNotMatch(html, /id="end-result"/);
   assert.match(app, /rank-avatar/);
+  assert.match(app, /rank-score/);
+  assert.match(app, /function drawPlayerName/);
+  assert.match(app, /ctx\.fillText\(player\.name/);
   assert.match(app, /nextRound\.addEventListener\('click', returnToMenu\)/);
   assert.match(stylesheet, /#end-rankings li:nth-child\(1\)/);
   assert.match(stylesheet, /#end-rankings li:nth-child\(2\)/);
   assert.match(stylesheet, /#next-round/);
+  assert.match(stylesheet, /\.rank-score/);
 });
 
 test('keeps ranking characters inside their original frames on a scaled stage without covering the course with HUD art', async () => {

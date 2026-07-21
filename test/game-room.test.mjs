@@ -261,6 +261,21 @@ test('ranks completed runners ahead of eliminated runners at the authoritative f
   ]);
 });
 
+test('records the server-owned run distance with every final placement', () => {
+  const room = new GameRoom({
+    tileSize: 48,
+    colliders: [],
+    finishX: 5,
+    spawns: [{ x: 0, y: 0, gravity: 0, speedX: 400 }]
+  });
+  room.join('runner', '得分玩家');
+  room.start('runner');
+
+  const snapshot = room.tick(1 / 40);
+  assert.equal(snapshot.results[0].score > 0, true);
+  assert.equal(snapshot.players[0].score, snapshot.results[0].score);
+});
+
 test('pins a runner against a side block without taking away its momentum', () => {
   const room = new GameRoom({
     tileSize: 48,

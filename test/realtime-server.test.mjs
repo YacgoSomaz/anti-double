@@ -149,10 +149,10 @@ test('adds only a compact server tick timing sample to a race packet', () => {
 test('adds authoritative final placements only when a race has results', () => {
   const packet = encodeRaceState({
     tick: 120, cameraX: 30, cameraSpeed: 140, players: [],
-    results: [{ slot: 2, rank: 1, outcome: 'finished' }, { slot: 1, rank: 2, outcome: 'eliminated' }]
+    results: [{ slot: 2, rank: 1, outcome: 'finished', score: 486 }, { slot: 1, rank: 2, outcome: 'eliminated', score: 120 }]
   });
 
-  assert.deepEqual(packet.r, [[2, 1, 1], [1, 2, 0]]);
+  assert.deepEqual(packet.r, [[2, 1, 1, 486], [1, 2, 0, 120]]);
 });
 
 test('retains a short-lived aggregate of client jitter reports without player identity', async (context) => {

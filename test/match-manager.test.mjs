@@ -37,3 +37,23 @@ test('validates room codes and rejects input from clients not in a match', () =>
   assert.deepEqual(matches.join('bad room', 'a'), { ok: false, error: 'invalid_room' });
   assert.deepEqual(matches.input('unknown', { type: 'flip', sequence: 1 }), { ok: false, error: 'not_in_match' });
 });
+
+test('releases a completed room so its code can immediately host a fresh match', () => {
+  const resultsLevel = {
+    ...tinyLevel,
+    spawns: [
+      { x: 0, y: 500, gravity: 1, speedX: 0 },
+      { x: 0, y: 500, gravity: 1, speedX: 0 }
+    ]
+  };
+  const matches = new MatchManager(resultsLevel);
+  matches.join('AGAIN', 'a');
+  matches.join('AGAIN', 'b');
+  matches.start('a');
+  matches.tick(1 / 40);
+
+  assert.equal(matches.closeCompletedRoom('AGAIN'), true);
+  assert.equal(matches.roomState('AGAIN'), null);
+  assert.equal(matches.input('a', { type: 'flip', sequence: 1 }).error, 'not_in_match');
+  assert.equal(matches.join('AGAIN', 'new-player').player.slot, 1);
+});
