@@ -356,9 +356,9 @@ test('binds every runner base speed to the shared camera before applying a catch
 test('gives a substantially larger but continuously fading catch-up bonus farther from centre', () => {
   const room = new GameRoom({
     tileSize: 48,
-    colliders: [],
+    colliders: [{ x: 3, y: 0 }],
     spawns: [
-      { x: 0, y: 100, gravity: 0, speedX: 600 },
+      { x: 80, y: -10, gravity: 1, speedX: 600 },
       { x: 220, y: 150, gravity: 0, speedX: 600 }
     ]
   });
@@ -366,7 +366,8 @@ test('gives a substantially larger but continuously fading catch-up bonus farthe
   room.join('near');
   room.start('far');
 
-  const snapshot = room.tick(1 / 40);
+  for (let frame = 0; frame < 3; frame += 1) room.tick(1 / 40);
+  const snapshot = room.snapshot();
   const [far, near] = snapshot.players;
   const farBonus = far.vx - snapshot.cameraSpeed;
   const nearBonus = near.vx - snapshot.cameraSpeed;

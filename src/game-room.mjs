@@ -18,6 +18,9 @@ const CAMERA_TARGET_SCREEN_X = 320;
 // equivalent left-edge threshold is 320 - 350 = -30 px.
 const MULTIPLAYER_LEFT_ESCAPE_SCREEN_X = CAMERA_TARGET_SCREEN_X - 350;
 const CAMERA_FOLLOW_GAIN = 0.2;
+// After a real side collision, use a stronger continuous recovery curve.  It
+// still fades to zero at centre and therefore never toggles on/off near it.
+const CAMERA_RECOVERY_FOLLOW_GAIN = 0.6;
 const CAMERA_TARGET_TOLERANCE = 4;
 const CHARACTERS = ['blue', 'green', 'yellow', 'red'];
 
@@ -57,7 +60,7 @@ export class GameRoom {
       id, slot, x: spawn.x, y: spawn.y, vx: spawn.speedX, vy: 0, startX: spawn.x, score: 0,
       previousX: spawn.x, previousY: spawn.y,
       speedX: spawn.speedX, character: CHARACTERS[slot - 1], name: playerName(name, slot), ready: Boolean(ready),
-      gravity: spawn.gravity, finished: false, eliminated: false, outcomeTick: null, blockedX: false, recoveringCameraPosition: false, flipWallGuard: 0,
+      gravity: spawn.gravity, finished: false, eliminated: false, outcomeTick: null, blockedX: false, recoveringCameraPosition: false, cameraRecoveryBoost: false, flipWallGuard: 0,
       hitbox: { width: PLAYER_WIDTH, height: PLAYER_HEIGHT, offsetX: PLAYER_OFFSET_X, offsetY: spawn.gravity < 0 ? INVERTED_PLAYER_OFFSET_Y : NORMAL_PLAYER_OFFSET_Y }
     };
     this.#players.set(id, player);
@@ -146,8 +149,9 @@ export class GameRoom {
     player.vx = nextCameraSpeed;
     const baseNextX = player.x + player.vx * dt;
     const distanceToCentre = cameraTargetX - baseNextX;
+    const followGain = player.cameraRecoveryBoost ? CAMERA_RECOVERY_FOLLOW_GAIN : CAMERA_FOLLOW_GAIN;
     const correction = distanceToCentre > CAMERA_TARGET_TOLERANCE
-      ? distanceToCentre * CAMERA_FOLLOW_GAIN * dt
+      ? distanceToCentre * followGain * dt
       : 0;
     // Sweep the complete base-plus-recovery movement so catch-up cannot cross
     // a side block.
@@ -156,12 +160,14 @@ export class GameRoom {
     player.blockedX = Boolean(sideBlock);
     if (sideBlock) {
       player.recoveringCameraPosition = true;
+      player.cameraRecoveryBoost = true;
       player.x = sideBlock.x - player.hitbox.offsetX - PLAYER_WIDTH;
     } else {
       player.x = nextX;
       if (distanceToCentre <= CAMERA_TARGET_TOLERANCE) {
         player.x = cameraTargetX;
         player.recoveringCameraPosition = false;
+        player.cameraRecoveryBoost = false;
       } else {
         player.vx += correction / dt;
         player.recoveringCameraPosition = true;
