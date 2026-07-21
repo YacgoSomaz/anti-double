@@ -48,7 +48,7 @@ export class GameRoom {
 
   join(id, name, ready = true) {
     if (this.#players.has(id)) return { ok: true, player: { ...this.#players.get(id) } };
-    if (this.#phase !== 'lobby') return { ok: false, error: 'match_started' };
+    if (this.#phase !== 'lobby') return { ok: false, error: this.#phase === 'results' ? 'match_finished' : 'match_started' };
     if (this.#players.size >= 4) return { ok: false, error: 'room_full' };
     const slot = [1, 2, 3, 4].find((candidate) => ![...this.#players.values()].some((player) => player.slot === candidate));
     const spawn = this.#level.spawns[slot - 1];

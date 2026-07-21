@@ -221,6 +221,28 @@ Promise.all([mapLoad, ...[...sprites, ...Object.values(scene)].map((image) => wa
   if (!frontScreen.hidden) frontScreen.dataset.phase = 'menu';
 });
 function setStatus(value, live = false) { status.textContent = value; dot.classList.toggle('live', live); }
+function nextRoomCode(value) {
+  const code = String(value ?? '').trim().toUpperCase();
+  const suffix = /^(.*?)(\d+)$/.exec(code);
+  if (suffix) {
+    const candidate = `${suffix[1]}${Number(suffix[2]) + 1}`;
+    if (candidate.length <= 12) return candidate;
+  }
+  return `${code.slice(0, 11)}2`;
+}
+function joinFailure(error, code) {
+  if (error === 'match_started' || error === 'match_finished') {
+    const room = nextRoomCode(code);
+    return {
+      room,
+      message: error === 'match_finished'
+        ? `上一局已经结束，已改为 ${room}；点击“开始联机”即可创建新房。`
+        : `该房间正在比赛，已改为 ${room}；点击“开始联机”即可创建新房。`
+    };
+  }
+  if (error === 'room_full') return { room: null, message: '该房间已满，请更换房间号后重试。' };
+  return { room: null, message: '加入房间失败，请重试。' };
+}
 function sendReady() {
   if (!raceReady || readySent || !localSlot || socket?.readyState !== WebSocket.OPEN) return;
   readySent = true;
@@ -252,20 +274,35 @@ async function connect() {
     join.disabled = !raceReady;
     setStatus(message);
   };
+  const abandonJoin = (message) => {
+    restoreJoinScreen(message);
+    if (socket !== connection || localSlot) return;
+    socket = undefined;
+    connection.close();
+  };
   joinTimeout = setTimeout(() => {
     if (socket !== connection || localSlot) return;
-    restoreJoinScreen('加入房间超时，请重试');
-    connection.close();
+    abandonJoin('加入房间超时，请重试');
   }, 8000);
   connection.addEventListener('open', () => connection.send(JSON.stringify({ type:'join', room:roomCode, name:nickname.value })));
-  connection.addEventListener('message', ({ data }) => handle(JSON.parse(data), connection));
+  connection.addEventListener('message', ({ data }) => {
+    let message;
+    try { message = JSON.parse(data); } catch { abandonJoin('服务响应异常，请重试'); return; }
+    if (message.type === 'error' && !localSlot) {
+      const failure = joinFailure(message.error, roomCode);
+      if (failure.room) room.value = failure.room;
+      abandonJoin(failure.message);
+      return;
+    }
+    handle(message, connection);
+  });
   connection.addEventListener('close', () => {
     if (socket !== connection) return;
     flip.disabled = true; lobbyStart.disabled = true;
-    if (!localSlot) restoreJoinScreen('连接已断开，请重试');
+    if (!localSlot) { restoreJoinScreen('连接已断开，请重试'); socket = undefined; }
     else setStatus('连接已断开');
   });
-  connection.addEventListener('error', () => restoreJoinScreen('连接失败，请重试'));
+  connection.addEventListener('error', () => abandonJoin('连接失败，请重试'));
 }
 function renderLobby() {
   if (!localSlot) return;
