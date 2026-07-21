@@ -362,7 +362,7 @@ function handle(message, connection = socket, consumeRaceState = false) {
   if (message.type === 'state') {
     const receivedAt = performance.now();
     const presentedCamera = advanceCamera(cameraX, receivedAt - cameraUpdatedAt, state.cameraSpeed);
-    const presentedPlayers = new Map(state.players.map((player) => [player.slot, advancePresentation(player, receivedAt - stateReceivedAt)]));
+    const presentedPlayers = new Map(state.players.map((player) => [player.slot, advancePresentation(player, receivedAt - stateReceivedAt, state.cameraSpeed)]));
     state = message.compact ? decodeCompactRaceState(message) : message;
     if (state.phase === 'playing') for (const player of state.players) {
       const presented = presentedPlayers.get(player.slot);
@@ -487,7 +487,7 @@ function drawMarathonDecorations(camera, property) {
   return drawn;
 }
 function renderPlayer(player, now) {
-  const position = advancePresentation(player, now - stateReceivedAt);
+  const position = advancePresentation(player, now - stateReceivedAt, state.cameraSpeed);
   return { ...player, ...position };
 }
 function drawPlayerName(player, x, y) {
