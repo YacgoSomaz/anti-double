@@ -2,7 +2,7 @@ import { once } from 'node:events';
 import net from 'node:net';
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createRealtimeServer } from '../src/realtime-server.mjs';
+import { createRealtimeServer, encodeRaceState } from '../src/realtime-server.mjs';
 
 const tinyLevel = {
   tileSize: 48,
@@ -107,14 +107,33 @@ test('keeps remote players in a host-controlled lobby, then starts one authorita
   two.send({ type: 'flip', sequence: 1 });
   await two.waitFor((message) => message.type === 'input_ok');
   realtime.tick();
+  realtime.tick();
 
-  const first = await one.waitFor((message) => message.type === 'state' && message.phase === 'playing' && message.players[1].gravity === 1);
-  const second = await two.waitFor((message) => message.type === 'state' && message.phase === 'playing' && message.players[1].gravity === 1);
+  const first = await one.waitFor((message) => message.type === 'state' && message.compact === true && message.p[1][5] === 1);
+  const second = await two.waitFor((message) => message.type === 'state' && message.compact === true && message.p[1][5] === 1);
   assert.deepEqual(first, second);
-  assert.equal(first.players[1].gravity, 1);
-  assert.equal(typeof first.cameraX, 'number');
-  assert.equal(typeof first.cameraSpeed, 'number');
-  assert.equal(first.cameraSpeed > 0, true);
+  assert.equal(first.tick, 2);
+  assert.equal(first.p[1][5], 1);
+  assert.equal(typeof first.c[0], 'number');
+  assert.equal(typeof first.c[1], 'number');
+  assert.equal(first.c[1] > 0, true);
+});
+
+test('encodes four-player race snapshots into a compact packet suitable for 20 Hz broadcast', () => {
+  const players = Array.from({ length: 4 }, (_, index) => ({
+    id: `internal-${index}`, slot: index + 1, x: 325.297295119375, y: 111.018875 + index * 40,
+    vx: 211.891804775, vy: index % 2 ? -320.755 : 320.755, previousX: 316, previousY: 103,
+    speedX: 211.891804775, character: 'blue', name: '玩家名字很长', ready: true, gravity: index % 2 ? -1 : 1,
+    finished: false, eliminated: false, blockedX: false, recoveringCameraPosition: false, flipWallGuard: 0,
+    hitbox: { width: 37, height: 48, offsetX: 16, offsetY: 19 }
+  }));
+  const packet = encodeRaceState({ tick: 40, cameraX: 5.297295119375, cameraSpeed: 211.891804775, players });
+
+  assert.deepEqual(packet, {
+    type: 'state', compact: true, tick: 40, c: [530, 21189],
+    p: [[1, 32530, 11102, 21189, 32076, 1, 0], [2, 32530, 15102, 21189, -32076, -1, 0], [3, 32530, 19102, 21189, 32076, 1, 0], [4, 32530, 23102, 21189, -32076, -1, 0]]
+  });
+  assert.equal(Buffer.byteLength(JSON.stringify(packet)) < 250, true);
 });
 
 test('validates WebSocket messages without exposing internal errors', async (context) => {
