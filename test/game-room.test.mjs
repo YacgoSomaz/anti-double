@@ -416,7 +416,7 @@ test('cancels vertical movement when opposite gravity runners press together', (
   assert.equal(second.vy, 0);
 });
 
-test('lets the downward-gravity runner keep its contact position when an inverted runner is underneath', () => {
+test('shares vertical separation between opposite-gravity runners that press together', () => {
   const room = new GameRoom({
     tileSize: 48,
     colliders: [],
@@ -430,8 +430,10 @@ test('lets the downward-gravity runner keep its contact position when an inverte
   room.tick(1 / 40);
 
   const [downwardRunner, invertedRunner] = room.snapshot().players;
-  assert.equal(downwardRunner.y, 118.75);
-  assert.equal(invertedRunner.y, 176.75);
+  // Both runners have the same capped vertical movement, so each absorbs half
+  // of the overlap correction.  Neither player is the other's position anchor.
+  assert.equal(downwardRunner.y, 93);
+  assert.equal(invertedRunner.y, 151);
   assert.equal(downwardRunner.vy, 0);
   assert.equal(invertedRunner.vy, 0);
 });
