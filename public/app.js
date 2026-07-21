@@ -16,9 +16,8 @@ const soundToggle = document.querySelector('#sound-toggle');
 const overlay = document.querySelector('#overlay');
 const frontScreen = document.querySelector('#front-screen');
 const endScreen = document.querySelector('#end-screen');
-const endResult = document.querySelector('#end-result');
 const endRankings = document.querySelector('#end-rankings');
-const backMenu = document.querySelector('#back-menu');
+const nextRound = document.querySelector('#next-round');
 const spectatorBanner = document.querySelector('#spectator-banner');
 const fullscreen = document.querySelector('#fullscreen');
 const status = document.querySelector('#status');
@@ -391,9 +390,7 @@ function showEndScreen(player) {
   showingEnd = true;
   flip.disabled = true;
   stopAudio(music);
-  const ownResult = state.results.find((result) => result.slot === player.slot);
-  setStatus(ownResult?.outcome === 'finished' ? '已完成全程' : '本局结束', true);
-  endResult.textContent = ownResult ? `第 ${ownResult.rank} 名 · ${ownResult.outcome === 'finished' ? '完成全程' : '淘汰出局'}` : '本局结束';
+  setStatus('本局排名已确定', true);
   renderRankings(state.results);
   endScreen.hidden = false;
 }
@@ -401,12 +398,11 @@ function renderRankings(results) {
   endRankings.replaceChildren(...results.map((result) => {
     const player = state.players.find((item) => item.slot === result.slot);
     const item = document.createElement('li');
-    item.classList.toggle('local', result.slot === localSlot);
-    const label = document.createElement('span');
-    label.textContent = `第 ${result.rank} 名 · ${player?.name ?? `玩家 ${result.slot}`}`;
-    const outcome = document.createElement('b');
-    outcome.textContent = result.outcome === 'finished' ? '完成' : '淘汰';
-    item.append(label, outcome);
+    item.setAttribute('aria-label', `第 ${result.rank} 名：${player?.name ?? `玩家 ${result.slot}`}`);
+    const avatar = document.createElement('span');
+    avatar.className = 'rank-avatar';
+    avatar.style.setProperty('--avatar-image', `url(${assetUrl(`assets/players/${spriteSources[(player?.slot ?? result.slot) - 1]}`)})`);
+    item.append(avatar);
     return item;
   }));
 }
@@ -503,7 +499,7 @@ function draw() {
   }
   ctx.fillStyle='#fff'; ctx.font='bold 16px Arial'; ctx.fillText(String(Math.floor(state.tick ?? 0)).padStart(3, '0'), 590, 24);
 }
-join.addEventListener('click', connect); lobbyStart.addEventListener('click', startMatch); backMenu.addEventListener('click', returnToMenu); flip.addEventListener('click', sendFlip); soundToggle.addEventListener('click', toggleSound); canvas.addEventListener('click', sendFlip);
+join.addEventListener('click', connect); lobbyStart.addEventListener('click', startMatch); nextRound.addEventListener('click', returnToMenu); flip.addEventListener('click', sendFlip); soundToggle.addEventListener('click', toggleSound); canvas.addEventListener('click', sendFlip);
 fullscreen.addEventListener('click', () => {
   if (document.fullscreenElement) document.exitFullscreen?.();
   else gameShell.requestFullscreen?.();

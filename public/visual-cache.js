@@ -14,7 +14,7 @@ function firstRecordAtOrAfter(records, x) {
 export function buildVisualDrawList(visualMap, property) {
   const records = [];
   let maxWidth = 0;
-  for (const decoration of visualMap?.[property] ?? []) {
+  for (const [sourceIndex, decoration] of (visualMap?.[property] ?? []).entries()) {
     const asset = visualMap.assets?.[decoration.imageId];
     if (!asset) continue;
     const placement = projectVisual(decoration, asset);
@@ -25,7 +25,8 @@ export function buildVisualDrawList(visualMap, property) {
       x: placement.x + (placement.offsetX ?? 0),
       y: placement.y + (placement.offsetY ?? 0),
       width,
-      height
+      height,
+      sourceIndex
     });
     maxWidth = Math.max(maxWidth, width);
   }
@@ -43,5 +44,8 @@ export function visibleDrawList(cache, left, right, top, bottom) {
     if (record.x + record.width < left || record.y + record.height < top || record.y > bottom) continue;
     visible.push(record);
   }
-  return visible;
+  // `records` are x-sorted for the binary search above, but the extracted SWF
+  // order is the visual layer order.  Restore it after culling so overlapping
+  // walls and upper buildings are painted like the original scene.
+  return visible.sort((first, second) => first.sourceIndex - second.sourceIndex);
 }

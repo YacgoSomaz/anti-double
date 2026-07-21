@@ -32,14 +32,19 @@ main { width:min(960px,100%); padding:22px; } header,.controls { display:flex; a
 #menu-panel #room { width:128px; padding:5px 8px; border-color:#7896a4; background:#071117; }
 #menu-start,#back-menu { min-width:184px; justify-self:center; padding:10px 18px; border:1px solid #d8e8f0; background:linear-gradient(#314b5b,#101f2b); color:#fff; font-weight:bold; letter-spacing:.12em; text-shadow:0 1px #000; box-shadow:inset 0 0 0 2px #14232d,0 4px 14px #0008; }
 #menu-start:hover,#back-menu:hover { border-color:#f5d961; color:#fff4ad; }
-#end-screen { display:grid; place-items:center; background:#000 url('/assets/menu/multi-end.png') center/cover no-repeat; animation:end-in .45s ease-out; }
+#end-screen { background:#000 url('/assets/menu/multi-end.png') center/cover no-repeat; animation:end-in .45s ease-out; }
 #end-screen[hidden],#front-screen[hidden] { display:none; }
-.end-copy { display:grid; gap:11px; place-items:center; transform:translateY(5px); text-align:center; text-shadow:0 2px 4px #000; }
-.end-copy strong { font-size:32px; color:#eaf6ff; letter-spacing:.18em; }
-.end-copy span { color:#a8d8ed; font-size:17px; }
 #overlay { z-index:3; }
 #spectator-banner { position:absolute; z-index:1; top:66px; left:50%; transform:translateX(-50%); padding:7px 13px; border:1px solid #d8c56f; background:#111c25dc; color:#fff0a8; font-weight:bold; text-shadow:0 1px #000; } #spectator-banner[hidden] { display:none; }
-.end-copy { width:min(360px,88%); }.end-copy ol { width:100%; margin:0; padding:0; list-style:none; border:1px solid #7b9eaf; background:#061018d9; }.end-copy li { display:flex; justify-content:space-between; gap:12px; padding:7px 10px; border-top:1px solid #294654; color:#d3e5ed; }.end-copy li:first-child { border-top:0; }.end-copy li.local { color:#fff1a4; background:#294151aa; }
+#end-rankings { position:absolute; inset:0; margin:0; padding:0; list-style:none; pointer-events:none; }
+#end-rankings li { position:absolute; display:grid; place-items:center; }
+#end-rankings li:nth-child(1) { left:105px; top:150px; width:150px; height:190px; }
+#end-rankings li:nth-child(2) { left:366px; top:86px; width:58px; height:72px; }
+#end-rankings li:nth-child(3) { left:366px; top:226px; width:58px; height:72px; }
+#end-rankings li:nth-child(4) { left:366px; top:365px; width:58px; height:72px; }
+.rank-avatar { display:block; width:58px; aspect-ratio:65/77; background:var(--avatar-image) 0 0/1500% 900% no-repeat; filter:drop-shadow(0 3px 5px #000); }
+#end-rankings li:nth-child(1) .rank-avatar { width:130px; }
+#next-round { position:absolute; right:12px; bottom:12px; z-index:1; min-width:94px; padding:7px 10px; border-color:#d8e8f0; background:linear-gradient(#314b5b,#101f2b); color:#fff; font-size:12px; font-weight:bold; text-shadow:0 1px #000; }
 .controls > span { color:var(--muted); }
 @keyframes loading-bar { from { width:0; } to { width:100%; } }
 @keyframes loading-out { to { opacity:0; transform:translateY(8px); } }
