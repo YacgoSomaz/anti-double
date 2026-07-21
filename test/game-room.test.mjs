@@ -333,7 +333,7 @@ test('smoothly pulls a lagging runner toward the shared camera even without a si
   assert.equal(second.vx < first.vx, true);
 });
 
-test('quickly restores a runner to the shared camera after clearing a side block', () => {
+test('steadily restores a runner to the shared camera after clearing a side block', () => {
   const room = new GameRoom({
     tileSize: 48,
     colliders: [{ x: 3, y: 0 }],
@@ -342,12 +342,20 @@ test('quickly restores a runner to the shared camera after clearing a side block
   room.join('a');
   room.start('a');
 
-  for (let frame = 0; frame < 10; frame += 1) room.tick(1 / 40);
+  room.tick(1 / 40);
+  room.tick(1 / 40);
+  const firstRecovery = room.snapshot().players[0];
+  room.tick(1 / 40);
+  const secondRecovery = room.snapshot().players[0];
+  for (let frame = 0; frame < 7; frame += 1) room.tick(1 / 40);
 
   const snapshot = room.snapshot();
   const player = snapshot.players[0];
   assert.equal(player.eliminated, false);
-  assert.equal(player.x - snapshot.cameraX > 90, true);
+  assert.equal(firstRecovery.cameraRecoverySpeed > 0, true);
+  assert.equal(secondRecovery.cameraRecoverySpeed > firstRecovery.cameraRecoverySpeed, true);
+  assert.equal(firstRecovery.vx - firstRecovery.speedX < 100, true);
+  assert.equal(player.x - snapshot.cameraX > 78, true);
   assert.equal(player.vx > player.speedX, true);
 });
 
