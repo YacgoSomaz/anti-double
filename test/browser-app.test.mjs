@@ -131,6 +131,15 @@ test('fits the complete original stage inside a narrow or short mobile viewport'
   assert.match(stylesheet, /canvas \{[^}]*aspect-ratio:640\/501/);
 });
 
+test('keeps the host start action and lobby controls usable on a narrow phone', async () => {
+  const stylesheet = await readFile(new URL('../public/style.css', import.meta.url), 'utf8');
+
+  assert.match(stylesheet, /@media \(max-width:620px\)[\s\S]*#lobby-start \{[^}]*min-width:0[^}]*min-height:42px/);
+  assert.match(stylesheet, /@media \(max-width:620px\)[\s\S]*\.lobby-card li \{[^}]*height:74px[^}]*aspect-ratio:auto/);
+  assert.match(stylesheet, /@media \(max-width:620px\)[\s\S]*#diagnostics \{\s*display:none/);
+  assert.match(stylesheet, /@media \(max-width:620px\)[\s\S]*\.controls \{[^}]*grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);
+});
+
 test('loads every original multiplayer decoration layer rather than drawing collision tiles as scenery', async () => {
   const app = await readFile(new URL('../public/app.js', import.meta.url), 'utf8');
   assert.match(app, /data\/marathon\.json/);
