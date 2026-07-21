@@ -418,17 +418,21 @@ test('accelerates every original 40 FPS physics frame instead of keeping the spa
   assert.equal(player.vx > player.speedX, true);
 });
 
-test('caps acceleration at the recovered speed threshold', () => {
+test('continues accelerating past the former speed threshold with the shared camera', () => {
   const room = new GameRoom({
     tileSize: 34,
     colliders: [],
     spawns: [{ x: 0, y: 100, gravity: 0, speedX: 769.812 }]
   });
   room.join('a');
+  room.start('a');
 
-  room.tick(1 / 40);
+  for (let frame = 0; frame < 40; frame += 1) room.tick(1 / 40);
 
-  assert.equal(room.snapshot().players[0].speedX, 769.812);
+  const snapshot = room.snapshot();
+  assert.equal(snapshot.players[0].speedX > 769.812, true);
+  assert.equal(Number(snapshot.players[0].speedX.toFixed(6)), 777.552191);
+  assert.equal(snapshot.cameraSpeed, snapshot.players[0].speedX);
 });
 
 test('stacks a player on another player rather than turning a shallow vertical contact into a side push', () => {
