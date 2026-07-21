@@ -3,6 +3,7 @@ import { assetUrl } from '/asset-urls.js';
 import { animationFrame, frameSourceRect, PLAYER_FRAME_HEIGHT, PLAYER_FRAME_WIDTH } from '/player-animation.js';
 import { advanceCamera } from '/camera.js';
 import { drawPlayerSprite } from '/player-render.js';
+import { createFrameTimingMonitor, createPacketTimingMonitor, formatDiagnostics } from '/network-diagnostics.js';
 
 const canvas = document.querySelector('#game');
 const ctx = canvas.getContext('2d');
@@ -19,6 +20,7 @@ const backMenu = document.querySelector('#back-menu');
 const status = document.querySelector('#status');
 const dot = document.querySelector('#dot');
 const ping = document.querySelector('#ping');
+const diagnostics = document.querySelector('#diagnostics');
 const players = document.querySelector('#players');
 const courseStatus = document.querySelector('#course-status');
 const lobbyRoom = document.querySelector('#lobby-room');
@@ -116,7 +118,14 @@ const FINAL_TUNNEL_ASSETS = new Set([
 // 首局只依赖完整碰撞地图、MP02 视觉、四个角色和五张公共场景图。
 // MP03/MP04 在后台预取，不能再把房间开始按钮卡在后续赛段资源上。
 const RACE_RESOURCE_TOTAL = 11;
+const packetTiming = createPacketTimingMonitor(); const frameTiming = createFrameTimingMonitor(); let lastDiagnosticsUpdate = 0;
 let socket; let joinTimeout; let sequence = 0; let state = { phase: 'lobby', players: [] }; let map; let visualMaps = new Map(); let lastPing = 0; let stateReceivedAt = performance.now(); let localSlot; let roomCode; let cameraX = 0; let cameraUpdatedAt = performance.now(); let showingEnd = false; let resourcesReady = false; let raceReady = false; let resourcesFailed = false; let readySent = false; let readySoundPlayed = false; let raceResourceLoaded = 0;
+
+function updateDiagnostics(now) {
+  if (now - lastDiagnosticsUpdate < 500) return;
+  lastDiagnosticsUpdate = now;
+  diagnostics.textContent = formatDiagnostics(packetTiming.summary(), frameTiming.summary());
+}
 
 function updateLobbyProgress() {
   const percent = Math.round(raceResourceLoaded / RACE_RESOURCE_TOTAL * 100);
@@ -275,7 +284,7 @@ function handle(message, connection = socket) {
   if (connection !== socket) return;
   if (message.type === 'joined') { clearTimeout(joinTimeout); join.disabled = false; localSlot = message.player.slot; roomCode = message.room; cameraX = Math.max(0, message.player.x - canvas.width / 2); cameraUpdatedAt = performance.now(); overlay.hidden = true; frontScreen.hidden = false; frontScreen.dataset.phase = 'lobby'; flip.disabled = true; sendReady(); signalRaceReady(); playAudio(menuMusic); setStatus(raceReady ? `已进入 ${message.room} 等待大厅` : '正在后台加载赛道资源…', true); renderLobby(); return; }
   if (message.type === 'state') {
-    state = message.compact ? decodeCompactRaceState(message) : message; stateReceivedAt = performance.now(); players.textContent = `${state.players.length}/4 玩家在线`;
+    state = message.compact ? decodeCompactRaceState(message) : message; stateReceivedAt = performance.now(); packetTiming.observe({ now: stateReceivedAt, tick: state.tick }); players.textContent = `${state.players.length}/4 玩家在线`;
     if (state.phase === 'lobby') { frontScreen.hidden = false; frontScreen.dataset.phase = 'lobby'; flip.disabled = true; courseStatus.textContent = '等待房主开始比赛'; renderLobby(); }
     else { frontScreen.hidden = true; flip.disabled = false; courseStatus.textContent = '赛道：MP02 → MP03 → MP04'; }
     const localPlayer = state.players.find((player) => player.slot === localSlot);
@@ -397,5 +406,5 @@ function draw() {
 join.addEventListener('click', connect); lobbyStart.addEventListener('click', startMatch); backMenu.addEventListener('click', returnToMenu); flip.addEventListener('click', sendFlip); soundToggle.addEventListener('click', toggleSound); canvas.addEventListener('click', sendFlip);
 addEventListener('keydown', (event) => { if(event.code==='Space'&&!event.repeat) {event.preventDefault();sendFlip();} });
 setInterval(() => { if(socket?.readyState===WebSocket.OPEN) { lastPing=performance.now(); socket.send(JSON.stringify({type:'ping'})); } }, 2000);
-function animationLoop() { draw(); requestAnimationFrame(animationLoop); }
+function animationLoop(now) { frameTiming.observe(now); updateDiagnostics(now); draw(); requestAnimationFrame(animationLoop); }
 requestAnimationFrame(animationLoop);
