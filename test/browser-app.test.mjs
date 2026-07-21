@@ -118,6 +118,7 @@ test('keeps eliminated players spectating and renders final server rankings with
   assert.match(app, /renderRankings/);
   assert.match(app, /观战中/);
   assert.match(app, /requestFullscreen/);
+  assert.match(app, /type: 'diagnostics'/);
   assert.match(stylesheet, /width:min\(900px,100%\)/);
   assert.match(html, /canvas id="game" width="640" height="501"/);
 });

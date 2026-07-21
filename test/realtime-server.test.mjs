@@ -152,6 +152,23 @@ test('adds authoritative final placements only when a race has results', () => {
   assert.deepEqual(packet.r, [[2, 1, 1], [1, 2, 0]]);
 });
 
+test('retains a short-lived aggregate of client jitter reports without player identity', async (context) => {
+  const realtime = createRealtimeServer({ level: tinyLevel, autoTick: false });
+  realtime.server.listen(0, '127.0.0.1');
+  await once(realtime.server, 'listening');
+  const { port } = realtime.server.address();
+  const one = await client(port);
+  context.after(() => { one.close(); realtime.close(); });
+
+  one.send({ type: 'diagnostics', diagnostics: { packetP95Ms: 82, packetMaxMs: 141, skippedTicks: 2, serverP95Ms: 26, frameFps: 48, droppedFrames: 3 } });
+  await one.waitFor((message) => message.type === 'diagnostics_ok');
+
+  assert.deepEqual(realtime.diagnostics(), {
+    reports: 1, packetP95Ms: 82, packetMaxMs: 141, skippedTicks: 2,
+    serverP95Ms: 26, minimumFrameFps: 48, droppedFrames: 3
+  });
+});
+
 test('validates WebSocket messages without exposing internal errors', async (context) => {
   const realtime = createRealtimeServer({ level: tinyLevel, autoTick: false });
   realtime.server.listen(0, '127.0.0.1');
