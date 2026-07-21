@@ -290,7 +290,7 @@ function decodeCompactRaceState(message) {
   const knownPlayers = new Map(state.players.map((player) => [player.slot, player]));
   return {
     ...message,
-    phase: 'playing',
+    phase: Array.isArray(message.r) ? 'results' : 'playing',
     hostSlot: state.hostSlot,
     cameraX: message.c[0] / 100,
     cameraSpeed: message.c[1] / 100,
