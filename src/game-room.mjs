@@ -18,9 +18,10 @@ const CAMERA_TARGET_SCREEN_X = 320;
 // equivalent left-edge threshold is 320 - 350 = -30 px.
 const MULTIPLAYER_LEFT_ESCAPE_SCREEN_X = CAMERA_TARGET_SCREEN_X - 350;
 const CAMERA_FOLLOW_GAIN = 0.2;
-// After a real side collision, use a stronger continuous recovery curve.  It
-// still fades to zero at centre and therefore never toggles on/off near it.
-const CAMERA_RECOVERY_FOLLOW_GAIN = 0.6;
+// After a real side collision, add up to 75% of the current shared speed.
+// The percentage is itself proportional to the centre gap, so it fades
+// continuously to zero near the target and remains effective late in a race.
+const CAMERA_RECOVERY_MAX_SPEED_RATIO = 0.75;
 const CAMERA_TARGET_TOLERANCE = 4;
 const CHARACTERS = ['blue', 'green', 'yellow', 'red'];
 
@@ -149,9 +150,13 @@ export class GameRoom {
     player.vx = nextCameraSpeed;
     const baseNextX = player.x + player.vx * dt;
     const distanceToCentre = cameraTargetX - baseNextX;
-    const followGain = player.cameraRecoveryBoost ? CAMERA_RECOVERY_FOLLOW_GAIN : CAMERA_FOLLOW_GAIN;
+    const recoveryRatio = player.cameraRecoveryBoost
+      ? Math.min(1, distanceToCentre / CAMERA_TARGET_SCREEN_X) * CAMERA_RECOVERY_MAX_SPEED_RATIO
+      : 0;
     const correction = distanceToCentre > CAMERA_TARGET_TOLERANCE
-      ? distanceToCentre * followGain * dt
+      ? (player.cameraRecoveryBoost
+        ? nextCameraSpeed * recoveryRatio * dt
+        : distanceToCentre * CAMERA_FOLLOW_GAIN * dt)
       : 0;
     // Sweep the complete base-plus-recovery movement so catch-up cannot cross
     // a side block.
