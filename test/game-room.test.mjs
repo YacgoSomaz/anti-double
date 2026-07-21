@@ -376,6 +376,25 @@ test('gives a substantially larger but continuously fading catch-up bonus farthe
   assert.equal(nearBonus > 0, true);
 });
 
+test('scales a blocked runner catch-up bonus with the current shared speed', () => {
+  const recoveryBonus = (speed) => {
+    const room = new GameRoom({
+      tileSize: 48,
+      colliders: [{ x: 3, y: 0 }],
+      spawns: [{ x: 80, y: -10, gravity: 1, speedX: speed }]
+    });
+    room.join('runner');
+    room.start('runner');
+    for (let frame = 0; frame < 3; frame += 1) room.tick(1 / 40);
+    const snapshot = room.snapshot();
+    return snapshot.players[0].vx - snapshot.cameraSpeed;
+  };
+
+  const slowerBonus = recoveryBonus(300);
+  const fasterBonus = recoveryBonus(600);
+  assert.equal(fasterBonus > slowerBonus * 1.8, true);
+});
+
 test('eliminates a runner that a side block leaves behind the scrolling camera', () => {
   const room = new GameRoom({
     tileSize: 48,
