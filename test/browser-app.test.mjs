@@ -156,6 +156,14 @@ test('keeps ranking characters inside their original frames on a scaled stage wi
   assert.doesNotMatch(app, /if \(scene\.hud\.complete\) ctx\.drawImage\(scene\.hud, 0, 0\)/);
 });
 
+test('draws a fixed red centre-line diagnostic over the race stage', async () => {
+  const app = await readFile(new URL('../public/app.js', import.meta.url), 'utf8');
+
+  assert.match(app, /CAMERA_DEBUG_SCREEN_X = 320/);
+  assert.match(app, /function drawCameraCentreDiagnostic/);
+  assert.match(app, /drawCameraCentreDiagnostic\(\)/);
+});
+
 test('fits the complete original stage inside a narrow or short mobile viewport', async () => {
   const stylesheet = await readFile(new URL('../public/style.css', import.meta.url), 'utf8');
 
