@@ -44,4 +44,31 @@ main { width:min(960px,100%); padding:22px; } header,.controls { display:flex; a
 @keyframes loading-bar { from { width:0; } to { width:100%; } }
 @keyframes loading-out { to { opacity:0; transform:translateY(8px); } }
 @keyframes end-in { from { opacity:0; transform:scale(.97); } to { opacity:1; transform:scale(1); } }
-@media (max-width:620px) { .menu-title-mask { transform:translateX(-50%) scale(.82); transform-origin:top center; } #menu-panel { padding-bottom:50px; gap:6px; } }
+@media (max-width:620px) {
+  header { display:block; }
+  .status { max-width:none; justify-content:flex-start; }
+  #diagnostics { display:none; }
+  .controls { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); align-items:stretch; }
+  .controls button { min-height:42px; padding:7px 4px; white-space:nowrap; }
+  #flip kbd { display:none; }
+  #course-status,#players { grid-column:1/-1; width:auto; margin-left:0; }
+  #course-status { padding-top:2px; }
+
+  #lobby-panel { padding:10px; }
+  .lobby-card { width:min(440px,100%); gap:5px; padding:10px; }
+  .lobby-kicker { font-size:10px; }
+  .lobby-card strong { font-size:20px; }
+  .lobby-card p { font-size:11px; line-height:1.2; }
+  #lobby-progress { gap:3px; font-size:10px; }
+  #lobby-progress i { height:5px; }
+  .lobby-card ol { gap:4px; }
+  .lobby-card li { height:74px; aspect-ratio:auto; padding:3px; }
+  .lobby-name { font-size:10px; }
+  .lobby-avatar { width:38px; }
+  .lobby-card li em { font-size:9px; line-height:1.1; }
+  .lobby-card li b { right:3px; bottom:2px; font-size:8px; }
+  #lobby-start { min-width:0; min-height:42px; width:min(220px,100%); padding:8px; }
+
+  .menu-title-mask { transform:translateX(-50%) scale(.82); transform-origin:top center; }
+  #menu-panel { padding-bottom:50px; gap:6px; }
+}
