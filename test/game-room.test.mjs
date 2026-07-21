@@ -415,3 +415,23 @@ test('cancels vertical movement when opposite gravity runners press together', (
   assert.equal(first.vy, 0);
   assert.equal(second.vy, 0);
 });
+
+test('lets the downward-gravity runner keep its contact position when an inverted runner is underneath', () => {
+  const room = new GameRoom({
+    tileSize: 48,
+    colliders: [],
+    spawns: [
+      { x: 100, y: 100, gravity: 1, speedX: 0 },
+      { x: 100, y: 144, gravity: -1, speedX: 0 }
+    ]
+  });
+  startRoom(room, 'a', 'b');
+
+  room.tick(1 / 40);
+
+  const [downwardRunner, invertedRunner] = room.snapshot().players;
+  assert.equal(downwardRunner.y, 118.75);
+  assert.equal(invertedRunner.y, 176.75);
+  assert.equal(downwardRunner.vy, 0);
+  assert.equal(invertedRunner.vy, 0);
+});
