@@ -507,6 +507,10 @@ function drawPlayerName(player, x, y) {
   ctx.restore();
 }
 function drawCameraCentreDiagnostic() {
+  const localPlayer = state.players.find((player) => player.slot === localSlot);
+  const now = performance.now();
+  const diagnosticCamera = advanceCamera(cameraX, now - cameraUpdatedAt, state.cameraSpeed);
+  const predicted = localPlayer ? advancePresentation(localPlayer, now - stateReceivedAt, state.cameraSpeed) : undefined;
   ctx.save();
   ctx.setLineDash([7, 5]);
   ctx.lineWidth = 2;
@@ -520,6 +524,13 @@ function drawCameraCentreDiagnostic() {
   ctx.font = 'bold 11px Arial';
   ctx.textAlign = 'center';
   ctx.fillText('中线', CAMERA_DEBUG_SCREEN_X, 74);
+  if (localPlayer && predicted) {
+    const distance = Math.round(CAMERA_DEBUG_SCREEN_X - (predicted.x - diagnosticCamera));
+    const detail = `距中线 ${distance}px · 角色 ${Math.round(localPlayer.vx)} · 镜头 ${Math.round(state.cameraSpeed || 0)} · ${localPlayer.blockedX ? '受阻' : '追赶'}`;
+    ctx.textAlign = 'left';
+    ctx.fillStyle = localPlayer.blockedX ? '#ffd75d' : '#ffb0b0';
+    ctx.fillText(detail, 8, 93);
+  }
   ctx.restore();
 }
 function draw() {
