@@ -134,15 +134,24 @@ export class GameRoom {
     if (player.finished || player.eliminated) return;
     player.previousX = player.x;
     player.previousY = player.y;
-    if (player.speedX < MAX_HORIZONTAL_SPEED) player.speedX = Math.min(MAX_HORIZONTAL_SPEED, player.speedX + HORIZONTAL_ACCELERATION * dt);
     // Original multiplayer follows one shared camera runner, not the current
     // first-place player.  All runners may approach that centre, but none may
     // pass it.  A lagging runner receives a distance-proportional correction,
     // which smoothly fades to zero as it reaches the centre.
     const nextCameraSpeed = Math.min(MAX_HORIZONTAL_SPEED, this.#cameraSpeed + HORIZONTAL_ACCELERATION * dt);
     const cameraTargetX = this.#cameraX + nextCameraSpeed * dt + CAMERA_TARGET_SCREEN_X;
-    player.vx = player.speedX;
-    const nextX = player.x + player.vx * dt;
+    // Camera speed is the one shared base speed.  A player can only exceed it
+    // while smoothly recovering from a position behind the centre target.
+    player.speedX = nextCameraSpeed;
+    player.vx = nextCameraSpeed;
+    const baseNextX = player.x + player.vx * dt;
+    const distanceToCentre = cameraTargetX - baseNextX;
+    const correction = distanceToCentre > CAMERA_TARGET_TOLERANCE
+      ? distanceToCentre * CAMERA_FOLLOW_GAIN * dt
+      : 0;
+    // Sweep the complete base-plus-recovery movement so catch-up cannot cross
+    // a side block.
+    const nextX = baseNextX + correction;
     const sideBlock = this.#firstSolidAhead(player, nextX);
     player.blockedX = Boolean(sideBlock);
     if (sideBlock) {
@@ -150,13 +159,10 @@ export class GameRoom {
       player.x = sideBlock.x - player.hitbox.offsetX - PLAYER_WIDTH;
     } else {
       player.x = nextX;
-      const distanceToCentre = cameraTargetX - player.x;
       if (distanceToCentre <= CAMERA_TARGET_TOLERANCE) {
         player.x = cameraTargetX;
         player.recoveringCameraPosition = false;
       } else {
-        const correction = distanceToCentre * CAMERA_FOLLOW_GAIN * dt;
-        player.x += correction;
         player.vx += correction / dt;
         player.recoveringCameraPosition = true;
       }
