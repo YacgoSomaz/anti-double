@@ -333,6 +333,26 @@ test('smoothly pulls a lagging runner toward the shared camera even without a si
   assert.equal(second.vx < first.vx, true);
 });
 
+test('binds every runner base speed to the shared camera before applying a catch-up bonus', () => {
+  const room = new GameRoom({
+    tileSize: 48,
+    colliders: [],
+    spawns: [
+      { x: 320, y: 100, gravity: 0, speedX: 600 },
+      { x: 0, y: 150, gravity: 0, speedX: 200 }
+    ]
+  });
+  room.join('leader');
+  room.join('lagging');
+  room.start('leader');
+
+  const snapshot = room.tick(1 / 40);
+  const [leader, lagging] = snapshot.players;
+  assert.equal(leader.speedX, snapshot.cameraSpeed);
+  assert.equal(lagging.speedX, snapshot.cameraSpeed);
+  assert.equal(lagging.vx > snapshot.cameraSpeed, true);
+});
+
 test('eliminates a runner that a side block leaves behind the scrolling camera', () => {
   const room = new GameRoom({
     tileSize: 48,
