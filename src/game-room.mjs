@@ -21,8 +21,8 @@ const MULTIPLAYER_LEFT_ESCAPE_SCREEN_X = CAMERA_TARGET_SCREEN_X - 350;
 // collision, it therefore needs an explicit (but swept) recovery speed to
 // return to the centre before the left-edge elimination rule catches it.
 const CAMERA_FOLLOW_GAIN = 0.2;
-const CAMERA_RECOVERY_FOLLOW_GAIN = 8;
-const CAMERA_MAX_RECOVERY_SPEED = 400;
+const CAMERA_RECOVERY_ACCELERATION = 240;
+const CAMERA_MAX_RECOVERY_SPEED = 280;
 const CAMERA_TARGET_TOLERANCE = 4;
 const CHARACTERS = ['blue', 'green', 'yellow', 'red'];
 
@@ -62,7 +62,7 @@ export class GameRoom {
       id, slot, x: spawn.x, y: spawn.y, vx: spawn.speedX, vy: 0, startX: spawn.x, score: 0,
       previousX: spawn.x, previousY: spawn.y,
       speedX: spawn.speedX, character: CHARACTERS[slot - 1], name: playerName(name, slot), ready: Boolean(ready),
-      gravity: spawn.gravity, finished: false, eliminated: false, outcomeTick: null, blockedX: false, recoveringCameraPosition: false, cameraRecoveryBoost: false, flipWallGuard: 0,
+      gravity: spawn.gravity, finished: false, eliminated: false, outcomeTick: null, blockedX: false, recoveringCameraPosition: false, cameraRecoveryBoost: false, cameraRecoverySpeed: 0, flipWallGuard: 0,
       hitbox: { width: PLAYER_WIDTH, height: PLAYER_HEIGHT, offsetX: PLAYER_OFFSET_X, offsetY: spawn.gravity < 0 ? INVERTED_PLAYER_OFFSET_Y : NORMAL_PLAYER_OFFSET_Y }
     };
     this.#players.set(id, player);
@@ -149,11 +149,14 @@ export class GameRoom {
     player.vx = player.speedX;
     const baseNextX = player.x + player.vx * dt;
     const distanceToCentre = cameraTargetX - baseNextX;
-    // Calculate recovery before sweeping the horizontal collision.  Adding it
-    // afterwards could place a lagging player on the far side of a wall.
-    const followGain = player.cameraRecoveryBoost ? CAMERA_RECOVERY_FOLLOW_GAIN : CAMERA_FOLLOW_GAIN;
+    // The normal pull stays smooth.  A player that was genuinely blocked then
+    // gains recovery speed a little every physics frame instead of snapping
+    // forward; the entire displacement is still collision-swept below.
+    const recoverySpeed = player.cameraRecoveryBoost
+      ? Math.min(CAMERA_MAX_RECOVERY_SPEED, player.cameraRecoverySpeed + CAMERA_RECOVERY_ACCELERATION * dt)
+      : 0;
     const correction = distanceToCentre > CAMERA_TARGET_TOLERANCE
-      ? Math.min(distanceToCentre * followGain * dt, CAMERA_MAX_RECOVERY_SPEED * dt)
+      ? Math.min(distanceToCentre, distanceToCentre * CAMERA_FOLLOW_GAIN * dt + recoverySpeed * dt)
       : 0;
     const nextX = baseNextX + correction;
     const sideBlock = this.#firstSolidAhead(player, nextX);
@@ -161,13 +164,16 @@ export class GameRoom {
     if (sideBlock) {
       player.recoveringCameraPosition = true;
       player.cameraRecoveryBoost = true;
+      player.cameraRecoverySpeed = 0;
       player.x = sideBlock.x - player.hitbox.offsetX - PLAYER_WIDTH;
     } else {
       player.x = nextX;
+      player.cameraRecoverySpeed = recoverySpeed;
       if (distanceToCentre <= CAMERA_TARGET_TOLERANCE) {
         player.x = cameraTargetX;
         player.recoveringCameraPosition = false;
         player.cameraRecoveryBoost = false;
+        player.cameraRecoverySpeed = 0;
       } else {
         player.vx += correction / dt;
         player.recoveringCameraPosition = true;
