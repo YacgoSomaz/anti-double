@@ -18,9 +18,9 @@ const CAMERA_TARGET_SCREEN_X = 320;
 // equivalent left-edge threshold is 320 - 350 = -30 px.
 const MULTIPLAYER_LEFT_ESCAPE_SCREEN_X = CAMERA_TARGET_SCREEN_X - 350;
 const CAMERA_FOLLOW_GAIN = 0.2;
-// After a real side collision, add up to 75% of the current shared speed.
-// The percentage is itself proportional to the centre gap, so it fades
-// continuously to zero near the target and remains effective late in a race.
+// Once a runner has entered the shared camera rhythm, being behind centre
+// adds up to 75% of the current shared speed. The percentage is proportional
+// to the centre gap, so it fades continuously to zero near the target.
 const CAMERA_RECOVERY_MAX_SPEED_RATIO = 0.75;
 const CAMERA_TARGET_TOLERANCE = 4;
 const BLOCKED_CAMERA_SAFETY_FRAMES = 12;
@@ -62,7 +62,7 @@ export class GameRoom {
       id, slot, x: spawn.x, y: spawn.y, vx: spawn.speedX, vy: 0, startX: spawn.x, score: 0,
       previousX: spawn.x, previousY: spawn.y,
       speedX: spawn.speedX, character: CHARACTERS[slot - 1], name: playerName(name, slot), ready: Boolean(ready),
-      gravity: spawn.gravity, finished: false, eliminated: false, outcomeTick: null, blockedX: false, recoveringCameraPosition: false, cameraRecoveryBoost: false, cameraSafetyFrames: 0, flipWallGuard: 0,
+      gravity: spawn.gravity, finished: false, eliminated: false, outcomeTick: null, blockedX: false, recoveringCameraPosition: false, cameraRecoveryBoost: false, hasReachedCameraCentre: Math.abs(spawn.x - CAMERA_TARGET_SCREEN_X) <= CAMERA_TARGET_TOLERANCE, cameraSafetyFrames: 0, flipWallGuard: 0,
       hitbox: { width: PLAYER_WIDTH, height: PLAYER_HEIGHT, offsetX: PLAYER_OFFSET_X, offsetY: spawn.gravity < 0 ? INVERTED_PLAYER_OFFSET_Y : NORMAL_PLAYER_OFFSET_Y }
     };
     this.#players.set(id, player);
@@ -151,13 +151,12 @@ export class GameRoom {
     player.vx = nextCameraSpeed;
     const baseNextX = player.x + player.vx * dt;
     const distanceToCentre = cameraTargetX - baseNextX;
-    const recoveryRatio = player.cameraRecoveryBoost
+    const usePercentageRecovery = player.hasReachedCameraCentre || player.cameraRecoveryBoost;
+    const recoveryRatio = usePercentageRecovery
       ? Math.min(1, distanceToCentre / CAMERA_TARGET_SCREEN_X) * CAMERA_RECOVERY_MAX_SPEED_RATIO
       : 0;
     const correction = distanceToCentre > CAMERA_TARGET_TOLERANCE
-      ? (player.cameraRecoveryBoost
-        ? nextCameraSpeed * recoveryRatio * dt
-        : distanceToCentre * CAMERA_FOLLOW_GAIN * dt)
+      ? (usePercentageRecovery ? nextCameraSpeed * recoveryRatio * dt : distanceToCentre * CAMERA_FOLLOW_GAIN * dt)
       : 0;
     // Sweep the complete base-plus-recovery movement so catch-up cannot cross
     // a side block.
@@ -172,6 +171,7 @@ export class GameRoom {
       player.x = nextX;
       if (distanceToCentre <= CAMERA_TARGET_TOLERANCE) {
         player.x = cameraTargetX;
+        player.hasReachedCameraCentre = true;
         player.recoveringCameraPosition = false;
         player.cameraRecoveryBoost = false;
       } else {

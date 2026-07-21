@@ -333,20 +333,6 @@ test('smoothly pulls a lagging runner toward the shared camera even without a si
   assert.equal(second.vx < first.vx, true);
 });
 
-test('uses a shared-speed percentage catch-up on open ground at late-race speed', () => {
-  const room = new GameRoom({
-    tileSize: 48,
-    colliders: [],
-    spawns: [{ x: 0, y: 100, gravity: 0, speedX: 600 }]
-  });
-  room.join('a');
-  room.start('a');
-
-  const player = room.tick(1 / 40).players[0];
-  assert.equal(player.blockedX, false);
-  assert.equal(player.vx - player.speedX > 400, true);
-});
-
 test('binds every runner base speed to the shared camera before applying a catch-up bonus', () => {
   const room = new GameRoom({
     tileSize: 48,
