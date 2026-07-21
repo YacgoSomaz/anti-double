@@ -411,6 +411,20 @@ test('holds the shared camera at the safety boundary while a side block pins a r
   assert.equal(snapshot.players[0].eliminated, false);
 });
 
+test('eliminates a runner still pinned after the short camera safety window', () => {
+  const room = new GameRoom({
+    tileSize: 48,
+    colliders: [{ x: 2, y: 0 }],
+    spawns: [{ x: 35, y: 0, gravity: 0, speedX: 400 }]
+  });
+  room.join('a');
+  room.start('a');
+
+  for (let frame = 0; frame < 16; frame += 1) room.tick(1 / 40);
+
+  assert.equal(room.snapshot().players[0].eliminated, true);
+});
+
 test('keeps advancing through the MP02 start instead of colliding with an invisible side wall', () => {
   const room = new GameRoom(loadLevel('mp02'));
   room.join('a');
