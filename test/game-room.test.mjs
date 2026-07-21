@@ -199,6 +199,20 @@ test('marks a player eliminated when their sprite leaves the multiplayer stage',
   assert.equal(room.input('a', { type: 'flip', sequence: 1 }).error, 'eliminated');
 });
 
+test('identifies a fully completed room separately from a race that is still running', () => {
+  const room = new GameRoom({
+    tileSize: 48,
+    colliders: [],
+    spawns: [{ x: 100, y: 500, gravity: 1, speedX: 0 }]
+  });
+  room.join('a');
+  room.start('a');
+  room.tick(1 / 40);
+
+  assert.equal(room.snapshot().phase, 'results');
+  assert.deepEqual(room.join('late'), { ok: false, error: 'match_finished' });
+});
+
 test('keeps an eliminated runner in the authoritative match until results rank every player', () => {
   const room = new GameRoom({
     tileSize: 48,

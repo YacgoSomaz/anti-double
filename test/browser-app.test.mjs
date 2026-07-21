@@ -153,6 +153,17 @@ test('keeps room inputs visible and remembers only the local player nickname on 
   assert.match(app, /localStorage\.setItem\(NICKNAME_STORAGE_KEY/);
 });
 
+test('explains a rejected room and proposes a fresh room code before joining', async () => {
+  const app = await readFile(new URL('../public/app.js', import.meta.url), 'utf8');
+
+  assert.match(app, /function nextRoomCode\(value\)/);
+  assert.match(app, /match_finished/);
+  assert.match(app, /上一局已经结束/);
+  assert.match(app, /该房间正在比赛/);
+  assert.match(app, /if \(message\.type === 'error' && !localSlot\)/);
+  assert.match(app, /room\.value = failure\.room;/);
+});
+
 test('loads every original multiplayer decoration layer rather than drawing collision tiles as scenery', async () => {
   const app = await readFile(new URL('../public/app.js', import.meta.url), 'utf8');
   assert.match(app, /data\/marathon\.json/);
