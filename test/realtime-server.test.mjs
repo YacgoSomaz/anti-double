@@ -39,6 +39,21 @@ test('coalesces volatile race states while a client socket is congested', () => 
   assert.deepEqual(sent, [100, 102]);
 });
 
+test('discards a queued race state before a reliable match transition', () => {
+  const sent = [];
+  const sender = createLatestStateSender((message) => {
+    sent.push(message.tick);
+    return false;
+  });
+
+  sender.send({ tick: 100 });
+  sender.send({ tick: 101 });
+  sender.clear();
+  sender.drain();
+
+  assert.deepEqual(sent, [100]);
+});
+
 function frame(message) {
   const payload = Buffer.from(JSON.stringify(message));
   const mask = Buffer.from([2, 4, 6, 8]);
