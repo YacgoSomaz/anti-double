@@ -161,3 +161,5 @@ Get-FileHash $swf -Algorithm SHA256
 ```
 
 进一步的低层 AVM2 证据保存在 `assets/reverse/player-avm2-disassembly.txt`、`assets/reverse/playstate-avm2-disassembly.txt`；实现对应关系与待办见 `docs/reverse-analysis.md`。本报告中的数字、类名和流程均可在上述正确样本及导出物中复查。
+
+多人回合流程、相机共享横向节拍、输入/动画状态机、触发器作用域和 Flixel 碰撞内核的进一步结论见 [SWF_FORENSICS_ADDENDUM.md](./SWF_FORENSICS_ADDENDUM.md)。该续报特别区分了原版多人规则与当前联网 marathon 的产品适配。
