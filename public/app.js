@@ -1,7 +1,7 @@
 import { buildVisualDrawList, visibleDrawList } from '/visual-cache.js';
 import { assetUrl } from '/asset-urls.js';
 import { animationFrame, frameSourceRect, PLAYER_FRAME_HEIGHT, PLAYER_FRAME_WIDTH } from '/player-animation.js';
-import { advanceCamera } from '/camera.js';
+import { advanceCamera, reconcileCamera } from '/camera.js';
 import { drawPlayerSprite } from '/player-render.js';
 import { createFrameTimingMonitor, createPacketTimingMonitor, formatDiagnostics } from '/network-diagnostics.js';
 
@@ -353,13 +353,16 @@ function handle(message, connection = socket) {
   if (connection !== socket) return;
   if (message.type === 'joined') { clearTimeout(joinTimeout); join.disabled = false; localSlot = message.player.slot; roomCode = message.room; cameraX = Math.max(0, message.player.x - canvas.width / 2); cameraUpdatedAt = performance.now(); overlay.hidden = true; frontScreen.hidden = false; frontScreen.dataset.phase = 'lobby'; flip.disabled = true; sendReady(); signalRaceReady(); playAudio(menuMusic); setStatus(raceReady ? `已进入 ${message.room} 等待大厅` : '正在后台加载赛道资源…', true); renderLobby(); return; }
   if (message.type === 'state') {
-    state = message.compact ? decodeCompactRaceState(message) : message; stateReceivedAt = performance.now(); packetTiming.observe({ now: stateReceivedAt, tick: state.tick, serverTickIntervalMs: state.serverTickIntervalMs }); players.textContent = `${state.players.length}/4 玩家在线`;
+    const receivedAt = performance.now();
+    const presentedCamera = advanceCamera(cameraX, receivedAt - cameraUpdatedAt, state.cameraSpeed);
+    state = message.compact ? decodeCompactRaceState(message) : message; stateReceivedAt = receivedAt; packetTiming.observe({ now: stateReceivedAt, tick: state.tick, serverTickIntervalMs: state.serverTickIntervalMs }); players.textContent = `${state.players.length}/4 玩家在线`;
     if (state.phase === 'lobby') { frontScreen.hidden = false; frontScreen.dataset.phase = 'lobby'; spectatorBanner.hidden = true; flip.disabled = true; courseStatus.textContent = '等待房主开始比赛'; renderLobby(); }
     else { frontScreen.hidden = true; }
     const localPlayer = state.players.find((player) => player.slot === localSlot);
     // Compact race packets store the camera in `c`, which is decoded above.
     // Read the normalized state so lobby and compact packets follow one path.
-    cameraX = Math.max(0, Number(state.cameraX) || 0);
+    const authoritativeCamera = Math.max(0, Number(state.cameraX) || 0);
+    cameraX = state.phase === 'playing' ? reconcileCamera(authoritativeCamera, presentedCamera) : authoritativeCamera;
     cameraUpdatedAt = stateReceivedAt;
     if (state.phase === 'playing' && (localPlayer?.finished || localPlayer?.eliminated)) {
       flip.disabled = true;

@@ -199,7 +199,8 @@ test('loads every original multiplayer decoration layer rather than drawing coll
   assert.match(app, /renderPlayer/);
   assert.match(app, /localSlot/);
   assert.match(app, /advanceCamera/);
-  assert.match(app, /cameraX = Math\.max\(0, Number\(state\.cameraX\) \|\| 0\)/);
+  assert.match(app, /const authoritativeCamera = Math\.max\(0, Number\(state\.cameraX\) \|\| 0\)/);
+  assert.match(app, /reconcileCamera\(authoritativeCamera, presentedCamera\)/);
   assert.doesNotMatch(app, /cameraX = Math\.max\(cameraX, Number\(message\.cameraX\)/);
   assert.doesNotMatch(app, /renderPlayers\[0\]\?\.x/);
 });
@@ -208,7 +209,7 @@ test('uses the decoded authoritative camera coordinate for compact race packets'
   const app = await readFile(new URL('../public/app.js', import.meta.url), 'utf8');
 
   assert.match(app, /cameraX: message\.c\[0\] \/ 100/);
-  assert.match(app, /cameraX = Math\.max\(0, Number\(state\.cameraX\) \|\| 0\)/);
+  assert.match(app, /const authoritativeCamera = Math\.max\(0, Number\(state\.cameraX\) \|\| 0\)/);
   assert.doesNotMatch(app, /cameraX = Math\.max\(0, Number\(message\.cameraX\) \|\| 0\)/);
 });
 
