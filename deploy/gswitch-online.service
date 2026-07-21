@@ -1,0 +1,20 @@
+[Unit]
+Description=G-Switch Online authoritative game server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/home/ubuntu/gswitch-online
+Environment=HOST=0.0.0.0
+Environment=PORT=1000
+ExecStart=/usr/bin/node src/server.mjs
+Restart=on-failure
+RestartSec=2
+AmbientCapabilities=CAP_NET_BIND_SERVICE
+CapabilityBoundingSet=CAP_NET_BIND_SERVICE
+
+[Install]
+WantedBy=multi-user.target
