@@ -279,7 +279,9 @@ function handle(message, connection = socket) {
     if (state.phase === 'lobby') { frontScreen.hidden = false; frontScreen.dataset.phase = 'lobby'; flip.disabled = true; courseStatus.textContent = '等待房主开始比赛'; renderLobby(); }
     else { frontScreen.hidden = true; flip.disabled = false; courseStatus.textContent = '赛道：MP02 → MP03 → MP04'; }
     const localPlayer = state.players.find((player) => player.slot === localSlot);
-    cameraX = Math.max(0, Number(message.cameraX) || 0);
+    // Compact race packets store the camera in `c`, which is decoded above.
+    // Read the normalized state so lobby and compact packets follow one path.
+    cameraX = Math.max(0, Number(state.cameraX) || 0);
     cameraUpdatedAt = stateReceivedAt;
     if (localPlayer?.finished || localPlayer?.eliminated) showEndScreen(localPlayer);
     return;

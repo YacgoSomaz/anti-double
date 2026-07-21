@@ -90,7 +90,7 @@ test('ships a Chinese original-style opening menu and animated end screen', asyn
   assert.match(app, /if \(resourcesFailed \|\| !raceReady\)/);
   assert.match(app, /025_SndMusic\.mp3/);
   assert.match(app, /032_SndMenuMusic\.mp3/);
-  assert.match(app, /message\.cameraX/);
+  assert.match(app, /state\.cameraX/);
   assert.match(app, /已淘汰/);
   assert.match(app, /raceReady/);
   assert.match(app, /player\.blockedX/);
@@ -123,7 +123,7 @@ test('loads every original multiplayer decoration layer rather than drawing coll
   assert.match(app, /renderPlayer/);
   assert.match(app, /localSlot/);
   assert.match(app, /advanceCamera/);
-  assert.match(app, /cameraX = Math\.max\(0, Number\(message\.cameraX\) \|\| 0\)/);
+  assert.match(app, /cameraX = Math\.max\(0, Number\(state\.cameraX\) \|\| 0\)/);
   assert.doesNotMatch(app, /cameraX = Math\.max\(cameraX, Number\(message\.cameraX\)/);
   assert.doesNotMatch(app, /renderPlayers\[0\]\?\.x/);
 });
