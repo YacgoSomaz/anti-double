@@ -162,6 +162,8 @@ test('draws a fixed red centre-line diagnostic over the race stage', async () =>
   assert.match(app, /CAMERA_DEBUG_SCREEN_X = 320/);
   assert.match(app, /function drawCameraCentreDiagnostic/);
   assert.match(app, /drawCameraCentreDiagnostic\(\)/);
+  assert.match(app, /距中线/);
+  assert.match(app, /受阻/);
 });
 
 test('fits the complete original stage inside a narrow or short mobile viewport', async () => {
