@@ -130,7 +130,11 @@ test('blocks an inverted runner at a wall corner during a gravity switch', () =>
 });
 
 test('lands a falling player on collision tiles rather than passing through them', () => {
-  const room = new GameRoom({ ...tinyLevel, spawns: [{ x: 24, y: 0, gravity: 1, speedX: 120 }] });
+  const room = new GameRoom({
+    ...tinyLevel,
+    colliders: Array.from({ length: 12 }, (_, x) => ({ x, y: 3 })),
+    spawns: [{ x: 24, y: 0, gravity: 1, speedX: 120 }]
+  });
   room.join('a');
   room.start('a');
 

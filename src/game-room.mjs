@@ -151,12 +151,18 @@ export class GameRoom {
     player.vx = nextCameraSpeed;
     const baseNextX = player.x + player.vx * dt;
     const distanceToCentre = cameraTargetX - baseNextX;
-    const usePercentageRecovery = player.hasReachedCameraCentre || player.cameraRecoveryBoost;
-    const recoveryRatio = usePercentageRecovery
-      ? Math.min(1, distanceToCentre / CAMERA_TARGET_SCREEN_X) * CAMERA_RECOVERY_MAX_SPEED_RATIO
-      : 0;
+    // Recovery must be based on the current gap every physics frame.  Gating
+    // it behind a historical "reached centre" flag accidentally fell back to
+    // a tiny fixed correction after a reconnect or state transition, leaving
+    // a runner permanently behind the shared camera at high speed.
+    const recoveryRatio = Math.min(1, distanceToCentre / CAMERA_TARGET_SCREEN_X) * CAMERA_RECOVERY_MAX_SPEED_RATIO;
+    const percentageCorrection = nextCameraSpeed * recoveryRatio * dt;
+    // Preserve the original low-speed nudge for a stopped camera.  At normal
+    // race speeds the percentage term dominates, so recovery scales with the
+    // current camera speed instead of becoming insignificant late in a run.
+    const minimumCorrection = distanceToCentre * CAMERA_FOLLOW_GAIN * dt;
     const correction = distanceToCentre > CAMERA_TARGET_TOLERANCE
-      ? (usePercentageRecovery ? nextCameraSpeed * recoveryRatio * dt : distanceToCentre * CAMERA_FOLLOW_GAIN * dt)
+      ? Math.max(percentageCorrection, minimumCorrection)
       : 0;
     // Sweep the complete base-plus-recovery movement so catch-up cannot cross
     // a side block.
