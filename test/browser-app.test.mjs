@@ -142,6 +142,19 @@ test('uses the original result board with character slots and a next-round actio
   assert.match(stylesheet, /#next-round/);
 });
 
+test('keeps ranking characters inside their original frames on a scaled stage without covering the course with HUD art', async () => {
+  const [app, stylesheet] = await Promise.all([
+    readFile(new URL('../public/app.js', import.meta.url), 'utf8'),
+    readFile(new URL('../public/style.css', import.meta.url), 'utf8')
+  ]);
+
+  assert.match(stylesheet, /#end-rankings li:nth-child\(1\) \{ left:16\.40625%; top:29\.94012%/);
+  assert.match(stylesheet, /#end-rankings li:nth-child\(2\) \{ left:51\.5625%; top:22\.55489%/);
+  assert.match(stylesheet, /#end-rankings li:nth-child\(3\) \{ left:51\.5625%; top:41\.91617%/);
+  assert.match(stylesheet, /#end-rankings li:nth-child\(4\) \{ left:51\.5625%; top:63\.07385%/);
+  assert.doesNotMatch(app, /if \(scene\.hud\.complete\) ctx\.drawImage\(scene\.hud, 0, 0\)/);
+});
+
 test('fits the complete original stage inside a narrow or short mobile viewport', async () => {
   const stylesheet = await readFile(new URL('../public/style.css', import.meta.url), 'utf8');
 
