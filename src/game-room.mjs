@@ -289,17 +289,43 @@ export class GameRoom {
       return;
     }
 
+    if (first.gravity !== second.gravity) {
+      // Opposite gravity turns an already stacked pair into one vertical body:
+      // both accelerations cancel, neither runner becomes the other's anchor,
+      // and the previous contact is retained.  Without this rollback, choosing
+      // the lower sprite as the anchor lets an inverted runner push its rider
+      // upward one physics frame at a time.
+      const previousVerticalGap = Math.max(firstPreviousTop, secondPreviousTop)
+        - Math.min(firstPreviousBottom, secondPreviousBottom);
+      if (Math.abs(previousVerticalGap) < 0.001) {
+        first.y = first.previousY;
+        second.y = second.previousY;
+      } else {
+        // On the first impact there is no shared contact to preserve. Split
+        // only this initial correction by the distance each runner travelled,
+        // then subsequent ticks keep the newly established stack fixed.
+        const firstTravel = Math.abs(first.vy * dt);
+        const secondTravel = Math.abs(second.vy * dt);
+        const totalTravel = firstTravel + secondTravel;
+        const firstShare = totalTravel ? firstTravel / totalTravel : 0.5;
+        const secondShare = 1 - firstShare;
+        if (firstTop <= secondTop) {
+          first.y -= verticalOverlap * firstShare;
+          second.y += verticalOverlap * secondShare;
+        } else {
+          first.y += verticalOverlap * firstShare;
+          second.y -= verticalOverlap * secondShare;
+        }
+      }
+      first.vy = 0;
+      second.vy = 0;
+      return;
+    }
+
     const upper = firstTop <= secondTop ? first : second;
     const lower = upper === first ? second : first;
     upper.y = lower.y + lower.hitbox.offsetY - upper.hitbox.offsetY - PLAYER_HEIGHT;
-
-    if (first.gravity !== second.gravity) {
-      // Opposite gravity is a press from both sides.  Keep the two boxes in
-      // contact and cancel their vertical movement every fixed frame; they
-      // continue moving horizontally as one stacked pair.
-      first.vy = 0;
-      second.vy = 0;
-    } else if (first.gravity > 0) {
+    if (first.gravity > 0) {
       // With matching downward gravity the upper runner is carried by the
       // lower one, so the pair falls together instead of trading places.
       upper.vy = lower.vy;
