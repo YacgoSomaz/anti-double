@@ -234,8 +234,8 @@ test('keeps an eliminated runner in the authoritative match until results rank e
   const resultsSnapshot = room.tick(1 / 40);
   assert.equal(resultsSnapshot.phase, 'results');
   assert.deepEqual(resultsSnapshot.results, [
-    { slot: 2, rank: 1, outcome: 'eliminated' },
-    { slot: 1, rank: 2, outcome: 'eliminated' }
+    { slot: 2, rank: 1, outcome: 'eliminated', score: 2 },
+    { slot: 1, rank: 2, outcome: 'eliminated', score: 1 }
   ]);
 });
 
@@ -256,8 +256,8 @@ test('ranks completed runners ahead of eliminated runners at the authoritative f
   const snapshot = room.tick(1 / 40);
   assert.equal(snapshot.phase, 'results');
   assert.deepEqual(snapshot.results, [
-    { slot: 1, rank: 1, outcome: 'finished' },
-    { slot: 2, rank: 2, outcome: 'eliminated' }
+    { slot: 1, rank: 1, outcome: 'finished', score: 0 },
+    { slot: 2, rank: 2, outcome: 'eliminated', score: 1 }
   ]);
 });
 

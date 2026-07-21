@@ -63,6 +63,14 @@ export class MatchManager {
     };
   }
 
+  closeCompletedRoom(room) {
+    const game = this.#rooms.get(room);
+    if (!game || game.snapshot().phase !== 'results') return false;
+    this.#rooms.delete(room);
+    for (const [id, membership] of this.#memberships) if (membership === room) this.#memberships.delete(id);
+    return true;
+  }
+
   tick(seconds) {
     return [...this.#rooms.entries()].map(([room, game]) => ({
       room,

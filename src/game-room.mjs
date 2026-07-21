@@ -54,7 +54,7 @@ export class GameRoom {
     const spawn = this.#level.spawns[slot - 1];
     if (!spawn) return { ok: false, error: 'level_missing_spawn' };
     const player = {
-      id, slot, x: spawn.x, y: spawn.y, vx: spawn.speedX, vy: 0,
+      id, slot, x: spawn.x, y: spawn.y, vx: spawn.speedX, vy: 0, startX: spawn.x, score: 0,
       previousX: spawn.x, previousY: spawn.y,
       speedX: spawn.speedX, character: CHARACTERS[slot - 1], name: playerName(name, slot), ready: Boolean(ready),
       gravity: spawn.gravity, finished: false, eliminated: false, outcomeTick: null, blockedX: false, recoveringCameraPosition: false, flipWallGuard: 0,
@@ -161,6 +161,7 @@ export class GameRoom {
         player.recoveringCameraPosition = true;
       }
     }
+    player.score = Math.max(player.score, Math.max(0, Math.floor(player.x - player.startX)));
     player.vy = Math.max(-MAX_VERTICAL_SPEED, Math.min(MAX_VERTICAL_SPEED, player.vy + player.gravity * GRAVITY * dt));
     const nextY = player.y + player.vy * dt;
     const block = this.#firstSolidUnder(player, nextY);
@@ -208,7 +209,7 @@ export class GameRoom {
           : right.outcomeTick - left.outcomeTick;
         return tickOrder || left.slot - right.slot;
       })
-      .map((player, index) => ({ slot: player.slot, rank: index + 1, outcome: player.finished ? 'finished' : 'eliminated' }));
+      .map((player, index) => ({ slot: player.slot, rank: index + 1, outcome: player.finished ? 'finished' : 'eliminated', score: player.score }));
   }
 
   #firstSolidUnder(player, nextY) {

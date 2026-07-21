@@ -130,7 +130,7 @@ export function encodeRaceState(snapshot, tickIntervalMs) {
     tick: snapshot.tick,
     c: [coordinate(snapshot.cameraX), coordinate(snapshot.cameraSpeed)],
     ...(Number.isFinite(tickIntervalMs) ? { d: Math.max(0, Math.round(tickIntervalMs * 10)) } : {}),
-    ...(snapshot.results?.length ? { r: snapshot.results.map(({ slot, rank, outcome }) => [slot, rank, outcome === 'finished' ? 1 : 0]) } : {}),
+    ...(snapshot.results?.length ? { r: snapshot.results.map(({ slot, rank, outcome, score }) => [slot, rank, outcome === 'finished' ? 1 : 0, Math.max(0, Math.floor(score ?? 0))]) } : {}),
     p: snapshot.players.map((player) => [
       player.slot,
       coordinate(player.x), coordinate(player.y),
@@ -215,6 +215,10 @@ export function createRealtimeServer({ level, autoTick = true }) {
       if (!regularRacePacket && !isNewResult) return;
       if (isNewResult) resultTicksSent.set(update.room, update.snapshot.tick);
       update.recipients.forEach((id) => send(id, encodeRaceState(update.snapshot, tickIntervalMs)));
+      if (isNewResult) {
+        matches.closeCompletedRoom(update.room);
+        resultTicksSent.delete(update.room);
+      }
     });
   };
   const timer = autoTick ? setInterval(tick, 1000 / 40) : null;

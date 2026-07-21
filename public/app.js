@@ -341,7 +341,7 @@ function decodeCompactRaceState(message) {
     cameraX: message.c[0] / 100,
     cameraSpeed: message.c[1] / 100,
     serverTickIntervalMs: Number.isInteger(message.d) ? message.d / 10 : undefined,
-    results: Array.isArray(message.r) ? message.r.map(([slot, rank, outcome]) => ({ slot, rank, outcome: outcome ? 'finished' : 'eliminated' })) : [],
+    results: Array.isArray(message.r) ? message.r.map(([slot, rank, outcome, score]) => ({ slot, rank, outcome: outcome ? 'finished' : 'eliminated', score: Math.max(0, Number(score) || 0) })) : [],
     players: message.p.map(([slot, x, y, vx, vy, gravity, flags]) => ({
       ...knownPlayers.get(slot),
       slot, x: x / 100, y: y / 100, vx: vx / 100, vy: vy / 100, gravity,
@@ -405,7 +405,10 @@ function renderRankings(results) {
     const avatar = document.createElement('span');
     avatar.className = 'rank-avatar';
     avatar.style.setProperty('--avatar-image', `url(${assetUrl(`assets/players/${spriteSources[(player?.slot ?? result.slot) - 1]}`)})`);
-    item.append(avatar);
+    const score = document.createElement('span');
+    score.className = 'rank-score';
+    score.textContent = `${Math.max(0, Math.floor(result.score ?? 0))} 分`;
+    item.append(avatar, score);
     return item;
   }));
 }
@@ -470,6 +473,18 @@ function renderPlayer(player, now) {
   const elapsed = Math.min(50, Math.max(0, now - stateReceivedAt)) / 1000;
   return { ...player, x: player.x + (player.blockedX ? 0 : player.vx * elapsed), y: player.y + player.vy * elapsed };
 }
+function drawPlayerName(player, x, y) {
+  const labelY = player.gravity < 0 ? y + PLAYER_FRAME_HEIGHT + 12 : y - 6;
+  ctx.save();
+  ctx.font = 'bold 12px Arial';
+  ctx.textAlign = 'center';
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = '#071319';
+  ctx.fillStyle = '#f3fbff';
+  ctx.strokeText(player.name, x + PLAYER_FRAME_WIDTH / 2, labelY);
+  ctx.fillText(player.name, x + PLAYER_FRAME_WIDTH / 2, labelY);
+  ctx.restore();
+}
 function draw() {
   ctx.fillStyle='#9bcde3'; ctx.fillRect(0, 0, canvas.width, canvas.height); if (!map) return;
   const now = performance.now();
@@ -498,6 +513,7 @@ function draw() {
     if (sprite.complete && sprite.naturalWidth) {
       drawPlayerSprite(ctx, sprite, source, { ...player, x, y });
     } else { ctx.fillStyle = colors[player.slot - 1]; ctx.fillRect(x + 16, y + 19, 37, 48); }
+    drawPlayerName(player, x, y);
   }
   ctx.fillStyle='#fff'; ctx.font='bold 16px Arial'; ctx.fillText(String(Math.floor(state.tick ?? 0)).padStart(3, '0'), 590, 24);
 }
