@@ -8,7 +8,8 @@ import { MatchManager } from './match-manager.mjs';
 const GUID = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11';
 const MAX_MESSAGE_BYTES = 512;
 const MAX_MESSAGES_PER_SECOND = 20;
-const RACE_BROADCAST_EVERY_TICKS = 2;
+const PHYSICS_HZ = 40;
+const DEFAULT_RACE_BROADCAST_HZ = 30;
 const publicDir = resolve(fileURLToPath(new URL('../public/', import.meta.url)));
 const mimeTypes = new Map([
   ['.html', 'text/html; charset=utf-8'],
@@ -141,8 +142,28 @@ export function encodeRaceState(snapshot, tickIntervalMs) {
   };
 }
 
-export function createRealtimeServer({ level, autoTick = true }) {
+// Bresenham-style rate gate: at 30 Hz over a 40 Hz simulation it emits three
+// packets in every four physics frames, without reducing collision precision.
+export function createRaceBroadcastGate({ physicsHz = PHYSICS_HZ, broadcastHz = DEFAULT_RACE_BROADCAST_HZ } = {}) {
+  if (!Number.isInteger(physicsHz) || !Number.isInteger(broadcastHz) || physicsHz < 1 || broadcastHz < 1 || broadcastHz > physicsHz) throw new RangeError('Invalid broadcast rate');
+  const credits = new Map();
+  return {
+    shouldBroadcast(room) {
+      const next = (credits.get(room) ?? 0) + broadcastHz;
+      if (next < physicsHz) {
+        credits.set(room, next);
+        return false;
+      }
+      credits.set(room, next - physicsHz);
+      return true;
+    },
+    reset(room) { credits.delete(room); }
+  };
+}
+
+export function createRealtimeServer({ level, autoTick = true, raceBroadcastHz = DEFAULT_RACE_BROADCAST_HZ }) {
   const matches = new MatchManager(level);
+  const raceBroadcastGate = createRaceBroadcastGate({ broadcastHz: raceBroadcastHz });
   const clients = new Map();
   const diagnosticReports = new Map();
   let lastDiagnosticLogAt = 0;
@@ -210,18 +231,20 @@ export function createRealtimeServer({ level, autoTick = true }) {
     const tickIntervalMs = Math.max(0, now - lastTickAt);
     lastTickAt = now;
     matches.tick(1 / 40).forEach((update) => {
-      const regularRacePacket = update.snapshot.phase === 'playing' && update.snapshot.tick % RACE_BROADCAST_EVERY_TICKS === 0;
+      const regularRacePacket = update.snapshot.phase === 'playing' && raceBroadcastGate.shouldBroadcast(update.room);
       const isNewResult = update.snapshot.phase === 'results' && resultTicksSent.get(update.room) !== update.snapshot.tick;
+      if (update.snapshot.phase !== 'playing') raceBroadcastGate.reset(update.room);
       if (!regularRacePacket && !isNewResult) return;
       if (isNewResult) resultTicksSent.set(update.room, update.snapshot.tick);
       update.recipients.forEach((id) => send(id, encodeRaceState(update.snapshot, tickIntervalMs)));
       if (isNewResult) {
         matches.closeCompletedRoom(update.room);
         resultTicksSent.delete(update.room);
+        raceBroadcastGate.reset(update.room);
       }
     });
   };
-  const timer = autoTick ? setInterval(tick, 1000 / 40) : null;
+  const timer = autoTick ? setInterval(tick, 1000 / PHYSICS_HZ) : null;
 
   server.on('upgrade', (request, socket, head) => {
     const key = request.headers['sec-websocket-key'];

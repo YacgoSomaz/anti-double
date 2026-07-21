@@ -132,7 +132,7 @@ test('keeps remote players in a host-controlled lobby, then starts one authorita
   assert.equal(Number.isInteger(first.d), true);
 });
 
-test('encodes four-player race snapshots into a compact packet suitable for 20 Hz broadcast', () => {
+test('encodes four-player race snapshots into a compact packet suitable for 30 Hz broadcast', () => {
   const players = Array.from({ length: 4 }, (_, index) => ({
     id: `internal-${index}`, slot: index + 1, x: 325.297295119375, y: 111.018875 + index * 40,
     vx: 211.891804775, vy: index % 2 ? -320.755 : 320.755, previousX: 316, previousY: 103,
