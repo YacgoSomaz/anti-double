@@ -141,6 +141,18 @@ test('keeps the host start action and lobby controls usable on a narrow phone', 
   assert.match(stylesheet, /@media \(max-width:620px\)[\s\S]*\.controls \{[^}]*grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);
 });
 
+test('keeps room inputs visible and remembers only the local player nickname on a phone', async () => {
+  const stylesheet = await readFile(new URL('../public/style.css', import.meta.url), 'utf8');
+  const app = await readFile(new URL('../public/app.js', import.meta.url), 'utf8');
+
+  assert.match(stylesheet, /@media \(max-width:620px\)[\s\S]*\.menu-title-mask \{[^}]*top:12px[^}]*scale\(\.55\)/);
+  assert.match(stylesheet, /@media \(max-width:620px\)[\s\S]*#menu-panel p \{ display:none; \}/);
+  assert.match(app, /const NICKNAME_STORAGE_KEY = 'gswitch-online:nickname';/);
+  assert.match(app, /localStorage\.getItem\(NICKNAME_STORAGE_KEY\)/);
+  assert.match(app, /nickname\.addEventListener\('input'/);
+  assert.match(app, /localStorage\.setItem\(NICKNAME_STORAGE_KEY/);
+});
+
 test('loads every original multiplayer decoration layer rather than drawing collision tiles as scenery', async () => {
   const app = await readFile(new URL('../public/app.js', import.meta.url), 'utf8');
   assert.match(app, /data\/marathon\.json/);
