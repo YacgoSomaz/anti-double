@@ -489,7 +489,6 @@ function draw() {
     else { ctx.fillStyle = '#68727a'; ctx.fillRect(x, y, world.cellSize, world.cellSize); }
   }
   drawMarathonDecorations(camera, 'frontVisualInfo');
-  if (scene.hud.complete) ctx.drawImage(scene.hud, 0, 0);
   for (const player of renderPlayers) {
     if (player.eliminated) continue;
     const x = player.x - camera;

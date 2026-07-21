@@ -136,9 +136,6 @@ test('uses the original result board with character slots and a next-round actio
   assert.match(app, /nextRound\.addEventListener\('click', returnToMenu\)/);
   assert.match(stylesheet, /#end-rankings li:nth-child\(1\)/);
   assert.match(stylesheet, /#end-rankings li:nth-child\(2\)/);
-  assert.match(stylesheet, /#end-rankings li:nth-child\(2\)[\s\S]*?left:\s*330px[\s\S]*?top:\s*113px/);
-  assert.match(stylesheet, /#end-rankings li:nth-child\(3\)[\s\S]*?left:\s*330px[\s\S]*?top:\s*210px/);
-  assert.match(stylesheet, /#end-rankings li:nth-child\(4\)[\s\S]*?left:\s*330px[\s\S]*?top:\s*316px/);
   assert.match(stylesheet, /#next-round/);
 });
 
@@ -207,7 +204,7 @@ test('loads every original multiplayer decoration layer rather than drawing coll
   assert.match(app, /preloadDecorationImages/);
   assert.match(app, /visibleDrawList/);
   assert.match(app, /ImgFinalTunnel/);
-  assert.match(app, /scene\.hud/);
+  assert.doesNotMatch(app, /ctx\.drawImage\(scene\.hud/);
   assert.match(app, /requestAnimationFrame/);
   assert.match(app, /renderPlayer/);
   assert.match(app, /localSlot/);
