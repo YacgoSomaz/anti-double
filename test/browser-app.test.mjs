@@ -123,6 +123,14 @@ test('keeps eliminated players spectating and renders final server rankings with
   assert.match(html, /canvas id="game" width="640" height="501"/);
 });
 
+test('fits the complete original stage inside a narrow or short mobile viewport', async () => {
+  const stylesheet = await readFile(new URL('../public/style.css', import.meta.url), 'utf8');
+
+  assert.match(stylesheet, /@media \(max-width:620px\)[\s\S]*\.game-shell \{ width:calc\(100vw - 16px\);/);
+  assert.match(stylesheet, /@supports \(height:100svh\)[\s\S]*\.game-shell \{ width:min\(calc\(100vw - 16px\),calc\(\(100svh - 168px\) \* 640 \/ 501\)\);/);
+  assert.match(stylesheet, /canvas \{[^}]*aspect-ratio:640\/501/);
+});
+
 test('loads every original multiplayer decoration layer rather than drawing collision tiles as scenery', async () => {
   const app = await readFile(new URL('../public/app.js', import.meta.url), 'utf8');
   assert.match(app, /data\/marathon\.json/);
