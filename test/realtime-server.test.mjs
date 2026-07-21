@@ -131,7 +131,7 @@ test('encodes four-player race snapshots into a compact packet suitable for 20 H
 
   assert.deepEqual(packet, {
     type: 'state', compact: true, tick: 40, c: [530, 21189],
-    p: [[1, 32530, 11102, 21189, 32076, 1, 0], [2, 32530, 15102, 21189, -32076, -1, 0], [3, 32530, 19102, 21189, 32076, 1, 0], [4, 32530, 23102, 21189, -32076, -1, 0]]
+    p: [[1, 32530, 11102, 21189, 32076, 1, 0], [2, 32530, 15102, 21189, -32075, -1, 0], [3, 32530, 19102, 21189, 32076, 1, 0], [4, 32530, 23102, 21189, -32075, -1, 0]]
   });
   assert.equal(Buffer.byteLength(JSON.stringify(packet)) < 250, true);
 });

@@ -256,11 +256,26 @@ function renderLobby() {
   }));
   lobbyStart.disabled = !raceReady || state.phase !== 'lobby' || !isHost || !allReady || socket?.readyState !== WebSocket.OPEN;
 }
+function decodeCompactRaceState(message) {
+  const knownPlayers = new Map(state.players.map((player) => [player.slot, player]));
+  return {
+    ...message,
+    phase: 'playing',
+    hostSlot: state.hostSlot,
+    cameraX: message.c[0] / 100,
+    cameraSpeed: message.c[1] / 100,
+    players: message.p.map(([slot, x, y, vx, vy, gravity, flags]) => ({
+      ...knownPlayers.get(slot),
+      slot, x: x / 100, y: y / 100, vx: vx / 100, vy: vy / 100, gravity,
+      finished: Boolean(flags & 1), eliminated: Boolean(flags & 2), blockedX: Boolean(flags & 4)
+    }))
+  };
+}
 function handle(message, connection = socket) {
   if (connection !== socket) return;
   if (message.type === 'joined') { clearTimeout(joinTimeout); join.disabled = false; localSlot = message.player.slot; roomCode = message.room; cameraX = Math.max(0, message.player.x - canvas.width / 2); cameraUpdatedAt = performance.now(); overlay.hidden = true; frontScreen.hidden = false; frontScreen.dataset.phase = 'lobby'; flip.disabled = true; sendReady(); signalRaceReady(); playAudio(menuMusic); setStatus(raceReady ? `已进入 ${message.room} 等待大厅` : '正在后台加载赛道资源…', true); renderLobby(); return; }
   if (message.type === 'state') {
-    state = message; stateReceivedAt = performance.now(); players.textContent = `${state.players.length}/4 玩家在线`;
+    state = message.compact ? decodeCompactRaceState(message) : message; stateReceivedAt = performance.now(); players.textContent = `${state.players.length}/4 玩家在线`;
     if (state.phase === 'lobby') { frontScreen.hidden = false; frontScreen.dataset.phase = 'lobby'; flip.disabled = true; courseStatus.textContent = '等待房主开始比赛'; renderLobby(); }
     else { frontScreen.hidden = true; flip.disabled = false; courseStatus.textContent = '赛道：MP02 → MP03 → MP04'; }
     const localPlayer = state.players.find((player) => player.slot === localSlot);

@@ -8,6 +8,7 @@ import { MatchManager } from './match-manager.mjs';
 const GUID = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11';
 const MAX_MESSAGE_BYTES = 512;
 const MAX_MESSAGES_PER_SECOND = 20;
+const RACE_BROADCAST_EVERY_TICKS = 2;
 const publicDir = resolve(fileURLToPath(new URL('../public/', import.meta.url)));
 const mimeTypes = new Map([
   ['.html', 'text/html; charset=utf-8'],
@@ -89,6 +90,30 @@ function stateMessage(snapshot) {
   };
 }
 
+function coordinate(value) {
+  return Math.round(value * 100);
+}
+
+// The lobby needs names and readiness flags, but resending that immutable data
+// forty times a second during a race wastes nearly all of a small uplink.  Race
+// packets contain only the fields that can change while the browser keeps the
+// player metadata it received in the lobby snapshot.
+export function encodeRaceState(snapshot) {
+  return {
+    type: 'state',
+    compact: true,
+    tick: snapshot.tick,
+    c: [coordinate(snapshot.cameraX), coordinate(snapshot.cameraSpeed)],
+    p: snapshot.players.map((player) => [
+      player.slot,
+      coordinate(player.x), coordinate(player.y),
+      coordinate(player.vx), coordinate(player.vy),
+      player.gravity,
+      (player.finished ? 1 : 0) | (player.eliminated ? 2 : 0) | (player.blockedX ? 4 : 0)
+    ])
+  };
+}
+
 export function createRealtimeServer({ level, autoTick = true }) {
   const matches = new MatchManager(level);
   const clients = new Map();
@@ -133,7 +158,9 @@ export function createRealtimeServer({ level, autoTick = true }) {
     if (client?.socket.writable) client.socket.write(textFrame(message));
   };
   const broadcast = (update) => update?.recipients.forEach((id) => send(id, stateMessage(update.snapshot)));
-  const tick = () => matches.tick(1 / 40).filter((update) => update.snapshot.phase === 'playing').forEach((update) => update.recipients.forEach((id) => send(id, stateMessage(update.snapshot))));
+  const tick = () => matches.tick(1 / 40)
+    .filter((update) => update.snapshot.phase === 'playing' && update.snapshot.tick % RACE_BROADCAST_EVERY_TICKS === 0)
+    .forEach((update) => update.recipients.forEach((id) => send(id, encodeRaceState(update.snapshot))));
   const timer = autoTick ? setInterval(tick, 1000 / 40) : null;
 
   server.on('upgrade', (request, socket, head) => {
