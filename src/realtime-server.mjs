@@ -9,7 +9,7 @@ const GUID = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11';
 const MAX_MESSAGE_BYTES = 512;
 const MAX_MESSAGES_PER_SECOND = 20;
 const PHYSICS_HZ = 40;
-const DEFAULT_RACE_BROADCAST_HZ = 30;
+const DEFAULT_RACE_BROADCAST_HZ = 40;
 const publicDir = resolve(fileURLToPath(new URL('../public/', import.meta.url)));
 const mimeTypes = new Map([
   ['.html', 'text/html; charset=utf-8'],
@@ -142,8 +142,8 @@ export function encodeRaceState(snapshot, tickIntervalMs) {
   };
 }
 
-// Bresenham-style rate gate: at 30 Hz over a 40 Hz simulation it emits three
-// packets in every four physics frames, without reducing collision precision.
+// Bresenham-style rate gate lets deployments lower update rate if needed.
+// The default mirrors every 40 Hz physics frame, avoiding an uneven cadence.
 export function createRaceBroadcastGate({ physicsHz = PHYSICS_HZ, broadcastHz = DEFAULT_RACE_BROADCAST_HZ } = {}) {
   if (!Number.isInteger(physicsHz) || !Number.isInteger(broadcastHz) || physicsHz < 1 || broadcastHz < 1 || broadcastHz > physicsHz) throw new RangeError('Invalid broadcast rate');
   const credits = new Map();

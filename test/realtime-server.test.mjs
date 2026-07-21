@@ -124,7 +124,7 @@ test('keeps remote players in a host-controlled lobby, then starts one authorita
   const first = await one.waitFor((message) => message.type === 'state' && message.compact === true && message.p[1][5] === 1);
   const second = await two.waitFor((message) => message.type === 'state' && message.compact === true && message.p[1][5] === 1);
   assert.deepEqual(first, second);
-  assert.equal(first.tick, 2);
+  assert.equal(first.tick, 1);
   assert.equal(first.p[1][5], 1);
   assert.equal(typeof first.c[0], 'number');
   assert.equal(typeof first.c[1], 'number');
