@@ -156,14 +156,13 @@ test('keeps ranking characters inside their original frames on a scaled stage wi
   assert.doesNotMatch(app, /if \(scene\.hud\.complete\) ctx\.drawImage\(scene\.hud, 0, 0\)/);
 });
 
-test('draws a fixed red centre-line diagnostic over the race stage', async () => {
+test('keeps internal camera diagnostics out of the player-facing race stage', async () => {
   const app = await readFile(new URL('../public/app.js', import.meta.url), 'utf8');
 
-  assert.match(app, /CAMERA_DEBUG_SCREEN_X = 320/);
-  assert.match(app, /function drawCameraCentreDiagnostic/);
-  assert.match(app, /drawCameraCentreDiagnostic\(\)/);
-  assert.match(app, /距中线/);
-  assert.match(app, /受阻/);
+  assert.doesNotMatch(app, /CAMERA_DEBUG_SCREEN_X/);
+  assert.doesNotMatch(app, /drawCameraCentreDiagnostic/);
+  assert.doesNotMatch(app, /距中线/);
+  assert.doesNotMatch(app, /受阻/);
 });
 
 test('fits the complete original stage inside a narrow or short mobile viewport', async () => {
