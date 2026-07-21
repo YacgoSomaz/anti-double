@@ -5,6 +5,7 @@ import { advanceCamera, reconcileCamera } from '/camera.js';
 import { advancePresentation, presentationOffset } from '/player-presentation.js';
 import { drawPlayerSprite } from '/player-render.js';
 import { createFrameTimingMonitor, createPacketTimingMonitor, formatDiagnostics } from '/network-diagnostics.js';
+import { createLatestRaceStateBuffer } from '/latest-race-state.js';
 
 const canvas = document.querySelector('#game');
 const gameShell = document.querySelector('.game-shell');
@@ -134,6 +135,7 @@ const FINAL_TUNNEL_ASSETS = new Set([
 const RACE_RESOURCE_TOTAL = 11;
 const packetTiming = createPacketTimingMonitor(); const frameTiming = createFrameTimingMonitor(); let lastDiagnosticsUpdate = 0;
 let socket; let joinTimeout; let sequence = 0; let state = { phase: 'lobby', players: [] }; let map; let visualMaps = new Map(); let lastPing = 0; let stateReceivedAt = performance.now(); let localSlot; let roomCode; let cameraX = 0; let cameraUpdatedAt = performance.now(); let showingEnd = false; let resourcesReady = false; let raceReady = false; let resourcesFailed = false; let readySent = false; let readySoundPlayed = false; let raceResourceLoaded = 0;
+const latestRaceState = createLatestRaceStateBuffer();
 
 function updateDiagnostics(now) {
   if (now - lastDiagnosticsUpdate < 500) return;
@@ -259,7 +261,7 @@ async function connect() {
   if (!nickname.value.trim()) return setStatus('请输入昵称');
   await unlockAudio();
   clearTimeout(joinTimeout);
-  socket?.close(); sequence = 0; localSlot = undefined; roomCode = room.value.trim().toUpperCase(); state = { phase: 'lobby', players: [] }; cameraX = 0; cameraUpdatedAt = performance.now(); showingEnd = false; readySent = false; readySoundPlayed = false;
+  socket?.close(); sequence = 0; localSlot = undefined; roomCode = room.value.trim().toUpperCase(); state = { phase: 'lobby', players: [] }; cameraX = 0; cameraUpdatedAt = performance.now(); showingEnd = false; readySent = false; readySoundPlayed = false; latestRaceState.reset();
   frontScreen.hidden = true; endScreen.hidden = true; overlay.hidden = false;
   join.disabled = true;
   const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -350,8 +352,12 @@ function decodeCompactRaceState(message) {
     }))
   };
 }
-function handle(message, connection = socket) {
+function handle(message, connection = socket, consumeRaceState = false) {
   if (connection !== socket) return;
+  if (message.type === 'state' && message.compact && !consumeRaceState) {
+    latestRaceState.offer(message);
+    return;
+  }
   if (message.type === 'joined') { clearTimeout(joinTimeout); join.disabled = false; localSlot = message.player.slot; roomCode = message.room; cameraX = Math.max(0, message.player.x - canvas.width / 2); cameraUpdatedAt = performance.now(); overlay.hidden = true; frontScreen.hidden = false; frontScreen.dataset.phase = 'lobby'; flip.disabled = true; sendReady(); signalRaceReady(); playAudio(menuMusic); setStatus(raceReady ? `已进入 ${message.room} 等待大厅` : '正在后台加载赛道资源…', true); renderLobby(); return; }
   if (message.type === 'state') {
     const receivedAt = performance.now();
@@ -536,5 +542,12 @@ fullscreen.addEventListener('click', () => {
 addEventListener('keydown', (event) => { if(event.code==='Space'&&!event.repeat) {event.preventDefault();sendFlip();} });
 setInterval(() => { if(socket?.readyState===WebSocket.OPEN) { lastPing=performance.now(); socket.send(JSON.stringify({type:'ping'})); } }, 2000);
 setInterval(sendDiagnostics, 5000);
-function animationLoop(now) { frameTiming.observe(now); updateDiagnostics(now); draw(); requestAnimationFrame(animationLoop); }
+function applyLatestRaceState() {
+  const message = latestRaceState.take();
+  if (!message) return;
+  // Bypass the queue here: this is the one newest state selected for this
+  // display frame, not an inbound network event.
+  handle(message, socket, true);
+}
+function animationLoop(now) { applyLatestRaceState(); frameTiming.observe(now); updateDiagnostics(now); draw(); requestAnimationFrame(animationLoop); }
 requestAnimationFrame(animationLoop);

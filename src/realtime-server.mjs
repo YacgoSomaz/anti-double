@@ -120,6 +120,33 @@ function coordinate(value) {
   return Math.round(value * 100);
 }
 
+// A race frame has no value once a newer frame exists.  When Node reports
+// socket backpressure, retain only that newest frame until `drain`; join,
+// start and result messages still use the reliable direct sender below.
+export function createLatestStateSender(write) {
+  let waitingForDrain = false;
+  let pending;
+  const flush = () => {
+    if (waitingForDrain || !pending) return;
+    const next = pending;
+    pending = undefined;
+    waitingForDrain = !write(next);
+  };
+  return {
+    send(message) {
+      pending = message;
+      flush();
+    },
+    drain() {
+      waitingForDrain = false;
+      flush();
+    },
+    clear() {
+      pending = undefined;
+    }
+  };
+}
+
 // The lobby needs names and readiness flags, but resending that immutable data
 // forty times a second during a race wastes nearly all of a small uplink.  Race
 // packets contain only the fields that can change while the browser keeps the
@@ -223,6 +250,7 @@ export function createRealtimeServer({ level, autoTick = true, raceBroadcastHz =
     const client = clients.get(id);
     if (client?.socket.writable) client.socket.write(textFrame(message));
   };
+  const sendRaceState = (id, message) => clients.get(id)?.raceStateSender.send(message);
   const broadcast = (update) => update?.recipients.forEach((id) => send(id, stateMessage(update.snapshot)));
   let lastTickAt = performance.now();
   const resultTicksSent = new Map();
@@ -236,7 +264,15 @@ export function createRealtimeServer({ level, autoTick = true, raceBroadcastHz =
       if (update.snapshot.phase !== 'playing') raceBroadcastGate.reset(update.room);
       if (!regularRacePacket && !isNewResult) return;
       if (isNewResult) resultTicksSent.set(update.room, update.snapshot.tick);
-      update.recipients.forEach((id) => send(id, encodeRaceState(update.snapshot, tickIntervalMs)));
+      const message = encodeRaceState(update.snapshot, tickIntervalMs);
+      if (isNewResult) {
+        update.recipients.forEach((id) => {
+          clients.get(id)?.raceStateSender.clear();
+          send(id, message);
+        });
+      } else {
+        update.recipients.forEach((id) => sendRaceState(id, message));
+      }
       if (isNewResult) {
         matches.closeCompletedRoom(update.room);
         resultTicksSent.delete(update.room);
@@ -254,7 +290,12 @@ export function createRealtimeServer({ level, autoTick = true, raceBroadcastHz =
     }
     socket.write(`HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: ${accept(key)}\r\n\r\n`);
     const id = randomUUID();
-    const client = { socket, buffer: Buffer.from(head), times: [] };
+    const client = {
+      socket,
+      buffer: Buffer.from(head),
+      times: [],
+      raceStateSender: createLatestStateSender((message) => socket.write(textFrame(message)))
+    };
     clients.set(id, client);
     const receive = (chunk) => {
       try {
@@ -311,6 +352,7 @@ export function createRealtimeServer({ level, autoTick = true, raceBroadcastHz =
     };
     if (client.buffer.length) receive(Buffer.alloc(0));
     socket.on('data', receive);
+    socket.on('drain', () => client.raceStateSender.drain());
     socket.on('close', () => { const room = matches.leave(id); clients.delete(id); broadcast(matches.roomState(room)); });
     socket.on('error', () => socket.destroy());
   });
