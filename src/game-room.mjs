@@ -17,7 +17,12 @@ const CAMERA_TARGET_SCREEN_X = 320;
 // is at the centre of the 640 px stage; #cameraX is the left edge, so the
 // equivalent left-edge threshold is 320 - 350 = -30 px.
 const MULTIPLAYER_LEFT_ESCAPE_SCREEN_X = CAMERA_TARGET_SCREEN_X - 350;
+// A runner moves at the same base speed as the shared camera.  After a brief
+// collision, it therefore needs an explicit (but swept) recovery speed to
+// return to the centre before the left-edge elimination rule catches it.
 const CAMERA_FOLLOW_GAIN = 0.2;
+const CAMERA_RECOVERY_FOLLOW_GAIN = 8;
+const CAMERA_MAX_RECOVERY_SPEED = 400;
 const CAMERA_TARGET_TOLERANCE = 4;
 const CHARACTERS = ['blue', 'green', 'yellow', 'red'];
 
@@ -57,7 +62,7 @@ export class GameRoom {
       id, slot, x: spawn.x, y: spawn.y, vx: spawn.speedX, vy: 0, startX: spawn.x, score: 0,
       previousX: spawn.x, previousY: spawn.y,
       speedX: spawn.speedX, character: CHARACTERS[slot - 1], name: playerName(name, slot), ready: Boolean(ready),
-      gravity: spawn.gravity, finished: false, eliminated: false, outcomeTick: null, blockedX: false, recoveringCameraPosition: false, flipWallGuard: 0,
+      gravity: spawn.gravity, finished: false, eliminated: false, outcomeTick: null, blockedX: false, recoveringCameraPosition: false, cameraRecoveryBoost: false, flipWallGuard: 0,
       hitbox: { width: PLAYER_WIDTH, height: PLAYER_HEIGHT, offsetX: PLAYER_OFFSET_X, offsetY: spawn.gravity < 0 ? INVERTED_PLAYER_OFFSET_Y : NORMAL_PLAYER_OFFSET_Y }
     };
     this.#players.set(id, player);
@@ -142,21 +147,28 @@ export class GameRoom {
     const nextCameraSpeed = Math.min(MAX_HORIZONTAL_SPEED, this.#cameraSpeed + HORIZONTAL_ACCELERATION * dt);
     const cameraTargetX = this.#cameraX + nextCameraSpeed * dt + CAMERA_TARGET_SCREEN_X;
     player.vx = player.speedX;
-    const nextX = player.x + player.vx * dt;
+    const baseNextX = player.x + player.vx * dt;
+    const distanceToCentre = cameraTargetX - baseNextX;
+    // Calculate recovery before sweeping the horizontal collision.  Adding it
+    // afterwards could place a lagging player on the far side of a wall.
+    const followGain = player.cameraRecoveryBoost ? CAMERA_RECOVERY_FOLLOW_GAIN : CAMERA_FOLLOW_GAIN;
+    const correction = distanceToCentre > CAMERA_TARGET_TOLERANCE
+      ? Math.min(distanceToCentre * followGain * dt, CAMERA_MAX_RECOVERY_SPEED * dt)
+      : 0;
+    const nextX = baseNextX + correction;
     const sideBlock = this.#firstSolidAhead(player, nextX);
     player.blockedX = Boolean(sideBlock);
     if (sideBlock) {
       player.recoveringCameraPosition = true;
+      player.cameraRecoveryBoost = true;
       player.x = sideBlock.x - player.hitbox.offsetX - PLAYER_WIDTH;
     } else {
       player.x = nextX;
-      const distanceToCentre = cameraTargetX - player.x;
       if (distanceToCentre <= CAMERA_TARGET_TOLERANCE) {
         player.x = cameraTargetX;
         player.recoveringCameraPosition = false;
+        player.cameraRecoveryBoost = false;
       } else {
-        const correction = distanceToCentre * CAMERA_FOLLOW_GAIN * dt;
-        player.x += correction;
         player.vx += correction / dt;
         player.recoveringCameraPosition = true;
       }

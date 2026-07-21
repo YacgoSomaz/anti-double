@@ -333,11 +333,11 @@ test('smoothly pulls a lagging runner toward the shared camera even without a si
   assert.equal(second.vx < first.vx, true);
 });
 
-test('quickly restores a runner to the shared camera after it has fallen behind', () => {
+test('quickly restores a runner to the shared camera after clearing a side block', () => {
   const room = new GameRoom({
     tileSize: 48,
-    colliders: [],
-    spawns: [{ x: 0, y: 100, gravity: 0, speedX: 400 }]
+    colliders: [{ x: 3, y: 0 }],
+    spawns: [{ x: 80, y: -10, gravity: 1, speedX: 769.812 }]
   });
   room.join('a');
   room.start('a');
