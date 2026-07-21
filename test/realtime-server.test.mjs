@@ -15,13 +15,13 @@ const tinyLevel = {
   ]
 };
 
-test('broadcasts 30 compact updates across 40 authoritative physics ticks', () => {
-  const gate = createRaceBroadcastGate({ physicsHz: 40, broadcastHz: 30 });
+test('broadcasts every authoritative frame by default to avoid cadence jitter', () => {
+  const gate = createRaceBroadcastGate();
   const sentTicks = Array.from({ length: 40 }, (_, index) => index + 1)
     .filter((tick) => gate.shouldBroadcast('room-a', tick));
 
-  assert.equal(sentTicks.length, 30);
-  assert.equal(Math.max(...sentTicks.slice(1).map((tick, index) => tick - sentTicks[index])), 2);
+  assert.equal(sentTicks.length, 40);
+  assert.equal(Math.max(...sentTicks.slice(1).map((tick, index) => tick - sentTicks[index])), 1);
 });
 
 function frame(message) {
@@ -132,7 +132,7 @@ test('keeps remote players in a host-controlled lobby, then starts one authorita
   assert.equal(Number.isInteger(first.d), true);
 });
 
-test('encodes four-player race snapshots into a compact packet suitable for 30 Hz broadcast', () => {
+test('encodes four-player race snapshots into a compact packet suitable for 40 Hz broadcast', () => {
   const players = Array.from({ length: 4 }, (_, index) => ({
     id: `internal-${index}`, slot: index + 1, x: 325.297295119375, y: 111.018875 + index * 40,
     vx: 211.891804775, vy: index % 2 ? -320.755 : 320.755, previousX: 316, previousY: 103,
