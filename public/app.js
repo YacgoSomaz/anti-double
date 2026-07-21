@@ -1,7 +1,7 @@
 import { buildVisualDrawList, visibleDrawList } from '/visual-cache.js';
 import { assetUrl } from '/asset-urls.js';
 import { animationFrame, frameSourceRect, PLAYER_FRAME_HEIGHT, PLAYER_FRAME_WIDTH } from '/player-animation.js';
-import { advanceCamera, reconcileCamera } from '/camera.js';
+import { advanceCamera, CAMERA_PREDICTION_WINDOW_MS, reconcileCamera } from '/camera.js';
 import { drawPlayerSprite } from '/player-render.js';
 import { createFrameTimingMonitor, createPacketTimingMonitor, formatDiagnostics } from '/network-diagnostics.js';
 
@@ -470,7 +470,9 @@ function drawMarathonDecorations(camera, property) {
   return drawn;
 }
 function renderPlayer(player, now) {
-  const elapsed = Math.min(50, Math.max(0, now - stateReceivedAt)) / 1000;
+  // Predict moving runners for the same short window as the locally-integrated
+  // camera.  A confirmed horizontal block still renders as stationary.
+  const elapsed = Math.min(CAMERA_PREDICTION_WINDOW_MS, Math.max(0, now - stateReceivedAt)) / 1000;
   return { ...player, x: player.x + (player.blockedX ? 0 : player.vx * elapsed), y: player.y + player.vy * elapsed };
 }
 function drawPlayerName(player, x, y) {

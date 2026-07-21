@@ -213,6 +213,8 @@ test('loads every original multiplayer decoration layer rather than drawing coll
   assert.match(app, /renderPlayer/);
   assert.match(app, /localSlot/);
   assert.match(app, /advanceCamera/);
+  assert.match(app, /CAMERA_PREDICTION_WINDOW_MS/);
+  assert.match(app, /Math\.min\(CAMERA_PREDICTION_WINDOW_MS, Math\.max\(0, now - stateReceivedAt\)\)/);
   assert.match(app, /const authoritativeCamera = Math\.max\(0, Number\(state\.cameraX\) \|\| 0\)/);
   assert.match(app, /reconcileCamera\(authoritativeCamera, presentedCamera\)/);
   assert.doesNotMatch(app, /cameraX = Math\.max\(cameraX, Number\(message\.cameraX\)/);
