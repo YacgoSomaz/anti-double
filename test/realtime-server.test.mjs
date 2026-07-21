@@ -18,7 +18,10 @@ const tinyLevel = {
 function frame(message) {
   const payload = Buffer.from(JSON.stringify(message));
   const mask = Buffer.from([2, 4, 6, 8]);
-  return Buffer.concat([Buffer.from([0x81, 0x80 | payload.length]), mask, Buffer.from(payload.map((byte, index) => byte ^ mask[index % 4]))]);
+  const header = payload.length <= 125
+    ? Buffer.from([0x81, 0x80 | payload.length])
+    : Buffer.from([0x81, 0x80 | 126, payload.length >> 8, payload.length & 255]);
+  return Buffer.concat([header, mask, Buffer.from(payload.map((byte, index) => byte ^ mask[index % 4]))]);
 }
 
 async function client(port) {

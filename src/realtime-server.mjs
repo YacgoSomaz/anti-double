@@ -49,14 +49,20 @@ function decode(buffer) {
   while (cursor + 2 <= buffer.length) {
     const first = buffer[cursor];
     const second = buffer[cursor + 1];
-    const size = second & 127;
-    if (size === 126 || size === 127 || !(second & 128) || !(first & 128) || size > MAX_MESSAGE_BYTES) throw new Error('Invalid frame');
-    if (cursor + 6 + size > buffer.length) break;
-    const mask = buffer.subarray(cursor + 2, cursor + 6);
+    const sizeCode = second & 127;
+    if (sizeCode === 127 || !(second & 128) || !(first & 128)) throw new Error('Invalid frame');
+    const extendedLength = sizeCode === 126 ? 2 : 0;
+    if (cursor + 2 + extendedLength > buffer.length) break;
+    const size = sizeCode === 126 ? buffer.readUInt16BE(cursor + 2) : sizeCode;
+    if (size > MAX_MESSAGE_BYTES) throw new Error('Invalid frame');
+    const maskStart = cursor + 2 + extendedLength;
+    const payloadStart = maskStart + 4;
+    if (payloadStart + size > buffer.length) break;
+    const mask = buffer.subarray(maskStart, payloadStart);
     const payload = Buffer.alloc(size);
-    for (let index = 0; index < size; index += 1) payload[index] = buffer[cursor + 6 + index] ^ mask[index % 4];
+    for (let index = 0; index < size; index += 1) payload[index] = buffer[payloadStart + index] ^ mask[index % 4];
     messages.push({ opcode: first & 15, value: payload.toString('utf8') });
-    cursor += 6 + size;
+    cursor = payloadStart + size;
   }
   return { messages, rest: buffer.subarray(cursor) };
 }
@@ -69,8 +75,26 @@ function parseInput(value) {
     if (data?.type === 'start') return { type: 'start' };
     if (data?.type === 'flip' && Number.isInteger(data.sequence) && data.sequence > 0 && data.sequence <= 1000000000) return { type: 'flip', sequence: data.sequence };
     if (data?.type === 'ping') return { type: 'ping' };
+    if (data?.type === 'diagnostics') {
+      const diagnostics = parseDiagnostics(data.diagnostics);
+      if (diagnostics) return { type: 'diagnostics', diagnostics };
+    }
   } catch {}
   return null;
+}
+
+function parseDiagnostics(value) {
+  if (!value || typeof value !== 'object') return null;
+  const limits = {
+    packetP95Ms: 60000, packetMaxMs: 60000, skippedTicks: 10000,
+    serverP95Ms: 60000, frameFps: 240, droppedFrames: 10000
+  };
+  const diagnostics = {};
+  for (const [key, maximum] of Object.entries(limits)) {
+    if (!Number.isInteger(value[key]) || value[key] < 0 || value[key] > maximum) return null;
+    diagnostics[key] = value[key];
+  }
+  return diagnostics;
 }
 
 function sameOrigin(request) {
@@ -120,6 +144,24 @@ export function encodeRaceState(snapshot, tickIntervalMs) {
 export function createRealtimeServer({ level, autoTick = true }) {
   const matches = new MatchManager(level);
   const clients = new Map();
+  const diagnosticReports = new Map();
+  let lastDiagnosticLogAt = 0;
+  const diagnostics = () => {
+    const now = Date.now();
+    for (const [id, report] of diagnosticReports) if (now - report.updatedAt > 120000) diagnosticReports.delete(id);
+    const reports = [...diagnosticReports.values()];
+    const maximum = (key) => Math.max(0, ...reports.map((report) => report[key]));
+    const minimum = (key) => reports.length ? Math.min(...reports.map((report) => report[key])) : 0;
+    return {
+      reports: reports.length,
+      packetP95Ms: maximum('packetP95Ms'),
+      packetMaxMs: maximum('packetMaxMs'),
+      skippedTicks: reports.reduce((total, report) => total + report.skippedTicks, 0),
+      serverP95Ms: maximum('serverP95Ms'),
+      minimumFrameFps: minimum('frameFps'),
+      droppedFrames: reports.reduce((total, report) => total + report.droppedFrames, 0)
+    };
+  };
   const server = createServer((request, response) => {
     response.setHeader('Content-Security-Policy', "default-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; connect-src 'self' ws: wss:");
     response.setHeader('X-Content-Type-Options', 'nosniff');
@@ -227,6 +269,13 @@ export function createRealtimeServer({ level, autoTick = true }) {
           } else if (input.type === 'flip') {
             const result = matches.input(id, input);
             send(id, result.ok ? { type: 'input_ok', tick: result.tick } : { type: 'error', error: result.error });
+          } else if (input.type === 'diagnostics') {
+            diagnosticReports.set(id, { ...input.diagnostics, updatedAt: Date.now() });
+            if (Date.now() - lastDiagnosticLogAt >= 10000) {
+              lastDiagnosticLogAt = Date.now();
+              console.log(`gswitch diagnostics ${JSON.stringify(diagnostics())}`);
+            }
+            send(id, { type: 'diagnostics_ok' });
           } else {
             send(id, { type: 'pong' });
           }
@@ -238,5 +287,5 @@ export function createRealtimeServer({ level, autoTick = true }) {
     socket.on('close', () => { const room = matches.leave(id); clients.delete(id); broadcast(matches.roomState(room)); });
     socket.on('error', () => socket.destroy());
   });
-  return { server, tick, close: () => { if (timer) clearInterval(timer); for (const client of clients.values()) client.socket.destroy(); server.close(); } };
+  return { server, tick, diagnostics, close: () => { if (timer) clearInterval(timer); for (const client of clients.values()) client.socket.destroy(); server.close(); } };
 }

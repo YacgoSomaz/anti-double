@@ -130,6 +130,23 @@ function updateDiagnostics(now) {
   lastDiagnosticsUpdate = now;
   diagnostics.textContent = formatDiagnostics(packetTiming.summary(), frameTiming.summary());
 }
+function sendDiagnostics() {
+  if (socket?.readyState !== WebSocket.OPEN) return;
+  const packet = packetTiming.summary();
+  const frame = frameTiming.summary();
+  if (!packet.samples || !frame.samples) return;
+  socket.send(JSON.stringify({
+    type: 'diagnostics',
+    diagnostics: {
+      packetP95Ms: Math.round(packet.p95IntervalMs),
+      packetMaxMs: Math.round(packet.maxIntervalMs),
+      skippedTicks: packet.skippedTicks,
+      serverP95Ms: Math.round(packet.serverP95TickIntervalMs),
+      frameFps: Math.max(0, Math.round(1000 / frame.averageFrameMs)),
+      droppedFrames: frame.droppedFrames
+    }
+  }));
+}
 
 function updateLobbyProgress() {
   const percent = Math.round(raceResourceLoaded / RACE_RESOURCE_TOTAL * 100);
@@ -446,5 +463,6 @@ fullscreen.addEventListener('click', () => {
 });
 addEventListener('keydown', (event) => { if(event.code==='Space'&&!event.repeat) {event.preventDefault();sendFlip();} });
 setInterval(() => { if(socket?.readyState===WebSocket.OPEN) { lastPing=performance.now(); socket.send(JSON.stringify({type:'ping'})); } }, 2000);
+setInterval(sendDiagnostics, 5000);
 function animationLoop(now) { frameTiming.observe(now); updateDiagnostics(now); draw(); requestAnimationFrame(animationLoop); }
 requestAnimationFrame(animationLoop);
