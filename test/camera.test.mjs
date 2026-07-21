@@ -2,10 +2,10 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { advanceCamera, reconcileCamera } from '../public/camera.js';
 
-test('bridges normal packet jitter with a bounded shared-camera prediction', () => {
+test('locally integrates the shared-camera acceleration through a delayed packet', () => {
   const camera = advanceCamera(100, 250, 211.6983);
-  assert.equal(camera, 152.925);
-  assert.equal(advanceCamera(100, 800, 211.6983), camera);
+  assert.equal(camera, 153.166);
+  assert.equal(advanceCamera(100, 1000, 211.6983), 315.568);
 });
 
 test('does not derive the shared camera from a local player position', () => {
