@@ -23,3 +23,18 @@ test('preprojects decorations once and returns only the current viewport', () =>
   assert.deepEqual(visible.map((item) => item.asset.file), ['near.png']);
   assert.equal(Number(visible[0].x.toFixed(3)), 76.981);
 });
+
+test('restores the recovered source layer order after culling by horizontal position', () => {
+  const visualMap = {
+    assets: { tile: { file: 'tile.png', width: 40, height: 20 } },
+    visualInfo: [
+      { imageId: 'tile', posX: 600, posY: 300, depth: 2 },
+      { imageId: 'tile', posX: 120, posY: 300, depth: 1 }
+    ]
+  };
+
+  const cache = buildVisualDrawList(visualMap, 'visualInfo');
+  const visible = visibleDrawList(cache, 0, 500, 0, 500);
+
+  assert.deepEqual(visible.map((item) => item.sourceIndex), [0, 1]);
+});

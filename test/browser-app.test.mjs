@@ -124,6 +124,21 @@ test('keeps eliminated players spectating and renders final server rankings with
   assert.match(html, /canvas id="game" width="640" height="501"/);
 });
 
+test('uses the original result board with character slots and a next-round action', async () => {
+  const html = await readFile(new URL('../public/index.html', import.meta.url), 'utf8');
+  const stylesheet = await readFile(new URL('../public/style.css', import.meta.url), 'utf8');
+  const app = await readFile(new URL('../public/app.js', import.meta.url), 'utf8');
+
+  assert.match(html, /id="end-rankings"/);
+  assert.match(html, /id="next-round"/);
+  assert.doesNotMatch(html, /id="end-result"/);
+  assert.match(app, /rank-avatar/);
+  assert.match(app, /nextRound\.addEventListener\('click', returnToMenu\)/);
+  assert.match(stylesheet, /#end-rankings li:nth-child\(1\)/);
+  assert.match(stylesheet, /#end-rankings li:nth-child\(2\)/);
+  assert.match(stylesheet, /#next-round/);
+});
+
 test('fits the complete original stage inside a narrow or short mobile viewport', async () => {
   const stylesheet = await readFile(new URL('../public/style.css', import.meta.url), 'utf8');
 
