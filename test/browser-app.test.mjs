@@ -93,7 +93,7 @@ test('ships a Chinese original-style opening menu and animated end screen', asyn
   assert.match(app, /state\.cameraX/);
   assert.match(app, /已淘汰/);
   assert.match(app, /raceReady/);
-  assert.match(app, /player\.blockedX/);
+  assert.match(app, /presentationOffsetX/);
   assert.match(app, /图片加载失败/);
   assert.match(app, /image\.decode/);
   assert.match(app, /RACE_RESOURCE_TOTAL = 11/);
@@ -213,8 +213,8 @@ test('loads every original multiplayer decoration layer rather than drawing coll
   assert.match(app, /renderPlayer/);
   assert.match(app, /localSlot/);
   assert.match(app, /advanceCamera/);
-  assert.match(app, /CAMERA_PREDICTION_WINDOW_MS/);
-  assert.match(app, /Math\.min\(CAMERA_PREDICTION_WINDOW_MS, Math\.max\(0, now - stateReceivedAt\)\)/);
+  assert.match(app, /advancePresentation/);
+  assert.match(app, /presentationOffset/);
   assert.match(app, /const authoritativeCamera = Math\.max\(0, Number\(state\.cameraX\) \|\| 0\)/);
   assert.match(app, /reconcileCamera\(authoritativeCamera, presentedCamera\)/);
   assert.doesNotMatch(app, /cameraX = Math\.max\(cameraX, Number\(message\.cameraX\)/);

@@ -1,7 +1,8 @@
 import { buildVisualDrawList, visibleDrawList } from '/visual-cache.js';
 import { assetUrl } from '/asset-urls.js';
 import { animationFrame, frameSourceRect, PLAYER_FRAME_HEIGHT, PLAYER_FRAME_WIDTH } from '/player-animation.js';
-import { advanceCamera, CAMERA_PREDICTION_WINDOW_MS, reconcileCamera } from '/camera.js';
+import { advanceCamera, reconcileCamera } from '/camera.js';
+import { advancePresentation, presentationOffset } from '/player-presentation.js';
 import { drawPlayerSprite } from '/player-render.js';
 import { createFrameTimingMonitor, createPacketTimingMonitor, formatDiagnostics } from '/network-diagnostics.js';
 
@@ -355,7 +356,17 @@ function handle(message, connection = socket) {
   if (message.type === 'state') {
     const receivedAt = performance.now();
     const presentedCamera = advanceCamera(cameraX, receivedAt - cameraUpdatedAt, state.cameraSpeed);
-    state = message.compact ? decodeCompactRaceState(message) : message; stateReceivedAt = receivedAt; packetTiming.observe({ now: stateReceivedAt, tick: state.tick, serverTickIntervalMs: state.serverTickIntervalMs }); players.textContent = `${state.players.length}/4 玩家在线`;
+    const presentedPlayers = new Map(state.players.map((player) => [player.slot, advancePresentation(player, receivedAt - stateReceivedAt)]));
+    state = message.compact ? decodeCompactRaceState(message) : message;
+    if (state.phase === 'playing') for (const player of state.players) {
+      const presented = presentedPlayers.get(player.slot);
+      if (presented && !player.finished && !player.eliminated) {
+        const offset = presentationOffset(presented, player);
+        player.presentationOffsetX = offset.x;
+        player.presentationOffsetY = offset.y;
+      }
+    }
+    stateReceivedAt = receivedAt; packetTiming.observe({ now: stateReceivedAt, tick: state.tick, serverTickIntervalMs: state.serverTickIntervalMs }); players.textContent = `${state.players.length}/4 玩家在线`;
     if (state.phase === 'lobby') { frontScreen.hidden = false; frontScreen.dataset.phase = 'lobby'; spectatorBanner.hidden = true; flip.disabled = true; courseStatus.textContent = '等待房主开始比赛'; renderLobby(); }
     else { frontScreen.hidden = true; }
     const localPlayer = state.players.find((player) => player.slot === localSlot);
@@ -470,10 +481,8 @@ function drawMarathonDecorations(camera, property) {
   return drawn;
 }
 function renderPlayer(player, now) {
-  // Predict moving runners for the same short window as the locally-integrated
-  // camera.  A confirmed horizontal block still renders as stationary.
-  const elapsed = Math.min(CAMERA_PREDICTION_WINDOW_MS, Math.max(0, now - stateReceivedAt)) / 1000;
-  return { ...player, x: player.x + (player.blockedX ? 0 : player.vx * elapsed), y: player.y + player.vy * elapsed };
+  const position = advancePresentation(player, now - stateReceivedAt);
+  return { ...player, ...position };
 }
 function drawPlayerName(player, x, y) {
   const labelY = player.gravity < 0 ? y + PLAYER_FRAME_HEIGHT + 12 : y - 6;

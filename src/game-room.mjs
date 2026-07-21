@@ -200,7 +200,15 @@ export class GameRoom {
     const runners = [...this.#players.values()].filter((player) => !player.finished && !player.eliminated);
     if (!runners.length) return;
     this.#cameraSpeed = Math.min(MAX_HORIZONTAL_SPEED, this.#cameraSpeed + HORIZONTAL_ACCELERATION * dt);
-    this.#cameraX += this.#cameraSpeed * dt;
+    const requestedCameraX = this.#cameraX + this.#cameraSpeed * dt;
+    // A terrain side collision is not a failure condition.  Hold the shared
+    // camera at the survivor boundary until that runner can clear the block,
+    // then the existing percentage catch-up returns them to centre.
+    const blockedSafetyX = Math.min(...runners
+      .filter((player) => player.blockedX)
+      .map((player) => player.x - MULTIPLAYER_LEFT_ESCAPE_SCREEN_X));
+    const safeCameraX = Number.isFinite(blockedSafetyX) ? Math.min(requestedCameraX, blockedSafetyX) : requestedCameraX;
+    this.#cameraX = Math.max(this.#cameraX, safeCameraX);
   }
 
   #eliminatePlayersOutsideView() {
