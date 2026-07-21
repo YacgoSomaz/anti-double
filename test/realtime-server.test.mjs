@@ -2,7 +2,7 @@ import { once } from 'node:events';
 import net from 'node:net';
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createRealtimeServer, encodeRaceState } from '../src/realtime-server.mjs';
+import { createRaceBroadcastGate, createRealtimeServer, encodeRaceState } from '../src/realtime-server.mjs';
 
 const tinyLevel = {
   tileSize: 48,
@@ -14,6 +14,15 @@ const tinyLevel = {
     { x: 0, y: 0, gravity: -1, speedX: 120 }
   ]
 };
+
+test('broadcasts 30 compact updates across 40 authoritative physics ticks', () => {
+  const gate = createRaceBroadcastGate({ physicsHz: 40, broadcastHz: 30 });
+  const sentTicks = Array.from({ length: 40 }, (_, index) => index + 1)
+    .filter((tick) => gate.shouldBroadcast('room-a', tick));
+
+  assert.equal(sentTicks.length, 30);
+  assert.equal(Math.max(...sentTicks.slice(1).map((tick, index) => tick - sentTicks[index])), 2);
+});
 
 function frame(message) {
   const payload = Buffer.from(JSON.stringify(message));
