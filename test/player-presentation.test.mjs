@@ -11,3 +11,9 @@ test('gradually absorbs a server correction instead of snapping a runner backwar
   assert.equal(position.x > 105, true);
   assert.equal(position.x < 135, true);
 });
+
+test('keeps advancing player presentation through a multi-second packet stall', () => {
+  const result = advancePresentation({ x: 100, y: 0, vx: 200, vy: 0, blockedX: false }, 2500);
+
+  assert.equal(result.x, 600);
+});

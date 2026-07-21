@@ -8,6 +8,10 @@ test('locally integrates the shared-camera acceleration through a delayed packet
   assert.equal(advanceCamera(100, 1000, 211.6983), 315.568);
 });
 
+test('keeps locally integrating camera scroll through a multi-second packet stall', () => {
+  assert.equal(advanceCamera(100, 2500, 211.6983), 653.434);
+});
+
 test('does not derive the shared camera from a local player position', () => {
   const camera = advanceCamera(380, 16, 211.6983);
   assert.equal(camera, 383.388);
