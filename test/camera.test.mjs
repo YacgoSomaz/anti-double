@@ -26,3 +26,7 @@ test('does not pull the monotonic shared camera backwards for a delayed snapshot
   assert.equal(reconcileCamera(130, 145), 145);
   assert.equal(reconcileCamera(160, 145), 160);
 });
+
+test('accepts a large authoritative camera hold instead of leaving the visual camera far ahead', () => {
+  assert.equal(reconcileCamera(100, 180), 100);
+});
