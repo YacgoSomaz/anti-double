@@ -2,7 +2,7 @@ import { once } from 'node:events';
 import net from 'node:net';
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createRaceBroadcastGate, createRealtimeServer, encodeRaceState } from '../src/realtime-server.mjs';
+import { createLatestStateSender, createRaceBroadcastGate, createRealtimeServer, encodeRaceState } from '../src/realtime-server.mjs';
 
 const tinyLevel = {
   tileSize: 48,
@@ -22,6 +22,21 @@ test('broadcasts every authoritative frame by default to avoid cadence jitter', 
 
   assert.equal(sentTicks.length, 40);
   assert.equal(Math.max(...sentTicks.slice(1).map((tick, index) => tick - sentTicks[index])), 1);
+});
+
+test('coalesces volatile race states while a client socket is congested', () => {
+  const sent = [];
+  const sender = createLatestStateSender((message) => {
+    sent.push(message.tick);
+    return false;
+  });
+
+  sender.send({ tick: 100 });
+  sender.send({ tick: 101 });
+  sender.send({ tick: 102 });
+  sender.drain();
+
+  assert.deepEqual(sent, [100, 102]);
 });
 
 function frame(message) {
