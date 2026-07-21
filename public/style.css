@@ -39,9 +39,9 @@ main { width:min(960px,100%); padding:22px; } header,.controls { display:flex; a
 #end-rankings { position:absolute; inset:0; margin:0; padding:0; list-style:none; pointer-events:none; }
 #end-rankings li { position:absolute; display:grid; place-items:center; }
 #end-rankings li:nth-child(1) { left:105px; top:150px; width:150px; height:190px; }
-#end-rankings li:nth-child(2) { left:366px; top:86px; width:58px; height:72px; }
-#end-rankings li:nth-child(3) { left:366px; top:226px; width:58px; height:72px; }
-#end-rankings li:nth-child(4) { left:366px; top:365px; width:58px; height:72px; }
+#end-rankings li:nth-child(2) { left:330px; top:113px; width:58px; height:72px; }
+#end-rankings li:nth-child(3) { left:330px; top:210px; width:58px; height:72px; }
+#end-rankings li:nth-child(4) { left:330px; top:316px; width:58px; height:72px; }
 .rank-avatar { display:block; width:58px; aspect-ratio:65/77; background:var(--avatar-image) 0 0/1500% 900% no-repeat; filter:drop-shadow(0 3px 5px #000); }
 #end-rankings li:nth-child(1) .rank-avatar { width:130px; }
 #next-round { position:absolute; right:12px; bottom:12px; z-index:1; min-width:94px; padding:7px 10px; border-color:#d8e8f0; background:linear-gradient(#314b5b,#101f2b); color:#fff; font-size:12px; font-weight:bold; text-shadow:0 1px #000; }
