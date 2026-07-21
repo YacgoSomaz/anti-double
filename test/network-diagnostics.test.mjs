@@ -4,9 +4,9 @@ import { createFrameTimingMonitor, createPacketTimingMonitor } from '../public/n
 
 test('reports state arrival jitter and skipped server ticks without changing game state', () => {
   const monitor = createPacketTimingMonitor();
-  monitor.observe({ now: 1000, tick: 2 });
-  monitor.observe({ now: 1050, tick: 4 });
-  monitor.observe({ now: 1130, tick: 8 });
+  monitor.observe({ now: 1000, tick: 2, serverTickIntervalMs: 25 });
+  monitor.observe({ now: 1050, tick: 4, serverTickIntervalMs: 26 });
+  monitor.observe({ now: 1130, tick: 8, serverTickIntervalMs: 49 });
 
   assert.deepEqual(monitor.summary(), {
     samples: 2,
@@ -14,7 +14,10 @@ test('reports state arrival jitter and skipped server ticks without changing gam
     p95IntervalMs: 80,
     maxIntervalMs: 80,
     maxTickGap: 4,
-    skippedTicks: 2
+    skippedTicks: 2,
+    serverSamples: 3,
+    serverP95TickIntervalMs: 49,
+    serverMaxTickIntervalMs: 49
   });
 });
 

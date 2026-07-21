@@ -117,6 +117,7 @@ test('keeps remote players in a host-controlled lobby, then starts one authorita
   assert.equal(typeof first.c[0], 'number');
   assert.equal(typeof first.c[1], 'number');
   assert.equal(first.c[1] > 0, true);
+  assert.equal(Number.isInteger(first.d), true);
 });
 
 test('encodes four-player race snapshots into a compact packet suitable for 20 Hz broadcast', () => {
@@ -134,6 +135,12 @@ test('encodes four-player race snapshots into a compact packet suitable for 20 H
     p: [[1, 32530, 11102, 21189, 32076, 1, 0], [2, 32530, 15102, 21189, -32075, -1, 0], [3, 32530, 19102, 21189, 32076, 1, 0], [4, 32530, 23102, 21189, -32075, -1, 0]]
   });
   assert.equal(Buffer.byteLength(JSON.stringify(packet)) < 250, true);
+});
+
+test('adds only a compact server tick timing sample to a race packet', () => {
+  const packet = encodeRaceState({ tick: 2, cameraX: 0, cameraSpeed: 120, players: [] }, 27.4);
+
+  assert.equal(packet.d, 274);
 });
 
 test('validates WebSocket messages without exposing internal errors', async (context) => {
