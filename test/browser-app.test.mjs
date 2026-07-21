@@ -106,6 +106,22 @@ test('ships a Chinese original-style opening menu and animated end screen', asyn
   assert.match(stylesheet, /data-phase="lobby"/);
 });
 
+test('keeps eliminated players spectating and renders final server rankings without changing the game stage', async () => {
+  const html = await readFile(new URL('../public/index.html', import.meta.url), 'utf8');
+  const stylesheet = await readFile(new URL('../public/style.css', import.meta.url), 'utf8');
+  const app = await readFile(new URL('../public/app.js', import.meta.url), 'utf8');
+
+  assert.match(html, /id="spectator-banner"/);
+  assert.match(html, /id="end-rankings"/);
+  assert.match(html, /id="fullscreen"/);
+  assert.match(app, /state\.phase === 'results'/);
+  assert.match(app, /renderRankings/);
+  assert.match(app, /观战中/);
+  assert.match(app, /requestFullscreen/);
+  assert.match(stylesheet, /width:min\(900px,100%\)/);
+  assert.match(html, /canvas id="game" width="640" height="501"/);
+});
+
 test('loads every original multiplayer decoration layer rather than drawing collision tiles as scenery', async () => {
   const app = await readFile(new URL('../public/app.js', import.meta.url), 'utf8');
   assert.match(app, /data\/marathon\.json/);

@@ -199,6 +199,54 @@ test('marks a player eliminated when their sprite leaves the multiplayer stage',
   assert.equal(room.input('a', { type: 'flip', sequence: 1 }).error, 'eliminated');
 });
 
+test('keeps an eliminated runner in the authoritative match until results rank every player', () => {
+  const room = new GameRoom({
+    tileSize: 48,
+    colliders: [],
+    spawns: [
+      { x: 0, y: 500, gravity: 1, speedX: 0 },
+      { x: 0, y: 490, gravity: 1, speedX: 0 }
+    ]
+  });
+  room.join('first', '先淘汰');
+  room.join('second', '后淘汰');
+  room.start('first');
+
+  const spectatorSnapshot = room.tick(1 / 40);
+  assert.equal(spectatorSnapshot.phase, 'playing');
+  assert.equal(spectatorSnapshot.players[0].eliminated, true);
+  assert.equal(spectatorSnapshot.results.length, 0);
+
+  const resultsSnapshot = room.tick(1 / 40);
+  assert.equal(resultsSnapshot.phase, 'results');
+  assert.deepEqual(resultsSnapshot.results, [
+    { slot: 2, rank: 1, outcome: 'eliminated' },
+    { slot: 1, rank: 2, outcome: 'eliminated' }
+  ]);
+});
+
+test('ranks completed runners ahead of eliminated runners at the authoritative finish', () => {
+  const room = new GameRoom({
+    tileSize: 48,
+    colliders: [],
+    finishX: 320,
+    spawns: [
+      { x: 320, y: 0, gravity: 0, speedX: 0 },
+      { x: 0, y: 500, gravity: 1, speedX: 0 }
+    ]
+  });
+  room.join('winner', '冠军');
+  room.join('other', '淘汰');
+  room.start('winner');
+
+  const snapshot = room.tick(1 / 40);
+  assert.equal(snapshot.phase, 'results');
+  assert.deepEqual(snapshot.results, [
+    { slot: 1, rank: 1, outcome: 'finished' },
+    { slot: 2, rank: 2, outcome: 'eliminated' }
+  ]);
+});
+
 test('pins a runner against a side block without taking away its momentum', () => {
   const room = new GameRoom({
     tileSize: 48,

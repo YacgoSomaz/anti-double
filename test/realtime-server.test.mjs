@@ -143,6 +143,15 @@ test('adds only a compact server tick timing sample to a race packet', () => {
   assert.equal(packet.d, 274);
 });
 
+test('adds authoritative final placements only when a race has results', () => {
+  const packet = encodeRaceState({
+    tick: 120, cameraX: 30, cameraSpeed: 140, players: [],
+    results: [{ slot: 2, rank: 1, outcome: 'finished' }, { slot: 1, rank: 2, outcome: 'eliminated' }]
+  });
+
+  assert.deepEqual(packet.r, [[2, 1, 1], [1, 2, 0]]);
+});
+
 test('validates WebSocket messages without exposing internal errors', async (context) => {
   const realtime = createRealtimeServer({ level: tinyLevel, autoTick: false });
   realtime.server.listen(0, '127.0.0.1');
