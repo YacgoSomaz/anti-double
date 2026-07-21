@@ -292,7 +292,7 @@ test('pins a runner against a side block without taking away its momentum', () =
 
   const player = room.snapshot().players[0];
   assert.equal(player.x, 43);
-  assert.equal(player.vx > 400, true);
+  assert.equal(player.vx > player.speedX, true);
   assert.equal(player.speedX > 400, true);
   assert.equal(player.blockedX, true);
 });
