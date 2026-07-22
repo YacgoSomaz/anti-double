@@ -334,6 +334,24 @@ test('pins a runner against a side block without taking away its momentum', () =
   assert.equal(player.blockedX, true);
 });
 
+test('does not let a runner phase through a side tile on a shallow real hitbox overlap', () => {
+  const room = new GameRoom({
+    tileSize: 48,
+    colliders: [{ x: 7, y: 3 }],
+    // The 37 x 48 collision box overlaps the tile vertically by 23 px.  It
+    // is a real collision, even though it is just under half the hitbox tall.
+    spawns: [{ x: 280, y: 150, gravity: 0, speedX: 400 }]
+  });
+  room.join('runner');
+  room.start('runner');
+
+  room.tick(1 / 40);
+
+  const player = room.snapshot().players[0];
+  // Tile left edge 336 - hitbox offset 16 - hitbox width 37 = x 283.
+  assert.equal(player.x <= 283, true);
+});
+
 test('does not let a late gravity-flip corner overlap tunnel through a side block', () => {
   const room = new GameRoom({
     tileSize: 48,
