@@ -71,3 +71,10 @@ test('rejects unsafe editor property paths and invalid elimination bounds', () =
   const draft = createEditorDraft(level);
   assert.equal(validateEditorDraft({ ...draft, elimination: { leftMargin: -1, top: 600, bottom: 10 } }).valid, false);
 });
+
+test('moves a visual placement without touching its source collision layer', () => {
+  let history = createHistory(createEditorDraft({ ...level, visuals: [{ id: 'LightCubeGray', x: 100, y: 200, width: 45, height: 40 }] }));
+  history = updateEditorProperty(history, { path: ['visuals', 0, 'x'], value: 180 });
+  assert.equal(history.current.visuals[0].x, 180);
+  assert.deepEqual(history.current.colliders, [{ x: 1, y: 2 }]);
+});
