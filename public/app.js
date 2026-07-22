@@ -650,7 +650,9 @@ function drawEliminationBoundary(now) {
   ctx.restore();
 }
 const ITEM_ICON_INDEX = Object.freeze({ gravity_burst: 0, phase: 1, speed_boost: 2 });
-const ITEM_GLOW_COLORS = Object.freeze({ gravity_burst: '#ff65e8', phase: '#55f6ff', speed_boost: '#ffc04d' });
+// The orange speed icon now acts as a brake pickup; the cool blue halo makes
+// that control effect distinguishable from the gravity and phase pickups.
+const ITEM_GLOW_COLORS = Object.freeze({ gravity_burst: '#ff65e8', phase: '#55f6ff', speed_boost: '#7ab8ff' });
 function drawItems(items, camera, viewport, now) {
   if (!itemIconSheet.complete || !itemIconSheet.naturalWidth) return;
   const frameWidth = itemIconSheet.naturalWidth / 3;

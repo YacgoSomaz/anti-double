@@ -35,7 +35,10 @@ const CAMERA_TARGET_TOLERANCE = 4;
 const BLOCKED_CAMERA_SAFETY_FRAMES = 12;
 const ITEM_PICKUP_RADIUS_X = 48;
 const ITEM_PICKUP_RADIUS_Y = 56;
-const SPEED_BOOST_MULTIPLIER = 1.35;
+// The recovered third pickup is used as a brake in the playable marathon:
+// it gives the collector a short, controllable speed reduction instead of
+// pushing the already accelerating camera beyond a human-readable pace.
+const SPEED_CONTROL_MULTIPLIER = 0.65;
 const CHARACTERS = ['blue', 'green', 'yellow', 'red'];
 const DEFAULT_DEBUG_TUNING = Object.freeze({ speedMultiplier: 1, cameraSpeedMultiplier: 1, recoveryMultiplier: 1, gravityMultiplier: 1, hitboxWidth: PLAYER_WIDTH, hitboxHeight: PLAYER_HEIGHT, eliminationMargin: 60 });
 
@@ -233,7 +236,7 @@ export class GameRoom {
     // Camera speed is the one shared base speed.  A player can only exceed it
     // while smoothly recovering from a position behind the centre target.
     player.speedX = nextCameraSpeed;
-    const speedMultiplier = player.speedBoostTicks > 0 ? SPEED_BOOST_MULTIPLIER : 1;
+    const speedMultiplier = player.speedBoostTicks > 0 ? SPEED_CONTROL_MULTIPLIER : 1;
     player.vx = nextCameraSpeed * speedMultiplier;
     const baseNextX = player.x + player.vx * dt;
     const distanceToCentre = cameraTargetX - baseNextX;
