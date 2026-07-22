@@ -49,7 +49,9 @@ function loadMarathon() {
     const data = readLevel(id);
     if (!firstLevel) firstLevel = data;
     const furthestCell = Math.max(...data.colliders.map((collider) => collider.x));
-    const lengthCells = furthestCell + 2;
+    // Keep the authored segment width when the last closing-wall cells are
+    // intentionally removed from the collision layer by the editor.
+    const lengthCells = Number.isFinite(data.lengthCells) ? data.lengthCells : furthestCell + 2;
     const startX = offsetCells * world.cellSize;
     const opensPreviousSeam = index > 0;
     const opensNextSeam = index < marathonCourseOrder.length - 1;

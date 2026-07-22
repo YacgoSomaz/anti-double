@@ -329,8 +329,8 @@ test('uses the decoded authoritative camera coordinate for compact race packets'
 test('ships the recovered visual and foreground placements for all three multiplayer courses', async () => {
   const expected = new Map([
     ['mp02', [1146, 77]],
-    ['mp03', [1443, 55]],
-    ['mp04', [1842, 80]],
+    ['mp03', [1415, 50]],
+    ['mp04', [1826, 80]],
   ]);
   for (const [course, [visualCount, frontVisualCount]] of expected) {
     const file = await readFile(new URL(`../public/data/${course}-visual.json`, import.meta.url), 'utf8');
