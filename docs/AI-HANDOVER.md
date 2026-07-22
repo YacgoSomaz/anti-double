@@ -126,6 +126,10 @@ loadLevel('marathon'): MP02 + MP03 + MP04
 
 玩家互撞在 `#separateOverlappingPlayers()`：仅在两个存活玩家的公共 AABB 同时重叠时结算。横向同高接触按上一帧 X（同 X 用槽位）稳定决定前后，后方与前方保持 `1.1 × width` 间隙且不扣水平动能；浅层上下接触可堆叠。相同重力时上/下玩家继承承载方的竖直速度，向同一侧移动；相反重力且相向接触时两者 `vy=0`，保持贴合向前。碰撞宽高由 `level.playerPhysics` 初始化，并可由编辑器一次应用于全部玩家。它是为权威联网防止每帧交换领先者的适配，不应声称是 Flixel 每个边缘细节的 1:1 移植。完整原版回调证据见 `docs/reverse-analysis.md`。
 
+### 4.1.1 道具系统
+
+`src/item-system.mjs` 根据 `level.itemConfig.seed/count/minimumSpacing` 为每个房间生成确定性的道具位置；显式 `itemSpawns` 会优先于随机生成，便于编辑器或测试固定道具。`GameRoom` 在服务器端判定拾取并将剩余道具以紧凑 `o` 字段广播。三种效果分别是：`gravity_burst` 对所有仍在比赛中的玩家各翻转一次；`phase` 持续 120 个 40Hz tick，跳过地图和玩家碰撞，但仍接受镜头淘汰；`speed_boost` 持续 120 tick，只提高拾取者的实际 `vx`。客户端只绘制道具和倒计时表现，不能自行触发效果。
+
 ### 4.2 关卡坐标和长赛道
 
 原始碰撞列表以 cell 坐标保存。`src/level-loader.mjs` 使用：

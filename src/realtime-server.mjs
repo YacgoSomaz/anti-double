@@ -4,6 +4,7 @@ import { createServer } from 'node:http';
 import { extname, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { MatchManager } from './match-manager.mjs';
+import { ITEM_TYPE_CODES } from './item-system.mjs';
 
 const GUID = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11';
 const MAX_MESSAGE_BYTES = 512;
@@ -164,13 +165,16 @@ export function encodeRaceState(snapshot, tickIntervalMs) {
     c: [coordinate(snapshot.cameraX), coordinate(snapshot.cameraSpeed)],
     ...(snapshot.introTicksRemaining > 0 ? { i: snapshot.introTicksRemaining } : {}),
     ...(Number.isFinite(tickIntervalMs) ? { d: Math.max(0, Math.round(tickIntervalMs * 10)) } : {}),
+    ...(snapshot.items?.length ? { o: snapshot.items.filter((item) => item.active !== false).map((item) => [ITEM_TYPE_CODES[item.type] ?? 0, coordinate(item.x), coordinate(item.y)]) } : {}),
     ...(snapshot.results?.length ? { r: snapshot.results.map(({ slot, rank, outcome, score }) => [slot, rank, outcome === 'finished' ? 1 : 0, Math.max(0, Math.floor(score ?? 0))]) } : {}),
     p: snapshot.players.map((player) => [
       player.slot,
       coordinate(player.x), coordinate(player.y),
       coordinate(player.vx), coordinate(player.vy),
       player.gravity,
-      (player.finished ? 1 : 0) | (player.eliminated ? 2 : 0) | (player.blockedX ? 4 : 0)
+      (player.finished ? 1 : 0) | (player.eliminated ? 2 : 0) | (player.blockedX ? 4 : 0),
+      Math.max(0, Math.floor(player.phaseTicks ?? 0)),
+      Math.max(0, Math.floor(player.speedBoostTicks ?? 0))
     ])
   };
 }

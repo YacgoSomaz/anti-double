@@ -4,6 +4,12 @@ export const ITEM_TYPES = Object.freeze({
   speedBoost: 'speed_boost'
 });
 
+export const ITEM_TYPE_CODES = Object.freeze({
+  [ITEM_TYPES.gravityBurst]: 1,
+  [ITEM_TYPES.phase]: 2,
+  [ITEM_TYPES.speedBoost]: 3
+});
+
 export const ITEM_EFFECT_TICKS = Object.freeze({
   phase: 120,
   speedBoost: 120

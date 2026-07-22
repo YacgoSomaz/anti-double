@@ -131,6 +131,7 @@ const scene = {
 };
 const openingBeam = loadImage(assetUrl('assets/effects/checkpoint-beamlight.png'));
 const eliminationBoundary = loadImage(assetUrl('assets/effects/elimination-boundary.png'));
+const itemIconSheet = loadImage(assetUrl('assets/items/item-icons-sheet.png'));
 const decorationImages = new Map();
 const visualPlacementCache = new WeakMap();
 const readyVisualMaps = new WeakSet();
@@ -141,7 +142,7 @@ const FINAL_TUNNEL_ASSETS = new Set([
 ]);
 // 每局开始前完成整个 marathon 的地图、装饰和图像解码。它们均使用
 // content-hash URL，浏览器会复用磁盘缓存；比赛中不再触发资源加载。
-const RACE_RESOURCE_TOTAL = 15;
+const RACE_RESOURCE_TOTAL = 16;
 // Recovered original 19×84 checkpoint beam. It falls from above to the runner
 // centre, fades away at the impact point, then lets the runner materialise.
 const OPENING_BEAM_THICKNESS = 64;
@@ -219,7 +220,7 @@ const minimumSplash = new Promise((resolve) => setTimeout(resolve, 900));
 minimumSplash.then(() => {
   if (!frontScreen.hidden) frontScreen.dataset.phase = 'menu';
 });
-Promise.all([mapLoad, ...[...sprites, ...Object.values(scene), openingBeam, eliminationBoundary].map((image) => waitForImage(image).then(markRaceResourceLoaded))]).then(() => {
+Promise.all([mapLoad, ...[...sprites, ...Object.values(scene), openingBeam, eliminationBoundary, itemIconSheet].map((image) => waitForImage(image).then(markRaceResourceLoaded))]).then(() => {
   raceReady = true;
   resourcesReady = true;
   join.disabled = false;
@@ -416,6 +417,7 @@ function renderLobby() {
 }
 function decodeCompactRaceState(message) {
   const knownPlayers = new Map(state.players.map((player) => [player.slot, player]));
+  const itemTypes = ['gravity_burst', 'phase', 'speed_boost'];
   return {
     ...message,
     phase: Array.isArray(message.r) ? 'results' : 'playing',
@@ -424,11 +426,13 @@ function decodeCompactRaceState(message) {
     cameraSpeed: message.c[1] / 100,
     introTicksRemaining: Number.isInteger(message.i) ? message.i : 0,
     serverTickIntervalMs: Number.isInteger(message.d) ? message.d / 10 : undefined,
+    items: Array.isArray(message.o) ? message.o.map(([type, x, y]) => ({ type: itemTypes[type - 1], x: x / 100, y: y / 100, active: true })) : [],
     results: Array.isArray(message.r) ? message.r.map(([slot, rank, outcome, score]) => ({ slot, rank, outcome: outcome ? 'finished' : 'eliminated', score: Math.max(0, Number(score) || 0) })) : [],
-    players: message.p.map(([slot, x, y, vx, vy, gravity, flags]) => ({
+    players: message.p.map(([slot, x, y, vx, vy, gravity, flags, phaseTicks = 0, speedBoostTicks = 0]) => ({
       ...knownPlayers.get(slot),
       slot, x: x / 100, y: y / 100, vx: vx / 100, vy: vy / 100, gravity,
-      finished: Boolean(flags & 1), eliminated: Boolean(flags & 2), blockedX: Boolean(flags & 4)
+      finished: Boolean(flags & 1), eliminated: Boolean(flags & 2), blockedX: Boolean(flags & 4),
+      phaseTicks, speedBoostTicks
     }))
   };
 }
@@ -645,6 +649,27 @@ function drawEliminationBoundary(now) {
   ctx.drawImage(eliminationBoundary, frame * frameWidth, 0, frameWidth, eliminationBoundary.naturalHeight, x - 3, -74, ELIMINATION_BOUNDARY_GLOW_WIDTH, 650);
   ctx.restore();
 }
+const ITEM_ICON_INDEX = Object.freeze({ gravity_burst: 0, phase: 1, speed_boost: 2 });
+function drawItems(items, camera, viewport, now) {
+  if (!itemIconSheet.complete || !itemIconSheet.naturalWidth) return;
+  const frameWidth = itemIconSheet.naturalWidth / 3;
+  const frameHeight = itemIconSheet.naturalHeight;
+  const size = 44;
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  for (const item of items ?? []) {
+    if (item.active === false) continue;
+    const index = ITEM_ICON_INDEX[item.type];
+    if (!Number.isInteger(index)) continue;
+    const x = Number(item.x) - camera;
+    const y = Number(item.y);
+    if (x < viewport.left - size || x > viewport.right + size || y < viewport.top - size || y > viewport.bottom + size) continue;
+    const pulse = 0.86 + Math.sin(now / 180 + index) * 0.12;
+    ctx.globalAlpha = pulse;
+    ctx.drawImage(itemIconSheet, index * frameWidth, 0, frameWidth, frameHeight, x - size / 2, y - size / 2, size, size);
+  }
+  ctx.restore();
+}
 function drawDeveloperOverlay(playersToDraw, camera, viewport, world) {
   if (!developerMode || !devPanelState) return;
   const { overlays } = devPanelState;
@@ -723,10 +748,13 @@ function draw() {
     else { ctx.fillStyle = '#68727a'; ctx.fillRect(x, y, world.cellSize, world.cellSize); }
   }
   drawMarathonDecorations(camera, 'frontVisualInfo', viewport);
+  drawItems(state.items, camera, viewport, now);
   drawEliminationBoundary(now);
   drawDeveloperOverlay(renderPlayers, camera, viewport, world);
   for (const player of renderPlayers) {
     if (player.eliminated) continue;
+    ctx.save();
+    if (player.phaseTicks > 0) ctx.globalAlpha = 0.48 + Math.sin(now / 70) * 0.12;
     const x = player.x - camera;
     const y = player.y;
     const sprite = sprites[player.slot - 1];
@@ -734,6 +762,7 @@ function draw() {
     const isBeamPhase = state.introTicksRemaining > 0 && openingElapsed < OPENING_BEAM_DURATION_MS;
     if (isBeamPhase) {
       drawOpeningBeam(x, y, now, openingElapsed);
+      ctx.restore();
       continue;
     }
     const morphElapsed = Math.max(0, openingElapsed - OPENING_BEAM_DURATION_MS);
@@ -744,6 +773,7 @@ function draw() {
       drawPlayerSprite(ctx, sprite, source, { ...player, x, y });
     } else { ctx.fillStyle = colors[player.slot - 1]; ctx.fillRect(x + 16, y + 19, 37, 48); }
     drawPlayerName(player, x, y);
+    ctx.restore();
   }
   ctx.restore();
   ctx.fillStyle='#fff'; ctx.font='bold 16px Arial'; ctx.fillText(String(Math.floor(state.tick ?? 0)).padStart(3, '0'), 590, 24);
