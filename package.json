@@ -6,6 +6,7 @@
     "build:data": "node build/generate-marathon.mjs && node tools/generate-asset-urls.mjs",
     "build:visuals": "node tools/build-mp02-visual.mjs",
     "build:audio": "node tools/build-audio.mjs",
+    "validate:editor-package": "node tools/validate-editor-package.mjs",
     "start": "node src/server.mjs",
     "test": "node --test",
     "test:coverage": "node --test --experimental-test-coverage"

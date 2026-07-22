@@ -9,6 +9,7 @@ export function createDraftDiff(base, current) {
     removedColliders: [...previous].filter(([cellKey]) => !next.has(cellKey)).map(([, cell]) => ({ ...cell })),
     spawnsChanged: JSON.stringify(base?.spawns ?? []) !== JSON.stringify(current?.spawns ?? []),
     finishChanged: Number(base?.finishX) !== Number(current?.finishX),
+    visualsChanged: JSON.stringify(base?.visuals ?? []) !== JSON.stringify(current?.visuals ?? []),
     fromSource: base?.source ?? 'marathon'
   };
 }

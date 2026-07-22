@@ -33,6 +33,7 @@ export function createEditorDraft(level, source = 'marathon') {
     spawns: clone(level?.spawns ?? []),
     finishX: Number(level?.finishX ?? 0),
     segments: clone(level?.segments ?? []),
+    visuals: clone(level?.visuals ?? []),
     elimination: { ...DEFAULT_EDITOR_ELIMINATION, ...(level?.elimination ?? {}) },
     cameraTargetX: Number(level?.cameraTargetX ?? 320)
   };
@@ -53,6 +54,8 @@ export function updateEditorProperty(history, { path, value }) {
     next.finishX = Math.max(0, Number(value));
   } else if (root === 'elimination' && path.length === 2 && ['leftMargin', 'top', 'bottom'].includes(index) && Number.isFinite(Number(value))) {
     next.elimination = { ...DEFAULT_EDITOR_ELIMINATION, ...(next.elimination ?? {}), [index]: Number(value) };
+  } else if (root === 'visuals' && Number.isInteger(index) && next.visuals?.[index] && ['x', 'y'].includes(key) && Number.isFinite(Number(value))) {
+    next.visuals[index] = { ...next.visuals[index], [key]: Number(value) };
   } else {
     throw new TypeError('属性编辑无效');
   }
@@ -98,6 +101,8 @@ export function exportEditorDraft(draft) {
 export function parseEditorDraft(text) {
   try {
     const draft = JSON.parse(text);
+    draft.visuals ??= [];
+    draft.elimination ??= { ...DEFAULT_EDITOR_ELIMINATION };
     const validation = validateEditorDraft(draft);
     if (!validation.valid) throw new Error(validation.errors.join('；'));
     return clone(draft);

@@ -4,6 +4,7 @@ import { createLocalNetworkLab, deliverSnapshots, queueSnapshot } from '/editor-
 import { createDraftDiff } from '/editor-package.js';
 import { GameRoom } from '/solo-game.mjs';
 import { animationFrame, frameSourceRect, morphFrame } from '/player-animation.js';
+import { projectVisual } from '/visual-projection.js';
 
 const canvas = document.querySelector('#editor-canvas');
 const ctx = canvas.getContext('2d');
@@ -42,6 +43,9 @@ let painting = false;
 let pan;
 let view = { x: 0, y: 150, scale: 0.55 };
 let selected;
+let selectedVisual;
+let visualDrag;
+let visualMaps = new Map();
 let running = false;
 let simulation;
 let replay = createReplay();
@@ -52,6 +56,7 @@ let simulationAccumulator = 0;
 let simulationLastAt = performance.now();
 let lab = createLocalNetworkLab();
 const eventLog = [];
+const visualImages = new Map();
 const animationImages = new Map(['blue', 'green', 'yellow', 'red'].map((color) => {
   const image = new Image(); image.src = `/assets/players/player-${color}.png`; return [color, image];
 }));
@@ -70,6 +75,30 @@ function cellAt(point) {
 function cellScreen(cell) {
   const world = levelWorld(); const size = courseCell();
   return { x: view.x + cell.x * size * view.scale, y: view.y + (world.originY - cell.y * size) * view.scale, size: size * view.scale };
+}
+function visualScreen(item) {
+  return { x: view.x + item.x * view.scale, y: view.y + item.y * view.scale, width: item.width * view.scale, height: item.height * view.scale };
+}
+function visualAt(point) {
+  const position = worldAt(point);
+  const visuals = history.current.visuals ?? [];
+  for (let index = visuals.length - 1; index >= 0; index -= 1) {
+    const item = visuals[index];
+    if (position.x >= item.x && position.x <= item.x + item.width && position.y >= item.y && position.y <= item.y + item.height) return index;
+  }
+  return -1;
+}
+function drawVisuals() {
+  const visuals = history.current.visuals ?? [];
+  for (let index = 0; index < visuals.length; index += 1) {
+    const item = visuals[index]; const preview = visualDrag?.index === index ? { ...item, x: visualDrag.x, y: visualDrag.y } : item; const box = visualScreen(preview);
+    if (box.x > canvas.width || box.y > canvas.height || box.x + box.width < 0 || box.y + box.height < 0) continue;
+    let image = visualImages.get(item.assetFile);
+    if (!image) { image = new Image(); image.src = `/assets/visual/${item.assetFile}`; visualImages.set(item.assetFile, image); }
+    if (image.complete && image.naturalWidth) ctx.drawImage(image, box.x, box.y, box.width, box.height);
+    else { ctx.fillStyle = '#34596880'; ctx.fillRect(box.x, box.y, box.width, box.height); }
+    if (selectedVisual === index) { ctx.save(); ctx.strokeStyle = '#ffdf6b'; ctx.lineWidth = 3; ctx.strokeRect(box.x, box.y, box.width, box.height); ctx.restore(); }
+  }
 }
 function setStatus(value) { status.textContent = value; }
 function updatePropertyEditor() {
@@ -99,7 +128,7 @@ function logCollisionEvents(state) {
 function updateInspector() {
   const draft = history.current; const valid = validateEditorDraft(draft);
   validation.textContent = valid.valid ? `草稿有效\n${draft.colliders.length} 个碰撞格\n撤销 ${history.undoStack.length} · 重做 ${history.redoStack.length}` : valid.errors.join('\n');
-  const selection = selected ? `碰撞格 (${selected.x}, ${selected.y})` : '尚未选择对象';
+  const selection = selected ? `碰撞格 (${selected.x}, ${selected.y})` : selectedVisual !== undefined ? `装饰 ${history.current.visuals?.[selectedVisual]?.imageId ?? ''}` : '尚未选择对象';
   inspector.replaceChildren(...[['选择', selection], ['图层', activeLayer], ['格尺寸', `${courseCell()} px`], ['终点', `${Math.round(draft.finishX)} px`], ['出生点', String(draft.spawns.length)]].flatMap(([term, description]) => {
     const dt = document.createElement('dt'); dt.textContent = term;
     const dd = document.createElement('dd'); dd.textContent = description;
@@ -131,6 +160,7 @@ function draw() {
   guide(history.current.finishX, '#ffd166', '终点');
   guide((history.current.cameraTargetX ?? 320) - 350 - (history.current.elimination?.leftMargin ?? 60), '#ff5f6d', '淘汰线');
   const world = levelWorld(); const bounds = history.current.elimination ?? { top: -90, bottom: 560 }; ctx.save(); ctx.strokeStyle = '#ff5f6d80'; ctx.setLineDash([3, 5]); for (const y of [bounds.top, bounds.bottom]) { const screenY = view.y + (world.originY - y) * view.scale; ctx.beginPath(); ctx.moveTo(0, screenY); ctx.lineTo(canvas.width, screenY); ctx.stroke(); } ctx.restore();
+  drawVisuals();
   for (const cell of history.current.colliders) {
     const box = cellScreen(cell);
     if (box.x > canvas.width || box.y > canvas.height || box.x + box.size < 0 || box.y + box.size < 0) continue;
@@ -158,6 +188,10 @@ function editAt(point) {
     if (distance < 90) { spawnIndex.value = String(nearest); selected = undefined; updateInspector(); draw(); }
     return;
   }
+  if (activeLayer === 'visual') {
+    selectedVisual = visualAt(point); selected = undefined; updateInspector(); draw();
+    return;
+  }
   if (activeLayer !== 'collision') return;
   const cell = cellAt(point); selected = cell;
   history = applyColliderEdit(history, { ...cell, solid: brush === 'paint' });
@@ -167,7 +201,7 @@ function resetDraft() {
   sourceDraft = sourceDraft ?? createEditorDraft(originalLevel, 'marathon');
   history = createHistory(structuredClone(sourceDraft));
   eventLog.length = 0; renderCollisionLog();
-  selected = undefined; view = { x: 0, y: 150, scale: 0.55 }; setStatus('已恢复为原始 marathon 草稿'); updateInspector(); draw();
+  selected = undefined; selectedVisual = undefined; visualDrag = undefined; view = { x: 0, y: 150, scale: 0.55 }; setStatus('已恢复为原始 marathon 草稿'); updateInspector(); draw();
 }
 function resetSimulation(replayMode = false) {
   const room = new GameRoom(history.current);
@@ -235,29 +269,50 @@ function renderSegments() {
     const item = document.createElement('li'); item.append(button); return item;
   }));
 }
+function flattenVisuals(level, maps) {
+  return (level.segments ?? []).flatMap((segment) => {
+    const map = maps.get(segment.id); if (!map) return [];
+    return ['visualInfo', 'frontVisualInfo'].flatMap((property) => (map[property] ?? []).map((visual, index) => {
+      const asset = map.assets?.[visual.imageId] ?? {}; const projected = projectVisual(visual, asset); const scaleX = projected.scaleX ?? 1; const scaleY = projected.scaleY ?? 1;
+      return { id: `${segment.id}:${property}:${index}:${segment.startX}`, imageId: visual.imageId, assetFile: asset.file, x: segment.startX + projected.x, y: projected.y, width: Number(asset.width ?? 0) * scaleX, height: Number(asset.height ?? 0) * scaleY, layer: property };
+    }));
+  });
+}
 async function load() {
-  const response = await fetch('/data/marathon.json');
-  if (!response.ok) throw new Error('无法读取 marathon 数据');
-  originalLevel = await response.json(); resetDraft(); renderSegments();
+  const responses = await Promise.all(['marathon', 'mp02-visual', 'mp03-visual', 'mp04-visual'].map((name) => fetch(`/data/${name}.json`)));
+  if (responses.some((response) => !response.ok)) throw new Error('无法读取赛道或装饰数据');
+  const [level, mp02, mp03, mp04] = await Promise.all(responses.map((response) => response.json())); visualMaps = new Map([['mp02', mp02], ['mp03', mp03], ['mp04', mp04]]);
+  originalLevel = { ...level, visuals: flattenVisuals(level, visualMaps) }; resetDraft(); renderSegments();
 }
 
 canvas.addEventListener('contextmenu', (event) => event.preventDefault());
 canvas.addEventListener('pointerdown', (event) => {
   const point = pointAt(event);
   if (event.button === 1 || event.button === 2) { pan = { point, view: { ...view } }; canvas.setPointerCapture(event.pointerId); return; }
+  if (event.button === 0 && activeLayer === 'visual') { const index = visualAt(point); if (index >= 0) { selectedVisual = index; const item = history.current.visuals[index]; const position = worldAt(point); visualDrag = { index, x: item.x, y: item.y, offsetX: position.x - item.x, offsetY: position.y - item.y }; canvas.setPointerCapture(event.pointerId); updateInspector(); draw(); } return; }
   painting = true; canvas.setPointerCapture(event.pointerId); editAt(point);
 });
 canvas.addEventListener('pointermove', (event) => {
   const point = pointAt(event);
   if (pan) { view.x = pan.view.x + point.x - pan.point.x; view.y = pan.view.y + point.y - pan.point.y; draw(); return; }
+  if (visualDrag) { const position = worldAt(point); visualDrag.x = position.x - visualDrag.offsetX; visualDrag.y = position.y - visualDrag.offsetY; draw(); return; }
   if (painting) editAt(point);
 });
-canvas.addEventListener('pointerup', (event) => { painting = false; pan = undefined; canvas.releasePointerCapture?.(event.pointerId); });
+canvas.addEventListener('pointerup', (event) => { if (visualDrag) { try { history = updateEditorProperty(history, { path: ['visuals', visualDrag.index, 'x'], value: visualDrag.x }); history = updateEditorProperty(history, { path: ['visuals', visualDrag.index, 'y'], value: visualDrag.y }); setStatus(`已移动装饰：${history.current.visuals[visualDrag.index].imageId}`); } catch (error) { setStatus(error.message); } visualDrag = undefined; updateInspector(); draw(); } painting = false; pan = undefined; canvas.releasePointerCapture?.(event.pointerId); });
 canvas.addEventListener('wheel', (event) => {
   event.preventDefault(); const point = pointAt(event); const world = worldAt(point); const next = Math.max(0.08, Math.min(3, view.scale * (event.deltaY < 0 ? 1.12 : 0.89)));
   view = { scale: next, x: point.x - world.x * next, y: point.y - world.y * next }; draw();
 }, { passive: false });
 document.addEventListener('change', (event) => { if (event.target.name === 'brush') brush = event.target.value; if (event.target.dataset.editorLayer) { activeLayer = event.target.dataset.editorLayer; updateInspector(); } });
+document.addEventListener('click', (event) => {
+  const layerButton = event.target.closest('[data-editor-layer]');
+  if (!layerButton || !history) return;
+  activeLayer = layerButton.dataset.editorLayer;
+  document.querySelectorAll('[data-editor-layer]').forEach((button) => button.classList.toggle('active', button === layerButton));
+  selected = undefined; if (activeLayer !== 'visual') selectedVisual = undefined;
+  setStatus(activeLayer === 'visual' ? '装饰层：拖动装饰可预览位置，松开后写入撤销历史' : `当前图层：${activeLayer === 'spawn' ? '出生点' : '碰撞层'}`);
+  updateInspector(); draw();
+});
 spawnIndex.addEventListener('change', updatePropertyEditor);
 localPlayerCount.addEventListener('change', () => { resetSimulation(); });
 latencyInput.addEventListener('input', configureLab); lossInput.addEventListener('input', configureLab);
