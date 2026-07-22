@@ -102,8 +102,11 @@ test('ships a Chinese original-style opening menu and animated end screen', asyn
   assert.match(app, /presentationOffsetX/);
   assert.match(app, /图片加载失败/);
   assert.match(app, /image\.decode/);
-  assert.match(app, /RACE_RESOURCE_TOTAL = 11/);
-  assert.match(app, /deferredVisualLoad/);
+  assert.match(app, /RACE_RESOURCE_TOTAL = 13/);
+  assert.match(app, /loadJson\('\/data\/mp03-visual\.json'\)/);
+  assert.match(app, /loadJson\('\/data\/mp04-visual\.json'\)/);
+  assert.match(app, /Promise\.all\(\[mp02, mp03, mp04\]\.map\(preloadDecorationImages\)\)/);
+  assert.doesNotMatch(app, /deferredVisualLoad/);
   assert.match(app, /038_SndPopupAppear\.mp3/);
   assert.match(app, /startMatch/);
   assert.match(app, /joinTimeout/);

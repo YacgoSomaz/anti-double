@@ -14,4 +14,6 @@ test('returns horizontal collision candidates in their original source order', (
 
   assert.deepEqual(index.query(20, 70), [firstInSecondColumn, blocks[2], blocks[3]]);
   assert.deepEqual(index.query(90, 120), [blocks[0]]);
+  assert.equal(index.find(20, 70, () => true), firstInSecondColumn);
+  assert.deepEqual(index.filter(20, 70, (block) => block.id.includes('second')), [firstInSecondColumn, blocks[3]]);
 });
