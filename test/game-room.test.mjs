@@ -708,3 +708,18 @@ test('does not let player side separation shove a runner into a world block', ()
   // not place its hitbox into the block's right edge at x=144.
   assert.equal(follower.x + follower.hitbox.offsetX >= 144, true);
 });
+
+test('applies developer collision, gravity, recovery and elimination tuning only to the local room instance', () => {
+  const room = new GameRoom({
+    tileSize: 48,
+    colliders: [],
+    spawns: [{ x: 100, y: 100, gravity: 1, speedX: 0 }]
+  });
+  const tuning = room.setDebugTuning({ hitboxWidth: 30, hitboxHeight: 60, gravityMultiplier: 0.5, recoveryMultiplier: 1.6, cameraSpeedMultiplier: 1.2, eliminationMargin: 120 });
+  room.join('solo', '调试玩家');
+
+  const player = room.snapshot().players[0];
+  assert.deepEqual(tuning, { hitboxWidth: 30, hitboxHeight: 60, gravityMultiplier: 0.5, recoveryMultiplier: 1.6, cameraSpeedMultiplier: 1.2, eliminationMargin: 120 });
+  assert.equal(player.hitbox.width, 30);
+  assert.equal(player.hitbox.height, 60);
+});

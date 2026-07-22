@@ -9,6 +9,7 @@ import { createLatestRaceStateBuffer } from '/latest-race-state.js';
 import { applyRaceViewport, RACE_BACKDROP_SCALE, worldViewportBounds } from '/race-viewport.js';
 import { ELIMINATION_BOUNDARY_FRAME_COUNT, eliminationBoundaryFrame } from '/elimination-boundary.js';
 import { GameRoom } from '/solo-game.mjs';
+import { DEFAULT_DEV_TUNING, createDeveloperPanel, exportDevConfig, isDeveloperMode, loadDevTuning, parseDevConfig, saveDevTuning } from '/dev-mode.js';
 
 const canvas = document.querySelector('#game');
 const gameShell = document.querySelector('.game-shell');
@@ -150,6 +151,9 @@ const ELIMINATION_BOUNDARY_WIDTH = 12;
 const ELIMINATION_BOUNDARY_GLOW_WIDTH = 18;
 const packetTiming = createPacketTimingMonitor(); const frameTiming = createFrameTimingMonitor(); let lastDiagnosticsUpdate = 0;
 let socket; let joinTimeout; let sequence = 0; let state = { phase: 'lobby', players: [] }; let map; let visualMaps = new Map(); let lastPing = 0; let stateReceivedAt = performance.now(); let localSlot; let roomCode; let cameraX = 0; let cameraUpdatedAt = performance.now(); let showingEnd = false; let resourcesReady = false; let raceReady = false; let resourcesFailed = false; let readySent = false; let readySoundPlayed = false; let raceResourceLoaded = 0; let soloRoom; let soloAccumulator = 0; let soloLastAt = 0;
+const developerMode = isDeveloperMode(location.search);
+const devTuning = developerMode ? loadDevTuning(localStorage) : { ...DEFAULT_DEV_TUNING };
+let devPanelState; let devPaused = false; let devSlowMotion = false;
 const latestRaceState = createLatestRaceStateBuffer();
 
 function updateDiagnostics(now) {
@@ -324,6 +328,7 @@ async function startSolo() {
   socket?.close(); socket = undefined; latestRaceState.reset();
   sequence = 0; localSlot = 1; roomCode = undefined; showingEnd = false; soloAccumulator = 0; soloLastAt = performance.now();
   soloRoom = new GameRoom(map);
+  if (developerMode) soloRoom.setDebugTuning(devTuning);
   soloRoom.join('solo', nickname.value, true);
   soloRoom.start('solo');
   state = soloRoom.snapshot();
@@ -331,6 +336,35 @@ async function startSolo() {
   frontScreen.hidden = true; endScreen.hidden = true; overlay.hidden = true; spectatorBanner.hidden = true;
   flip.disabled = false; players.textContent = '单人模式 · 本地运行'; courseStatus.textContent = '单人赛道 · 本地物理';
   stopAudio(menuMusic); playAudio(music); setStatus('单人模式 · 本地运行', true);
+}
+function initialiseDeveloperMode() {
+  if (!developerMode) return;
+  devPanelState = createDeveloperPanel(devTuning, (tuning) => {
+    saveDevTuning(localStorage, tuning);
+    soloRoom?.setDebugTuning(tuning);
+  });
+  document.body.append(devPanelState.panel);
+  devPanelState.panel.addEventListener('click', async (event) => {
+    const action = event.target.dataset.devAction;
+    if (!action) return;
+    if (action === 'restart') { devPaused = false; await startSolo(); }
+    if (action === 'pause') { devPaused = !devPaused; event.target.textContent = devPaused ? '继续' : '暂停'; }
+    if (action === 'slow') { devSlowMotion = !devSlowMotion; event.target.textContent = `慢放：${devSlowMotion ? '开' : '关'}`; }
+    if (action === 'reset') { Object.assign(devTuning, DEFAULT_DEV_TUNING); saveDevTuning(localStorage, devTuning); devPanelState.paint(devTuning); soloRoom?.setDebugTuning(devTuning); }
+    if (action === 'collapse') { devPanelState.setCollapsed(!devPanelState.panel.classList.contains('collapsed')); }
+    if (action === 'export') {
+      const blob = new Blob([exportDevConfig(devTuning)], { type: 'application/json' });
+      const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = 'gswitch-dev-config.json'; link.click(); URL.revokeObjectURL(link.href);
+    }
+  });
+  devPanelState.panel.addEventListener('change', async (event) => {
+    if (event.target.dataset.devAction !== 'import' || !event.target.files?.[0]) return;
+    try {
+      Object.assign(devTuning, parseDevConfig(await event.target.files[0].text()));
+      saveDevTuning(localStorage, devTuning); devPanelState.paint(devTuning); soloRoom?.setDebugTuning(devTuning); setStatus('开发配置已导入', true);
+    } catch (error) { setStatus(error.message); }
+    event.target.value = '';
+  });
 }
 function renderLobby() {
   if (!localSlot) return;
@@ -588,6 +622,41 @@ function drawEliminationBoundary(now) {
   ctx.drawImage(eliminationBoundary, frame * frameWidth, 0, frameWidth, eliminationBoundary.naturalHeight, x - 3, -74, ELIMINATION_BOUNDARY_GLOW_WIDTH, 650);
   ctx.restore();
 }
+function drawDeveloperOverlay(playersToDraw, camera, viewport, world) {
+  if (!developerMode || !devPanelState) return;
+  const { overlays } = devPanelState;
+  ctx.save();
+  ctx.lineWidth = 1.5;
+  ctx.font = '11px Arial';
+  if (overlays.blocks) {
+    ctx.strokeStyle = '#ffb84d';
+    for (const tile of map.colliders) {
+      const x = tile.x * world.cellSize - camera;
+      const y = world.originY - tile.y * world.cellSize;
+      if (x < viewport.left - camera - world.cellSize || x > viewport.right - camera || y < viewport.top - world.cellSize || y > viewport.bottom) continue;
+      ctx.strokeRect(x, y, world.cellSize, world.cellSize);
+    }
+  }
+  if (overlays.hitboxes) {
+    ctx.strokeStyle = '#25efff';
+    for (const player of playersToDraw) {
+      const hitbox = player.hitbox;
+      if (!hitbox) continue;
+      ctx.strokeRect(player.x - camera + hitbox.offsetX, player.y + hitbox.offsetY, hitbox.width, hitbox.height);
+    }
+  }
+  if (overlays.centre) {
+    ctx.setLineDash([5, 4]); ctx.strokeStyle = '#ff4d64';
+    ctx.beginPath(); ctx.moveTo(320, -70); ctx.lineTo(320, 570); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle = '#ff4d64'; ctx.fillText('镜头中线', 326, 18);
+  }
+  if (overlays.boundary) {
+    ctx.setLineDash([3, 3]); ctx.strokeStyle = '#ff2f4f';
+    ctx.beginPath(); ctx.moveTo(-34, -70); ctx.lineTo(-34, 570); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle = '#ff2f4f'; ctx.fillText('淘汰线', 6, 18);
+  }
+  ctx.restore();
+}
 function draw() {
   ctx.fillStyle='#9bcde3'; ctx.fillRect(0, 0, canvas.width, canvas.height); if (!map) return;
   const now = performance.now();
@@ -621,6 +690,7 @@ function draw() {
   }
   drawMarathonDecorations(camera, 'frontVisualInfo', viewport);
   drawEliminationBoundary(now);
+  drawDeveloperOverlay(renderPlayers, camera, viewport, world);
   for (const player of renderPlayers) {
     if (player.eliminated) continue;
     const x = player.x - camera;
@@ -661,8 +731,10 @@ function applyLatestRaceState() {
 }
 function advanceSoloRace(now) {
   if (!soloRoom) return;
-  soloAccumulator += Math.min(100, Math.max(0, now - soloLastAt));
+  const elapsed = Math.min(100, Math.max(0, now - soloLastAt));
   soloLastAt = now;
+  if (devPaused) return;
+  soloAccumulator += devSlowMotion ? elapsed * 0.35 : elapsed;
   while (soloAccumulator >= 25 && state.phase === 'playing') {
     state = soloRoom.tick(1 / 40);
     soloAccumulator -= 25;
@@ -674,4 +746,5 @@ function advanceSoloRace(now) {
   }
 }
 function animationLoop(now) { advanceSoloRace(now); applyLatestRaceState(); frameTiming.observe(now); updateDiagnostics(now); draw(); requestAnimationFrame(animationLoop); }
+initialiseDeveloperMode();
 requestAnimationFrame(animationLoop);

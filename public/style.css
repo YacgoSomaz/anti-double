@@ -49,6 +49,12 @@ main { width:min(960px,100%); padding:22px; } header,.controls { display:flex; a
 #end-rankings li:nth-child(1) .rank-score { top:79%; }
 #next-round { position:absolute; right:12px; bottom:12px; z-index:1; min-width:94px; padding:7px 10px; border-color:#d8e8f0; background:linear-gradient(#314b5b,#101f2b); color:#fff; font-size:12px; font-weight:bold; text-shadow:0 1px #000; }
 #page-refresh { border-color:#5e93a7; color:#d6edf5; }
+#dev-panel { position:fixed; z-index:20; top:10px; right:10px; width:276px; max-height:calc(100dvh - 20px); overflow:auto; padding:10px; border:1px solid #3ce6df; background:#07151de8; color:#d8edf5; box-shadow:0 10px 30px #000a; font-size:12px; backdrop-filter:blur(7px); }
+#dev-panel header { display:flex; justify-content:space-between; align-items:center; gap:8px; } #dev-panel header strong { color:#5bf6ef; letter-spacing:.05em; } #dev-panel header button { padding:3px 7px; font-size:11px; }
+#dev-panel p { margin:7px 0; color:#94abb6; line-height:1.35; } #dev-panel.collapsed { width:auto; min-width:0; } #dev-panel.collapsed > :not(header) { display:none; }
+.dev-overlay-options { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:4px; padding:7px 0; border-block:1px solid #264755; color:#b8d6df; } .dev-overlay-options label { white-space:nowrap; }
+.dev-tuning-controls { display:grid; gap:7px; padding:8px 0; } .dev-tuning-controls label { display:grid; grid-template-columns:1fr auto; gap:2px 7px; align-items:center; } .dev-tuning-controls input { grid-column:1/-1; width:100%; accent-color:#3ce6df; } .dev-tuning-controls output { color:#ffd95c; font-variant-numeric:tabular-nums; }
+.dev-actions { display:flex; flex-wrap:wrap; gap:5px; } .dev-actions button,.dev-import { padding:5px 7px; border:1px solid #416b7c; background:#102a36; color:#e8f8ff; font-size:11px; cursor:pointer; } .dev-import input { position:absolute; width:1px; height:1px; overflow:hidden; opacity:0; }
 .controls > span { color:var(--muted); }
 @keyframes loading-bar { from { width:0; } to { width:100%; } }
 @keyframes loading-out { to { opacity:0; transform:translateY(8px); } }
@@ -85,4 +91,5 @@ main { width:min(960px,100%); padding:22px; } header,.controls { display:flex; a
   #menu-panel input { width:126px; padding:4px 6px; }
   .menu-actions { gap:5px; }
   #menu-start,#solo-start { min-width:0; padding:8px 10px; }
+  #dev-panel { top:auto; right:6px; bottom:6px; width:min(284px,calc(100vw - 12px)); max-height:55dvh; }
 }

@@ -308,3 +308,14 @@ test('ships the recovered visual and foreground placements for all three multipl
     assert.equal(Object.keys(data.assets).length > 0, true);
   }
 });
+
+test('keeps developer controls opt-in and binds them only to local solo physics', async () => {
+  const app = await readFile(new URL('../public/app.js', import.meta.url), 'utf8');
+  const devMode = await readFile(new URL('../public/dev-mode.js', import.meta.url), 'utf8');
+  assert.match(app, /isDeveloperMode\(location\.search\)/);
+  assert.match(app, /if \(developerMode\) soloRoom\.setDebugTuning\(devTuning\)/);
+  assert.match(app, /drawDeveloperOverlay\(renderPlayers, camera, viewport, world\)/);
+  assert.match(app, /exportDevConfig\(devTuning\)/);
+  assert.match(devMode, /角色碰撞箱/);
+  assert.match(devMode, /淘汰边界/);
+});
