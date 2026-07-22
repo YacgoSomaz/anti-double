@@ -97,7 +97,7 @@ test('phase item grants three seconds of terrain and player collision immunity',
   assert.equal(player.x > 100, true);
 });
 
-test('speed control slows only the collecting runner velocity', () => {
+test('speed control slows the shared camera and every runner', () => {
   const level = {
     ...openLevel,
     itemSpawns: [{ id: 'speed-1', type: ITEM_TYPES.speedBoost, x: 100, y: 100 }]
@@ -108,7 +108,11 @@ test('speed control slows only the collecting runner velocity', () => {
   room.start('a');
 
   room.tick(1 / 40);
-  const [slowed, normal] = room.snapshot().players;
-  assert.equal(slowed.speedBoostTicks, 119);
-  assert.equal(slowed.vx < normal.vx, true);
+  const snapshot = room.snapshot();
+  const [first, second] = snapshot.players;
+  assert.equal(first.speedBoostTicks, 119);
+  assert.equal(second.speedBoostTicks, 119);
+  assert.equal(first.speedX, second.speedX);
+  assert.equal(first.speedX < 120, true);
+  assert.equal(snapshot.cameraSpeed < 120, true);
 });
