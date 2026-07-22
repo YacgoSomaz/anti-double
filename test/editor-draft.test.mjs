@@ -28,6 +28,11 @@ test('creates an isolated, versioned editor draft from a playable level', () => 
   assert.equal(draft.source, 'marathon');
 });
 
+test('normalizes duplicate source collision cells before opening an editor draft', () => {
+  const draft = createEditorDraft({ ...level, colliders: [{ x: 1, y: 2 }, { x: 1, y: 2 }] });
+  assert.deepEqual(draft.colliders, [{ x: 1, y: 2 }]);
+});
+
 test('paints and erases collision cells with undo and redo', () => {
   let history = createHistory(createEditorDraft(level));
   history = applyColliderEdit(history, { x: 3, y: 4, solid: true });
