@@ -334,22 +334,24 @@ test('pins a runner against a side block without taking away its momentum', () =
   assert.equal(player.blockedX, true);
 });
 
-test('sweeps a diagonal approach into a side tile before the runner can cross it', () => {
+test('does not create a side wall when a gravity flip crosses a narrow platform edge', () => {
   const room = new GameRoom({
-    tileSize: 48,
-    colliders: [{ x: 7, y: 3 }],
-    // The runner enters the tile vertically and horizontally in one 40 Hz
-    // frame. Testing only the pre-gravity box lets this corner tunnel.
-    spawns: [{ x: 280, y: 75, gravity: 1, speedX: 400 }]
+    tileSize: 34,
+    colliders: [{ x: 8, y: 3 }],
+    // This is a traversable near-corner path in the recovered stage geometry.
+    // The broad diagonal pre-sweep incorrectly pins the runner at x = 219.
+    spawns: [{ x: 180, y: 40, gravity: 1, speedX: 400 }]
   });
   room.join('runner');
   room.start('runner');
 
-  room.tick(1 / 40);
+  for (let frame = 0; frame < 10; frame += 1) {
+    if (frame === 5) room.input('runner', { type: 'flip', sequence: 1 });
+    room.tick(1 / 40);
+  }
 
   const player = room.snapshot().players[0];
-  // Tile left edge 336 - hitbox offset 16 - hitbox width 37 = x 283.
-  assert.equal(player.x <= 283, true);
+  assert.equal(player.x > 300, true);
 });
 
 test('does not let a late gravity-flip corner overlap tunnel through a side block', () => {
