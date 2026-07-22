@@ -50,6 +50,9 @@ test('serves the playable browser client with strict security headers', async (c
   const soloPhysics = await fetch(`http://127.0.0.1:${port}/solo-game.mjs`);
   assert.equal(soloPhysics.status, 200);
   assert.match(await soloPhysics.text(), /export class GameRoom/);
+  const collisionIndex = await fetch(`http://127.0.0.1:${port}/collision-index.mjs`);
+  assert.equal(collisionIndex.status, 200);
+  assert.match(await collisionIndex.text(), /createCollisionIndex/);
   const menuMusic = await fetch(`http://127.0.0.1:${port}/assets/sounds/032_SndMenuMusic.mp3`);
   assert.equal(menuMusic.status, 200);
   assert.equal(menuMusic.headers.get('content-type'), 'audio/mpeg');
