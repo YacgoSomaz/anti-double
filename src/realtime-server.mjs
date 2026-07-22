@@ -114,6 +114,7 @@ function stateMessage(snapshot) {
     hostSlot: snapshot.hostSlot,
     cameraX: snapshot.cameraX,
     cameraSpeed: snapshot.cameraSpeed,
+    introTicksRemaining: snapshot.introTicksRemaining,
     players: snapshot.players.map(({ id, ...player }) => player),
     results: snapshot.results
   };
@@ -160,6 +161,7 @@ export function encodeRaceState(snapshot, tickIntervalMs) {
     compact: true,
     tick: snapshot.tick,
     c: [coordinate(snapshot.cameraX), coordinate(snapshot.cameraSpeed)],
+    ...(snapshot.introTicksRemaining > 0 ? { i: snapshot.introTicksRemaining } : {}),
     ...(Number.isFinite(tickIntervalMs) ? { d: Math.max(0, Math.round(tickIntervalMs * 10)) } : {}),
     ...(snapshot.results?.length ? { r: snapshot.results.map(({ slot, rank, outcome, score }) => [slot, rank, outcome === 'finished' ? 1 : 0, Math.max(0, Math.floor(score ?? 0))]) } : {}),
     p: snapshot.players.map((player) => [

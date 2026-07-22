@@ -18,6 +18,10 @@ const multiplayerSpawns = [
 ];
 
 const world = { cellSize: 34, originY: 425 };
+// The recovered player atlas uses frames 23–44 at 20 FPS before physics
+// begins.  The server runs at 40 Hz, therefore the real opening holds for 44
+// authoritative ticks rather than being a client-only visual effect.
+const OPENING_MORPH_TICKS = 44;
 
 function readLevel(name) {
   const file = levelFiles.get(name);
@@ -67,6 +71,7 @@ function loadMarathon() {
   return {
     tileSize: firstLevel.tileSize,
     world,
+    openingMorphTicks: OPENING_MORPH_TICKS,
     colliders,
     spawns: firstLevel.spawns.map((spawn, index) => ({ ...spawn, ...multiplayerSpawns[index] })),
     finishX: offsetCells * world.cellSize,

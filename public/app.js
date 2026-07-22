@@ -137,12 +137,8 @@ const FINAL_TUNNEL_ASSETS = new Set([
 // content-hash URL，浏览器会复用磁盘缓存；比赛中不再触发资源加载。
 const RACE_RESOURCE_TOTAL = 13;
 const packetTiming = createPacketTimingMonitor(); const frameTiming = createFrameTimingMonitor(); let lastDiagnosticsUpdate = 0;
-let socket; let joinTimeout; let sequence = 0; let state = { phase: 'lobby', players: [] }; let map; let visualMaps = new Map(); let lastPing = 0; let stateReceivedAt = performance.now(); let localSlot; let roomCode; let cameraX = 0; let cameraUpdatedAt = performance.now(); let showingEnd = false; let resourcesReady = false; let raceReady = false; let resourcesFailed = false; let readySent = false; let readySoundPlayed = false; let raceResourceLoaded = 0; let soloRoom; let soloAccumulator = 0; let soloLastAt = 0; let raceIntroStartedAt = -Infinity;
+let socket; let joinTimeout; let sequence = 0; let state = { phase: 'lobby', players: [] }; let map; let visualMaps = new Map(); let lastPing = 0; let stateReceivedAt = performance.now(); let localSlot; let roomCode; let cameraX = 0; let cameraUpdatedAt = performance.now(); let showingEnd = false; let resourcesReady = false; let raceReady = false; let resourcesFailed = false; let readySent = false; let readySoundPlayed = false; let raceResourceLoaded = 0; let soloRoom; let soloAccumulator = 0; let soloLastAt = 0;
 const latestRaceState = createLatestRaceStateBuffer();
-
-function beginRaceIntro(now = performance.now()) {
-  raceIntroStartedAt = now;
-}
 
 function updateDiagnostics(now) {
   if (now - lastDiagnosticsUpdate < 500) return;
@@ -319,7 +315,6 @@ async function startSolo() {
   soloRoom.join('solo', nickname.value, true);
   soloRoom.start('solo');
   state = soloRoom.snapshot();
-  beginRaceIntro(soloLastAt);
   stateReceivedAt = soloLastAt; cameraX = state.cameraX; cameraUpdatedAt = soloLastAt;
   frontScreen.hidden = true; endScreen.hidden = true; overlay.hidden = true; spectatorBanner.hidden = true;
   flip.disabled = false; players.textContent = '单人模式 · 本地运行'; courseStatus.textContent = '单人赛道 · 本地物理';
@@ -362,6 +357,7 @@ function decodeCompactRaceState(message) {
     hostSlot: state.hostSlot,
     cameraX: message.c[0] / 100,
     cameraSpeed: message.c[1] / 100,
+    introTicksRemaining: Number.isInteger(message.i) ? message.i : 0,
     serverTickIntervalMs: Number.isInteger(message.d) ? message.d / 10 : undefined,
     results: Array.isArray(message.r) ? message.r.map(([slot, rank, outcome, score]) => ({ slot, rank, outcome: outcome ? 'finished' : 'eliminated', score: Math.max(0, Number(score) || 0) })) : [],
     players: message.p.map(([slot, x, y, vx, vy, gravity, flags]) => ({
@@ -400,7 +396,11 @@ function handle(message, connection = socket, consumeRaceState = false) {
     const authoritativeCamera = Math.max(0, Number(state.cameraX) || 0);
     cameraX = state.phase === 'playing' ? reconcileCamera(authoritativeCamera, presentedCamera) : authoritativeCamera;
     cameraUpdatedAt = stateReceivedAt;
-    if (state.phase === 'playing' && (localPlayer?.finished || localPlayer?.eliminated)) {
+    if (state.phase === 'playing' && state.introTicksRemaining > 0) {
+      spectatorBanner.hidden = true;
+      flip.disabled = true;
+      courseStatus.textContent = '传送中…';
+    } else if (state.phase === 'playing' && (localPlayer?.finished || localPlayer?.eliminated)) {
       flip.disabled = true;
       spectatorBanner.hidden = false;
       spectatorBanner.textContent = localPlayer.finished ? '已完成赛道 · 正在观战，等待本局结束' : '已淘汰 · 正在观战，等待本局结束';
@@ -418,12 +418,12 @@ function handle(message, connection = socket, consumeRaceState = false) {
     return;
   }
   if (message.type === 'ready_ok') return;
-  if (message.type === 'started') { beginRaceIntro(); stopAudio(menuMusic); playAudio(music); setStatus('比赛开始', true); return; }
+  if (message.type === 'started') { stopAudio(menuMusic); playAudio(music); setStatus('比赛开始 · 传送中…', true); return; }
   if (message.type === 'pong') { ping.textContent = `${Math.round(performance.now() - lastPing)} ms`; return; }
   if (message.type === 'error') { setStatus(`错误：${message.error}`); }
 }
 function sendFlip() {
-  if (state.phase !== 'playing') return;
+  if (state.phase !== 'playing' || state.introTicksRemaining > 0) return;
   if (soloRoom) {
     playAudio(switchSound, true);
     soloRoom.input('solo', { type:'flip', sequence:++sequence });
@@ -568,8 +568,8 @@ function draw() {
     const x = player.x - camera;
     const y = player.y;
     const sprite = sprites[player.slot - 1];
-    const introElapsed = now - raceIntroStartedAt;
-    const source = frameSourceRect(introElapsed >= 0 && introElapsed < MORPH_DURATION_MS
+    const introElapsed = MORPH_DURATION_MS - Math.max(0, Number(state.introTicksRemaining) || 0) * 25;
+    const source = frameSourceRect(state.introTicksRemaining > 0
       ? morphFrame(introElapsed)
       : animationFrame(now, player.vy !== 0));
     if (sprite.complete && sprite.naturalWidth) {

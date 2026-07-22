@@ -46,6 +46,7 @@ export class GameRoom {
   #tick = 0;
   #cameraX = 0;
   #cameraSpeed = 0;
+  #introTicksRemaining = 0;
   #phase = 'lobby';
   #hostId = null;
   #results = [];
@@ -69,7 +70,7 @@ export class GameRoom {
     const player = {
       id, slot, x: spawn.x, y: spawn.y, vx: spawn.speedX, vy: 0, startX: spawn.x, score: 0,
       previousX: spawn.x, previousY: spawn.y,
-      speedX: spawn.speedX, character: CHARACTERS[slot - 1], name: playerName(name, slot), ready: Boolean(ready),
+      speedX: spawn.speedX, startSpeedX: spawn.speedX, character: CHARACTERS[slot - 1], name: playerName(name, slot), ready: Boolean(ready),
       gravity: spawn.gravity, finished: false, eliminated: false, outcomeTick: null, blockedX: false, recoveringCameraPosition: false, cameraRecoveryBoost: false, hasReachedCameraCentre: Math.abs(spawn.x - CAMERA_TARGET_SCREEN_X) <= CAMERA_TARGET_TOLERANCE, cameraSafetyFrames: 0, flipWallGuard: 0,
       hitbox: { width: PLAYER_WIDTH, height: PLAYER_HEIGHT, offsetX: PLAYER_OFFSET_X, offsetY: spawn.gravity < 0 ? INVERTED_PLAYER_OFFSET_Y : NORMAL_PLAYER_OFFSET_Y }
     };
@@ -92,7 +93,19 @@ export class GameRoom {
     if (id !== this.#hostId) return { ok: false, error: 'not_host' };
     if (![...this.#players.values()].every((player) => player.ready)) return { ok: false, error: 'players_loading' };
     this.#phase = 'playing';
-    this.#cameraSpeed = Math.max(0, ...[...this.#players.values()].map((player) => player.speedX));
+    this.#introTicksRemaining = Math.max(0, Math.floor(Number(this.#level.openingMorphTicks) || 0));
+    if (this.#introTicksRemaining) {
+      this.#cameraSpeed = 0;
+      for (const player of this.#players.values()) {
+        player.vx = 0;
+        player.vy = 0;
+        player.speedX = 0;
+        player.previousX = player.x;
+        player.previousY = player.y;
+      }
+    } else {
+      this.#cameraSpeed = Math.max(0, ...[...this.#players.values()].map((player) => player.speedX));
+    }
     return { ok: true, tick: this.#tick };
   }
 
@@ -110,6 +123,7 @@ export class GameRoom {
     if (player.eliminated) return { ok: false, error: 'eliminated' };
     if (player.finished) return { ok: false, error: 'finished' };
     if (this.#phase !== 'playing') return { ok: false, error: 'waiting_for_host' };
+    if (this.#introTicksRemaining > 0) return { ok: false, error: 'intro_active' };
     if (event.sequence <= this.#sequences.get(id)) return { ok: false, error: 'stale_input' };
     this.#sequences.set(id, event.sequence);
     const previousOffsetY = player.hitbox.offsetY;
@@ -124,6 +138,11 @@ export class GameRoom {
     if (this.#phase !== 'playing') return this.snapshot();
     const dt = Math.max(0, Math.min(Number(seconds) || 0, MAX_STEP_SECONDS));
     this.#tick += 1;
+    if (this.#introTicksRemaining > 0) {
+      this.#introTicksRemaining -= 1;
+      if (this.#introTicksRemaining === 0) this.#releaseOpeningMorph();
+      return this.snapshot();
+    }
     for (const player of this.#players.values()) this.#updatePlayer(player, dt);
     this.#advanceCamera(dt);
     this.#separateOverlappingPlayers(dt);
@@ -142,6 +161,7 @@ export class GameRoom {
       phase: this.#phase,
       cameraX: this.#cameraX,
       cameraSpeed: this.#cameraSpeed,
+      introTicksRemaining: this.#introTicksRemaining,
       hostSlot: this.#players.get(this.#hostId)?.slot ?? null,
       players: [...this.#players.values()].map((player) => ({ ...player })),
       results: this.#results.map((result) => ({ ...result }))
@@ -234,6 +254,17 @@ export class GameRoom {
       .map((player) => player.x - MULTIPLAYER_LEFT_ESCAPE_SCREEN_X));
     const safeCameraX = Number.isFinite(blockedSafetyX) ? Math.min(requestedCameraX, blockedSafetyX) : requestedCameraX;
     this.#cameraX = Math.max(this.#cameraX, safeCameraX);
+  }
+
+  #releaseOpeningMorph() {
+    for (const player of this.#players.values()) {
+      player.speedX = player.startSpeedX;
+      player.vx = player.startSpeedX;
+      player.vy = 0;
+      player.previousX = player.x;
+      player.previousY = player.y;
+    }
+    this.#cameraSpeed = Math.max(0, ...[...this.#players.values()].map((player) => player.speedX));
   }
 
   #eliminatePlayersOutsideView() {
