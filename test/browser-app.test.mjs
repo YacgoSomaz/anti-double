@@ -92,11 +92,13 @@ test('ships a Chinese original-style opening menu and animated end screen', asyn
   assert.match(stylesheet, /multi-end\.png/);
   assert.match(app, /showEndScreen/);
   assert.match(app, /MORPH_DURATION_MS/);
-  assert.match(app, /morphFrame\(introElapsed\)/);
+  assert.match(app, /morphFrame\(morphElapsed\)/);
   assert.match(app, /introTicksRemaining/);
   assert.match(app, /传送中/);
   assert.match(app, /assets\/effects\/checkpoint-beamlight\.png/);
-  assert.match(app, /OPENING_BEAM_HEIGHT = 124/);
+  assert.match(app, /OPENING_BEAM_HEIGHT = 620/);
+  assert.match(app, /OPENING_BEAM_DURATION_MS = 400/);
+  assert.match(app, /isBeamPhase/);
   assert.match(app, /drawOpeningBeam/);
   assert.doesNotMatch(app, /beginRaceIntro/);
   assert.match(app, /赛道：MP03 → MP04 → MP02/);
