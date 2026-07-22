@@ -82,11 +82,13 @@ test('ships a Chinese original-style opening menu and animated end screen', asyn
   assert.match(html, /id="lobby-progress"/);
   assert.match(html, /id="end-screen"/);
   assert.match(html, /加载赛道资源/);
+  assert.match(html, /赛道：MP03 → MP04 → MP02/);
   assert.match(html, /本局结束/);
   assert.match(stylesheet, /menu-background\.png/);
   assert.match(stylesheet, /loading-splash\.png/);
   assert.match(stylesheet, /multi-end\.png/);
   assert.match(app, /showEndScreen/);
+  assert.match(app, /赛道：MP03 → MP04 → MP02/);
   assert.match(app, /renderLobby/);
   assert.match(app, /lobby-avatar/);
   assert.match(app, /resourcesReady/);

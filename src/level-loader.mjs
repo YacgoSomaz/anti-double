@@ -9,7 +9,7 @@ const levelFiles = new Map([
 // A full course rotation uses every recovered multiplayer map.  Run it twice
 // so a completed online race is long enough without introducing fabricated
 // obstacles or additional visual assets.
-const marathonCourseOrder = ['mp02', 'mp03', 'mp04', 'mp02', 'mp03', 'mp04'];
+const marathonCourseOrder = ['mp03', 'mp04', 'mp02', 'mp03', 'mp04', 'mp02'];
 const multiplayerSpawns = [
   { x: 316, y: 103, gravity: 1, speedX: 211.6983 },
   { x: 316, y: 325, gravity: -1, speedX: 211.6983 },

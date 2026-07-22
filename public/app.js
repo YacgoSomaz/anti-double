@@ -416,7 +416,7 @@ function handle(message, connection = socket, consumeRaceState = false) {
     } else {
       spectatorBanner.hidden = true;
       flip.disabled = false;
-      courseStatus.textContent = '赛道：MP02 → MP03 → MP04';
+      courseStatus.textContent = '赛道：MP03 → MP04 → MP02';
     }
     return;
   }
