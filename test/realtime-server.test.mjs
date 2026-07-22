@@ -192,6 +192,22 @@ test('encodes active item effects in the compact race packet', () => {
   assert.deepEqual(packet.p[0], [1, 10000, 10000, 15000, 0, 1, 0, 119, 0]);
 });
 
+test('keeps only nearby active pickups in compact race packets', () => {
+  const packet = encodeRaceState({
+    tick: 2,
+    cameraX: 1000,
+    cameraSpeed: 240,
+    items: [
+      { type: 'phase', x: 2200, y: 190, active: true },
+      { type: 'speed_boost', x: 9000, y: 280, active: true },
+      { type: 'gravity_burst', x: 1200, y: 370, active: false }
+    ],
+    players: []
+  });
+
+  assert.deepEqual(packet.o, [[2, 220000, 19000]]);
+});
+
 test('adds only a compact server tick timing sample to a race packet', () => {
   const packet = encodeRaceState({ tick: 2, cameraX: 0, cameraSpeed: 120, players: [] }, 27.4);
 

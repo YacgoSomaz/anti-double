@@ -40,8 +40,8 @@ test('keeps procedural pickups frequent across the long marathon', () => {
   const items = createItemState(level);
   const gaps = items.slice(1).map((item, index) => item.x - items[index].x);
 
-  assert.equal(items.length >= 36, true);
-  assert.equal(Math.max(...gaps) < 4000, true);
+  assert.equal(items.length >= 150, true);
+  assert.equal(Math.max(...gaps) < 700, true);
 });
 
 test('collecting a gravity burst flips every active runner exactly once', () => {
