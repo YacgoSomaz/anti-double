@@ -11,9 +11,11 @@ const MAX_MESSAGES_PER_SECOND = 20;
 const PHYSICS_HZ = 40;
 const DEFAULT_RACE_BROADCAST_HZ = 40;
 const publicDir = resolve(fileURLToPath(new URL('../public/', import.meta.url)));
+const soloGameModule = fileURLToPath(new URL('./game-room.mjs', import.meta.url));
 const mimeTypes = new Map([
   ['.html', 'text/html; charset=utf-8'],
   ['.js', 'text/javascript; charset=utf-8'],
+  ['.mjs', 'text/javascript; charset=utf-8'],
   ['.css', 'text/css; charset=utf-8'],
   ['.json', 'application/json; charset=utf-8'],
   ['.png', 'image/png'],
@@ -223,8 +225,11 @@ export function createRealtimeServer({ level, autoTick = true, raceBroadcastHz =
       requestUrl = new URL(request.url, 'http://local');
       pathname = decodeURIComponent(requestUrl.pathname);
     } catch { return response.writeHead(404).end(); }
-    const candidate = resolve(publicDir, pathname === '/' ? 'index.html' : pathname.replace(/^\/+/, ''));
-    if (!candidate.startsWith(publicDir + sep) || !mimeTypes.has(extname(candidate))) return response.writeHead(404).end();
+    const servesSoloPhysics = pathname === '/solo-game.mjs';
+    const candidate = servesSoloPhysics
+      ? soloGameModule
+      : resolve(publicDir, pathname === '/' ? 'index.html' : pathname.replace(/^\/+/, ''));
+    if ((!servesSoloPhysics && !candidate.startsWith(publicDir + sep)) || !mimeTypes.has(extname(candidate))) return response.writeHead(404).end();
     try {
       const metadata = statSync(candidate);
       if (!metadata.isFile()) return response.writeHead(404).end();

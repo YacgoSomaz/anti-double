@@ -7,6 +7,7 @@ import { drawPlayerSprite } from '/player-render.js';
 import { createFrameTimingMonitor, createPacketTimingMonitor, formatDiagnostics } from '/network-diagnostics.js';
 import { createLatestRaceStateBuffer } from '/latest-race-state.js';
 import { applyRaceViewport, RACE_BACKDROP_SCALE, worldViewportBounds } from '/race-viewport.js';
+import { GameRoom } from '/solo-game.mjs';
 
 const canvas = document.querySelector('#game');
 const gameShell = document.querySelector('.game-shell');
@@ -14,6 +15,7 @@ const ctx = canvas.getContext('2d');
 const room = document.querySelector('#room');
 const nickname = document.querySelector('#nickname');
 const join = document.querySelector('#menu-start');
+const soloStart = document.querySelector('#solo-start');
 const flip = document.querySelector('#flip');
 const soundToggle = document.querySelector('#sound-toggle');
 const overlay = document.querySelector('#overlay');
@@ -135,7 +137,7 @@ const FINAL_TUNNEL_ASSETS = new Set([
 // MP03/MP04 在后台预取，不能再把房间开始按钮卡在后续赛段资源上。
 const RACE_RESOURCE_TOTAL = 11;
 const packetTiming = createPacketTimingMonitor(); const frameTiming = createFrameTimingMonitor(); let lastDiagnosticsUpdate = 0;
-let socket; let joinTimeout; let sequence = 0; let state = { phase: 'lobby', players: [] }; let map; let visualMaps = new Map(); let lastPing = 0; let stateReceivedAt = performance.now(); let localSlot; let roomCode; let cameraX = 0; let cameraUpdatedAt = performance.now(); let showingEnd = false; let resourcesReady = false; let raceReady = false; let resourcesFailed = false; let readySent = false; let readySoundPlayed = false; let raceResourceLoaded = 0;
+let socket; let joinTimeout; let sequence = 0; let state = { phase: 'lobby', players: [] }; let map; let visualMaps = new Map(); let lastPing = 0; let stateReceivedAt = performance.now(); let localSlot; let roomCode; let cameraX = 0; let cameraUpdatedAt = performance.now(); let showingEnd = false; let resourcesReady = false; let raceReady = false; let resourcesFailed = false; let readySent = false; let readySoundPlayed = false; let raceResourceLoaded = 0; let soloRoom; let soloAccumulator = 0; let soloLastAt = 0;
 const latestRaceState = createLatestRaceStateBuffer();
 
 function updateDiagnostics(now) {
@@ -210,6 +212,8 @@ Promise.all([mapLoad, ...[...sprites, ...Object.values(scene)].map((image) => wa
   resourcesReady = true;
   join.disabled = false;
   join.textContent = '开始联机';
+  soloStart.disabled = false;
+  soloStart.textContent = '单人开始';
   updateLobbyProgress();
   sendReady();
   signalRaceReady();
@@ -220,6 +224,7 @@ Promise.all([mapLoad, ...[...sprites, ...Object.values(scene)].map((image) => wa
 }).catch(() => {
   resourcesFailed = true;
   join.textContent = '资源加载失败';
+  soloStart.textContent = '资源加载失败';
   setStatus('资源加载失败，请刷新重试');
   if (!frontScreen.hidden) frontScreen.dataset.phase = 'menu';
 });
@@ -262,7 +267,7 @@ async function connect() {
   if (!nickname.value.trim()) return setStatus('请输入昵称');
   await unlockAudio();
   clearTimeout(joinTimeout);
-  socket?.close(); sequence = 0; localSlot = undefined; roomCode = room.value.trim().toUpperCase(); state = { phase: 'lobby', players: [] }; cameraX = 0; cameraUpdatedAt = performance.now(); showingEnd = false; readySent = false; readySoundPlayed = false; latestRaceState.reset();
+  soloRoom = undefined; socket?.close(); sequence = 0; localSlot = undefined; roomCode = room.value.trim().toUpperCase(); state = { phase: 'lobby', players: [] }; cameraX = 0; cameraUpdatedAt = performance.now(); showingEnd = false; readySent = false; readySoundPlayed = false; latestRaceState.reset();
   frontScreen.hidden = true; endScreen.hidden = true; overlay.hidden = false;
   join.disabled = true;
   const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -306,6 +311,22 @@ async function connect() {
     else setStatus('连接已断开');
   });
   connection.addEventListener('error', () => abandonJoin('连接失败，请重试'));
+}
+async function startSolo() {
+  if (resourcesFailed || !raceReady || !map) return setStatus(resourcesFailed ? '资源加载失败，请刷新重试' : '角色和赛道仍在加载');
+  if (!nickname.value.trim()) return setStatus('请输入昵称');
+  await unlockAudio();
+  clearTimeout(joinTimeout);
+  socket?.close(); socket = undefined; latestRaceState.reset();
+  sequence = 0; localSlot = 1; roomCode = undefined; showingEnd = false; soloAccumulator = 0; soloLastAt = performance.now();
+  soloRoom = new GameRoom(map);
+  soloRoom.join('solo', nickname.value, true);
+  soloRoom.start('solo');
+  state = soloRoom.snapshot();
+  stateReceivedAt = soloLastAt; cameraX = state.cameraX; cameraUpdatedAt = soloLastAt;
+  frontScreen.hidden = true; endScreen.hidden = true; overlay.hidden = true; spectatorBanner.hidden = true;
+  flip.disabled = false; players.textContent = '单人模式 · 本地运行'; courseStatus.textContent = '单人赛道 · 本地物理';
+  stopAudio(menuMusic); playAudio(music); setStatus('单人模式 · 本地运行', true);
 }
 function renderLobby() {
   if (!localSlot) return;
@@ -404,7 +425,16 @@ function handle(message, connection = socket, consumeRaceState = false) {
   if (message.type === 'pong') { ping.textContent = `${Math.round(performance.now() - lastPing)} ms`; return; }
   if (message.type === 'error') { setStatus(`错误：${message.error}`); }
 }
-function sendFlip() { if (state.phase === 'playing' && socket?.readyState === WebSocket.OPEN) { playAudio(switchSound, true); socket.send(JSON.stringify({ type:'flip', sequence:++sequence })); } }
+function sendFlip() {
+  if (state.phase !== 'playing') return;
+  if (soloRoom) {
+    playAudio(switchSound, true);
+    soloRoom.input('solo', { type:'flip', sequence:++sequence });
+    state = soloRoom.snapshot();
+    return;
+  }
+  if (socket?.readyState === WebSocket.OPEN) { playAudio(switchSound, true); socket.send(JSON.stringify({ type:'flip', sequence:++sequence })); }
+}
 function startMatch() { if (raceReady && socket?.readyState === WebSocket.OPEN && state.phase === 'lobby' && state.hostSlot === localSlot && state.players.every((player) => player.ready)) socket.send(JSON.stringify({ type: 'start' })); }
 function showEndScreen(player) {
   if (showingEnd) return;
@@ -433,7 +463,7 @@ function renderRankings(results) {
 function returnToMenu() {
   showingEnd = false;
   clearTimeout(joinTimeout);
-  socket?.close(); socket = undefined; state = { phase: 'lobby', players: [] }; localSlot = undefined; roomCode = undefined; sequence = 0;
+  socket?.close(); socket = undefined; soloRoom = undefined; state = { phase: 'lobby', players: [] }; localSlot = undefined; roomCode = undefined; sequence = 0;
   stopAudio(music);
   playAudio(menuMusic);
   endScreen.hidden = true; overlay.hidden = true; frontScreen.hidden = false; frontScreen.dataset.phase = 'menu';
@@ -488,6 +518,7 @@ function drawMarathonDecorations(camera, property, viewport) {
   return drawn;
 }
 function renderPlayer(player, now) {
+  if (soloRoom) return player;
   const position = advancePresentation(player, now - stateReceivedAt, state.cameraSpeed);
   return { ...player, ...position };
 }
@@ -509,7 +540,7 @@ function draw() {
   const renderPlayers = state.players.map((player) => renderPlayer(player, now));
   // Keep every browser on the server's shared camera.  This is deliberately
   // independent of the local runner and never accumulates prediction error.
-  const camera = advanceCamera(cameraX, now - cameraUpdatedAt, state.cameraSpeed);
+  const camera = soloRoom ? cameraX : advanceCamera(cameraX, now - cameraUpdatedAt, state.cameraSpeed);
   const world = map.world ?? { cellSize: 34, originY: 425 };
   const viewport = worldViewportBounds({ cameraX: camera, width: canvas.width, height: canvas.height });
   ctx.save();
@@ -549,7 +580,7 @@ function draw() {
   ctx.restore();
   ctx.fillStyle='#fff'; ctx.font='bold 16px Arial'; ctx.fillText(String(Math.floor(state.tick ?? 0)).padStart(3, '0'), 590, 24);
 }
-join.addEventListener('click', connect); lobbyStart.addEventListener('click', startMatch); nextRound.addEventListener('click', returnToMenu); flip.addEventListener('click', sendFlip); soundToggle.addEventListener('click', toggleSound); canvas.addEventListener('click', sendFlip);
+join.addEventListener('click', connect); soloStart.addEventListener('click', startSolo); lobbyStart.addEventListener('click', startMatch); nextRound.addEventListener('click', returnToMenu); flip.addEventListener('click', sendFlip); soundToggle.addEventListener('click', toggleSound); canvas.addEventListener('click', sendFlip);
 fullscreen.addEventListener('click', () => {
   if (document.fullscreenElement) document.exitFullscreen?.();
   else gameShell.requestFullscreen?.();
@@ -564,5 +595,19 @@ function applyLatestRaceState() {
   // display frame, not an inbound network event.
   handle(message, socket, true);
 }
-function animationLoop(now) { applyLatestRaceState(); frameTiming.observe(now); updateDiagnostics(now); draw(); requestAnimationFrame(animationLoop); }
+function advanceSoloRace(now) {
+  if (!soloRoom) return;
+  soloAccumulator += Math.min(100, Math.max(0, now - soloLastAt));
+  soloLastAt = now;
+  while (soloAccumulator >= 25 && state.phase === 'playing') {
+    state = soloRoom.tick(1 / 40);
+    soloAccumulator -= 25;
+  }
+  stateReceivedAt = now; cameraX = state.cameraX; cameraUpdatedAt = now;
+  if (state.phase === 'results' && !showingEnd) {
+    flip.disabled = true; spectatorBanner.hidden = true; courseStatus.textContent = '单人赛道已结束';
+    showEndScreen(state.players[0]);
+  }
+}
+function animationLoop(now) { advanceSoloRace(now); applyLatestRaceState(); frameTiming.observe(now); updateDiagnostics(now); draw(); requestAnimationFrame(animationLoop); }
 requestAnimationFrame(animationLoop);
