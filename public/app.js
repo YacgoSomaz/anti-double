@@ -137,8 +137,8 @@ const FINAL_TUNNEL_ASSETS = new Set([
 // 每局开始前完成整个 marathon 的地图、装饰和图像解码。它们均使用
 // content-hash URL，浏览器会复用磁盘缓存；比赛中不再触发资源加载。
 const RACE_RESOURCE_TOTAL = 14;
-// Recovered original 19×84 checkpoint beam. It scans in from the left at
-// runner height, fades away at the target, then lets the runner materialise.
+// Recovered original 19×84 checkpoint beam. It falls from above to the runner
+// centre, fades away at the impact point, then lets the runner materialise.
 const OPENING_BEAM_THICKNESS = 64;
 const OPENING_BEAM_DURATION_MS = 900;
 const OPENING_BEAM_APPROACH_MS = 560;
@@ -543,17 +543,17 @@ function drawOpeningBeam(x, y, now, openingElapsed) {
   const approach = Math.min(1, openingElapsed / OPENING_BEAM_APPROACH_MS);
   const easedApproach = 1 - (1 - approach) ** 3;
   const dissipate = Math.max(0, Math.min(1, (openingElapsed - 620) / (OPENING_BEAM_DURATION_MS - 620)));
-  const targetX = x + PLAYER_FRAME_WIDTH / 2;
-  const startX = -80;
-  const headX = startX + (targetX - startX) * easedApproach;
-  const tailX = startX + (targetX - startX) * dissipate * 0.36;
-  const length = Math.max(8, headX - tailX);
-  const centreY = y + PLAYER_FRAME_HEIGHT / 2;
+  const targetY = y + PLAYER_FRAME_HEIGHT / 2;
+  const startY = -84;
+  const headY = startY + (targetY - startY) * easedApproach;
+  const tailY = startY + (targetY - startY) * dissipate * 0.36;
+  const length = Math.max(8, headY - tailY);
+  const centreX = x + PLAYER_FRAME_WIDTH / 2;
   const pulse = 0.84 + Math.sin(now / 28) * 0.1;
   const jitter = Math.sin(now / 19) * (1 + dissipate * 2);
   const drawLayer = (thickness, opacity, offset) => {
     ctx.globalAlpha = Math.max(0, opacity * pulse * (1 - dissipate * 0.84));
-    ctx.drawImage(openingBeam, tailX, centreY - thickness / 2 + jitter + offset, length, thickness);
+    ctx.drawImage(openingBeam, centreX - thickness / 2 + jitter + offset, tailY, thickness, length);
   };
   ctx.save();
   ctx.globalCompositeOperation = 'screen';
@@ -562,7 +562,7 @@ function drawOpeningBeam(x, y, now, openingElapsed) {
   drawLayer(24, 1, 0);
   if (approach >= 1) {
     ctx.globalAlpha = (1 - dissipate) * 0.72;
-    ctx.drawImage(openingBeam, targetX - 12, centreY - OPENING_BEAM_THICKNESS / 2, 24, OPENING_BEAM_THICKNESS);
+    ctx.drawImage(openingBeam, centreX - OPENING_BEAM_THICKNESS / 2, targetY - 12, OPENING_BEAM_THICKNESS, 24);
   }
   ctx.restore();
 }
