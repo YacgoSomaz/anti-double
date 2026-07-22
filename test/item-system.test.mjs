@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { ITEM_TYPES, createItemState } from '../src/item-system.mjs';
 import { GameRoom } from '../src/game-room.mjs';
+import { loadLevel } from '../src/level-loader.mjs';
 
 const openLevel = {
   tileSize: 48,
@@ -32,6 +33,15 @@ test('puts the first procedural item inside the opening playable stretch', () =>
 
   assert.equal(items[0].x <= 700, true);
   assert.equal(items.at(-1).x < level.finishX, true);
+});
+
+test('keeps procedural pickups frequent across the long marathon', () => {
+  const level = loadLevel('marathon');
+  const items = createItemState(level);
+  const gaps = items.slice(1).map((item, index) => item.x - items[index].x);
+
+  assert.equal(items.length >= 36, true);
+  assert.equal(Math.max(...gaps) < 4000, true);
 });
 
 test('collecting a gravity burst flips every active runner exactly once', () => {

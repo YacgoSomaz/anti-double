@@ -632,11 +632,11 @@ test('accelerates every original 40 FPS physics frame instead of keeping the spa
   for (let frame = 0; frame < 40; frame += 1) room.tick(1 / 40);
 
   const player = room.snapshot().players[0];
-  assert.equal(Number(player.speedX.toFixed(6)), 206.579162);
+  assert.equal(Number(player.speedX.toFixed(6)), 205.26333);
   assert.equal(player.vx > player.speedX, true);
 });
 
-test('uses a 15 percent softer horizontal acceleration ramp', () => {
+test('uses an even slower horizontal acceleration ramp', () => {
   const room = new GameRoom({
     tileSize: 34,
     colliders: [],
@@ -648,7 +648,7 @@ test('uses a 15 percent softer horizontal acceleration ramp', () => {
   for (let frame = 0; frame < 40; frame += 1) room.tick(1 / 40);
 
   const player = room.snapshot().players[0];
-  assert.equal(Number(player.speedX.toFixed(6)), 206.579162);
+  assert.equal(Number(player.speedX.toFixed(6)), 205.26333);
 });
 
 test('keeps the original shared speed cap after the ramp reaches its threshold', () => {
