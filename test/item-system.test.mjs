@@ -44,6 +44,24 @@ test('keeps procedural pickups frequent across the long marathon', () => {
   assert.equal(Math.max(...gaps) < 700, true);
 });
 
+test('keeps generated pickups outside collision blocks so they remain collectible', () => {
+  const level = loadLevel('marathon');
+  const items = createItemState(level);
+  const cellSize = level.world.cellSize;
+  const blocks = level.colliders.map((collider) => ({
+    x: collider.x * cellSize,
+    y: level.world.originY - collider.y * cellSize,
+    width: cellSize,
+    height: cellSize
+  }));
+  const overlaps = items.filter((item) => blocks.some((block) => item.x + 29 > block.x
+    && item.x - 29 < block.x + block.width
+    && item.y + 29 > block.y
+    && item.y - 29 < block.y + block.height));
+
+  assert.deepEqual(overlaps, []);
+});
+
 test('collecting a gravity burst flips every active runner exactly once', () => {
   const level = {
     ...openLevel,
