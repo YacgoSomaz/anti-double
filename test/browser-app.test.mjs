@@ -183,15 +183,19 @@ test('uses the original result board with character slots and a next-round actio
 
   assert.match(html, /id="end-rankings"/);
   assert.match(html, /id="next-round"/);
+  assert.match(html, /id="page-refresh"/);
   assert.doesNotMatch(html, /id="end-result"/);
   assert.match(app, /rank-avatar/);
   assert.match(app, /rank-score/);
   assert.match(app, /function drawPlayerName/);
   assert.match(app, /ctx\.fillText\(player\.name/);
   assert.match(app, /nextRound\.addEventListener\('click', returnToMenu\)/);
+  assert.match(app, /function returnToMenu\(\) \{[\s\S]*latestRaceState\.reset\(\)/);
+  assert.match(app, /pageRefresh\.addEventListener\('click', \(\) => location\.reload\(\)\)/);
   assert.match(stylesheet, /#end-rankings li:nth-child\(1\)/);
   assert.match(stylesheet, /#end-rankings li:nth-child\(2\)/);
   assert.match(stylesheet, /#next-round/);
+  assert.match(stylesheet, /#page-refresh/);
   assert.match(stylesheet, /\.rank-score/);
 });
 
