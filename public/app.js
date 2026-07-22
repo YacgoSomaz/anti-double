@@ -668,13 +668,17 @@ function drawItems(items, camera, viewport, now) {
     const pulse = 0.86 + Math.sin(now / 180 + index) * 0.12;
     const glow = ITEM_GLOW_COLORS[item.type] ?? '#ffffff';
     ctx.shadowColor = glow;
-    ctx.shadowBlur = 14;
+    // Keep the halo visible without washing the recovered pixel-art icon out.
+    ctx.shadowBlur = 8;
     ctx.globalAlpha = pulse * 0.72;
     ctx.strokeStyle = glow;
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.arc(x, y, size * 0.46, 0, Math.PI * 2);
     ctx.stroke();
+    // Draw the actual icon with normal alpha so its silhouette and color stay
+    // readable on bright foreground decorations.
+    ctx.globalCompositeOperation = 'source-over';
     ctx.globalAlpha = pulse;
     ctx.drawImage(itemIconSheet, index * frameWidth, 0, frameWidth, frameHeight, x - size / 2, y - size / 2, size, size);
   }
