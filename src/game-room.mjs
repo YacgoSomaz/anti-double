@@ -49,6 +49,11 @@ function normaliseDebugTuning(value = {}) {
   };
 }
 
+function playerOffsetY(gravity, height) {
+  const centeredAdjustment = (PLAYER_HEIGHT - height) / 2;
+  return (gravity < 0 ? INVERTED_PLAYER_OFFSET_Y : NORMAL_PLAYER_OFFSET_Y) + centeredAdjustment;
+}
+
 function playerName(value, slot) {
   const cleaned = String(value ?? '').replace(/[\u0000-\u001f\u007f]/g, '').trim().replace(/\s+/g, ' ');
   return [...cleaned].slice(0, 12).join('') || `玩家 ${slot}`;
@@ -76,6 +81,7 @@ export class GameRoom {
       ? { x: collider.x * level.world.cellSize, y: level.world.originY - collider.y * level.world.cellSize, width: level.world.cellSize, height: level.world.cellSize }
       : { x: collider.x * level.tileSize, y: collider.y * level.tileSize, width: level.tileSize, height: level.tileSize });
     this.#collisionIndex = createCollisionIndex(this.#blocks, level.world?.cellSize ?? level.tileSize);
+    this.#debugTuning = normaliseDebugTuning(level.playerPhysics ?? {});
   }
 
   setDebugTuning(value) {
@@ -85,6 +91,7 @@ export class GameRoom {
       player.hitbox.width = this.#debugTuning.hitboxWidth;
       player.hitbox.height = this.#debugTuning.hitboxHeight;
       player.hitbox.offsetX = PLAYER_OFFSET_X + (PLAYER_WIDTH - player.hitbox.width) / 2;
+      player.hitbox.offsetY = playerOffsetY(player.gravity, player.hitbox.height);
       player.startSpeedX *= this.#debugTuning.speedMultiplier / previousTuning.speedMultiplier;
       if (this.#phase === 'lobby') { player.speedX = player.startSpeedX; player.vx = player.startSpeedX; }
     }
@@ -105,7 +112,7 @@ export class GameRoom {
       previousX: spawn.x, previousY: spawn.y,
       speedX: spawn.speedX * this.#debugTuning.speedMultiplier, startSpeedX: spawn.speedX * this.#debugTuning.speedMultiplier, character: CHARACTERS[slot - 1], name: playerName(name, slot), ready: Boolean(ready),
       gravity: spawn.gravity, finished: false, eliminated: false, outcomeTick: null, blockedX: false, recoveringCameraPosition: false, cameraRecoveryBoost: false, hasReachedCameraCentre: Math.abs(spawn.x - CAMERA_TARGET_SCREEN_X) <= CAMERA_TARGET_TOLERANCE, cameraSafetyFrames: 0, flipWallGuard: 0,
-      hitbox: { width: this.#debugTuning.hitboxWidth, height: this.#debugTuning.hitboxHeight, offsetX: PLAYER_OFFSET_X + (PLAYER_WIDTH - this.#debugTuning.hitboxWidth) / 2, offsetY: spawn.gravity < 0 ? INVERTED_PLAYER_OFFSET_Y : NORMAL_PLAYER_OFFSET_Y }
+      hitbox: { width: this.#debugTuning.hitboxWidth, height: this.#debugTuning.hitboxHeight, offsetX: PLAYER_OFFSET_X + (PLAYER_WIDTH - this.#debugTuning.hitboxWidth) / 2, offsetY: playerOffsetY(spawn.gravity, this.#debugTuning.hitboxHeight) }
     };
     this.#players.set(id, player);
     this.#sequences.set(id, 0);
@@ -161,7 +168,7 @@ export class GameRoom {
     this.#sequences.set(id, event.sequence);
     const previousOffsetY = player.hitbox.offsetY;
     player.gravity *= -1;
-    player.hitbox.offsetY = player.gravity < 0 ? INVERTED_PLAYER_OFFSET_Y : NORMAL_PLAYER_OFFSET_Y;
+    player.hitbox.offsetY = playerOffsetY(player.gravity, player.hitbox.height);
     player.flipWallGuard = 4;
     this.#resolveGravityFlipOverlap(player, previousOffsetY);
     return { ok: true, tick: this.#tick };

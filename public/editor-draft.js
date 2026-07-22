@@ -1,5 +1,6 @@
 export const EDITOR_DRAFT_VERSION = 1;
 export const DEFAULT_EDITOR_ELIMINATION = Object.freeze({ leftMargin: 60, top: -90, bottom: 560 });
+export const DEFAULT_EDITOR_PLAYER_PHYSICS = Object.freeze({ hitboxWidth: 37, hitboxHeight: 28, gravityMultiplier: 1, recoveryMultiplier: 1 });
 
 function clone(value) { return structuredClone(value); }
 function cellKey(cell) { return `${cell.x}:${cell.y}`; }
@@ -16,6 +17,13 @@ export function validateEditorDraft(value) {
     const boundary = value.elimination;
     if (!Number.isFinite(boundary?.leftMargin) || boundary.leftMargin < 0 || boundary.leftMargin > 300) errors.push('淘汰线余量必须在 0–300 px');
     if (!Number.isFinite(boundary?.top) || !Number.isFinite(boundary?.bottom) || boundary.top >= boundary.bottom) errors.push('淘汰上下边界无效');
+  }
+  if (value?.playerPhysics !== undefined) {
+    const physics = value.playerPhysics;
+    if (!Number.isFinite(Number(physics?.hitboxWidth)) || Number(physics.hitboxWidth) < 20 || Number(physics.hitboxWidth) > 56) errors.push('角色碰撞宽度必须在 20–56 px');
+    if (!Number.isFinite(Number(physics?.hitboxHeight)) || Number(physics.hitboxHeight) < 28 || Number(physics.hitboxHeight) > 72) errors.push('角色碰撞高度必须在 28–72 px');
+    if (!Number.isFinite(Number(physics?.gravityMultiplier)) || Number(physics.gravityMultiplier) < 0.25 || Number(physics.gravityMultiplier) > 2) errors.push('重力倍率必须在 0.25–2');
+    if (!Number.isFinite(Number(physics?.recoveryMultiplier)) || Number(physics.recoveryMultiplier) < 0.1 || Number(physics.recoveryMultiplier) > 3) errors.push('追赶倍率必须在 0.1–3');
   }
   return { valid: errors.length === 0, errors };
 }
@@ -35,6 +43,7 @@ export function createEditorDraft(level, source = 'marathon') {
     segments: clone(level?.segments ?? []),
     visuals: clone(level?.visuals ?? []),
     elimination: { ...DEFAULT_EDITOR_ELIMINATION, ...(level?.elimination ?? {}) },
+    playerPhysics: { ...DEFAULT_EDITOR_PLAYER_PHYSICS, ...(level?.playerPhysics ?? {}) },
     cameraTargetX: Number(level?.cameraTargetX ?? 320)
   };
   const validation = validateEditorDraft(draft);
@@ -54,6 +63,8 @@ export function updateEditorProperty(history, { path, value }) {
     next.finishX = Math.max(0, Number(value));
   } else if (root === 'elimination' && path.length === 2 && ['leftMargin', 'top', 'bottom'].includes(index) && Number.isFinite(Number(value))) {
     next.elimination = { ...DEFAULT_EDITOR_ELIMINATION, ...(next.elimination ?? {}), [index]: Number(value) };
+  } else if (root === 'playerPhysics' && path.length === 2 && ['hitboxWidth', 'hitboxHeight', 'gravityMultiplier', 'recoveryMultiplier'].includes(index) && Number.isFinite(Number(value))) {
+    next.playerPhysics = { ...DEFAULT_EDITOR_PLAYER_PHYSICS, ...(next.playerPhysics ?? {}), [index]: Number(value) };
   } else if (root === 'visuals' && Number.isInteger(index) && next.visuals?.[index] && ['x', 'y'].includes(key) && Number.isFinite(Number(value))) {
     next.visuals[index] = { ...next.visuals[index], [key]: Number(value) };
   } else {
@@ -103,6 +114,7 @@ export function parseEditorDraft(text) {
     const draft = JSON.parse(text);
     draft.visuals ??= [];
     draft.elimination ??= { ...DEFAULT_EDITOR_ELIMINATION };
+    draft.playerPhysics ??= { ...DEFAULT_EDITOR_PLAYER_PHYSICS };
     const validation = validateEditorDraft(draft);
     if (!validation.valid) throw new Error(validation.errors.join('；'));
     return clone(draft);

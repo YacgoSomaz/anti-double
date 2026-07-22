@@ -4,6 +4,7 @@
 .collision-log { max-height: 128px; overflow: auto; margin: 8px 0 0; padding-left: 18px; color: #e2b873; font: 10px/1.5 ui-monospace, Consolas, monospace; }
 .physics-editor output,
 .animation-editor output { display: block; margin-top: 6px; }
+.shared-physics-note { margin: 4px 0 8px; color: #61f3ed; font-size: 10px; line-height: 1.45; }
 .animation-editor input[type="text"] { font: 10px ui-monospace, Consolas, monospace; }
 #editor-app { height: 100vh; min-height: 0; grid-template-rows: auto minmax(0, 1fr) auto; }
 .editor-tree,

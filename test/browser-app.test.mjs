@@ -377,8 +377,8 @@ test('ships the physics and editable animation inspectors in the standalone edit
   const editor = await readFile(new URL('../public/editor.js', import.meta.url), 'utf8');
   assert.match(html, /id="physics-readout"/);
   assert.match(html, /id="physics-hitbox-width"/);
-  assert.match(html, /所有玩家共享/);
-  assert.doesNotMatch(html, /id="physics-player"/);
+  assert.match(editor, /所有玩家共享/);
+  assert.match(editor, /physics-player.*remove/);
   assert.match(html, /id="animation-sequence"/);
   assert.match(html, /id="animation-speed"/);
   assert.match(html, /value="eliminate"/);

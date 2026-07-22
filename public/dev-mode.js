@@ -6,7 +6,7 @@ export const DEFAULT_DEV_TUNING = Object.freeze({
   recoveryMultiplier: 1,
   gravityMultiplier: 1,
   hitboxWidth: 37,
-  hitboxHeight: 48,
+  hitboxHeight: 28,
   eliminationMargin: 60
 });
 

@@ -41,7 +41,6 @@ const eliminationMargin = document.querySelector('#elimination-margin');
 const eliminationTop = document.querySelector('#elimination-top');
 const eliminationBottom = document.querySelector('#elimination-bottom');
 const collisionLog = document.querySelector('#collision-log');
-const physicsPlayer = document.querySelector('#physics-player');
 const physicsHitboxWidth = document.querySelector('#physics-hitbox-width');
 const physicsHitboxHeight = document.querySelector('#physics-hitbox-height');
 const physicsGravity = document.querySelector('#physics-gravity');
@@ -88,6 +87,8 @@ let simulationLastAt = performance.now();
 let lab = createLocalNetworkLab();
 const eventLog = [];
 const visualImages = new Map();
+document.querySelector('#physics-player')?.closest('label')?.remove();
+const physicsEditorNote = document.createElement('p'); physicsEditorNote.className = 'shared-physics-note'; physicsEditorNote.textContent = '所有玩家共享同一套角色碰撞与物理参数，修改一次即应用到全部玩家。'; document.querySelector('.physics-editor')?.prepend(physicsEditorNote);
 let animationConfig = { state: 'run', sequence: animationPreset('run').sequence, speed: animationPreset('run').speed, playing: true, elapsed: 0, lastAt: performance.now() };
 let currentTrajectory = [];
 const animationImages = new Map(['blue', 'green', 'yellow', 'red'].map((color) => {
@@ -258,27 +259,30 @@ function updatePropertyEditor() {
 }
 function activePhysicsPlayer() {
   const presented = simulation?.displayState ?? simulation?.state;
-  return presented?.players?.find((player) => player.slot === Number(physicsPlayer.value)) ?? presented?.players?.[0];
+  return presented?.players?.[0];
+}
+function physicsDimensions(tuning = {}) {
+  const height = Number(tuning.hitboxHeight) || 28;
+  const centeredAdjustment = (48 - height) / 2;
+  return { width: Number(tuning.hitboxWidth) || 37, height, offsetX: 16, normalOffsetY: 19 + centeredAdjustment, invertedOffsetY: 9 + centeredAdjustment };
 }
 function updatePhysicsInspector() {
   const presented = simulation?.displayState ?? simulation?.state;
   const players = presented?.players ?? [];
-  physicsPlayer.replaceChildren(...players.map((player) => { const option = document.createElement('option'); option.value = String(player.slot); option.textContent = `玩家 ${player.slot} · ${player.name}`; return option; }));
-  if (players.length && !players.some((player) => player.slot === Number(physicsPlayer.value))) physicsPlayer.value = String(players[0].slot);
   const player = activePhysicsPlayer();
-  const tuning = simulation?.room?.debugTuning?.() ?? { hitboxWidth: 37, hitboxHeight: 48, gravityMultiplier: 1, recoveryMultiplier: 1 };
+  const tuning = simulation?.room?.debugTuning?.() ?? { hitboxWidth: 37, hitboxHeight: 28, gravityMultiplier: 1, recoveryMultiplier: 1 };
   if (document.activeElement !== physicsHitboxWidth) physicsHitboxWidth.value = tuning.hitboxWidth;
   if (document.activeElement !== physicsHitboxHeight) physicsHitboxHeight.value = tuning.hitboxHeight;
   if (document.activeElement !== physicsGravity) physicsGravity.value = tuning.gravityMultiplier;
   if (document.activeElement !== physicsRecovery) physicsRecovery.value = tuning.recoveryMultiplier;
   if (!player) { currentTrajectory = []; physicsReadout.textContent = '尚未运行'; return; }
-  const dimensions = { width: Number(tuning.hitboxWidth) || 37, height: Number(tuning.hitboxHeight) || 48, offsetX: 16, normalOffsetY: 19, invertedOffsetY: 9 };
+  const dimensions = physicsDimensions(tuning);
   const box = hitboxForPlayer(player, dimensions);
   const contacts = contactsForPlayer(player, history.current.colliders, levelWorld(), dimensions);
   const playerContacts = playerContactsForPlayer(player, players, dimensions);
   const trajectory = predictTrajectory(player, { steps: 32, gravityAcceleration: 30000 * (Number(tuning.gravityMultiplier) || 1) }); currentTrajectory = trajectory;
   const contactText = [...contacts.map((contact) => `格(${contact.x},${contact.y})`), ...playerContacts.map((contact) => `玩家${contact.slot}`)];
-  physicsReadout.textContent = `玩家 ${player.slot} · ${player.gravity < 0 ? '反重力' : '正常重力'}\n碰撞盒 L${Math.round(box.left)} T${Math.round(box.top)} · ${Math.round(box.width)}×${Math.round(box.height)}\n速度 ${Math.round(player.vx)}, ${Math.round(player.vy)} · 接触 ${contactText.length ? contactText.join(' ') : '无'}\n预测轨迹 ${trajectory.length - 1} 帧 · ${player.blockedX ? '水平受阻' : '未受阻'}`;
+  physicsReadout.textContent = `所有玩家共享 · ${players.length} 人 · 当前预览玩家 ${player.slot}\n${player.gravity < 0 ? '反重力' : '正常重力'} · 碰撞盒 L${Math.round(box.left)} T${Math.round(box.top)} · ${Math.round(box.width)}×${Math.round(box.height)}\n速度 ${Math.round(player.vx)}, ${Math.round(player.vy)} · 接触 ${contactText.length ? contactText.join(' ') : '无'}\n预测轨迹 ${trajectory.length - 1} 帧 · ${player.blockedX ? '水平受阻' : '未受阻'}`;
 }
 function drawPrediction(trajectory) {
   if (!history || !trajectory?.length) return;
@@ -387,8 +391,9 @@ function draw() {
     ctx.restore();
     ctx.save(); ctx.font = 'bold 11px Arial'; ctx.textAlign = 'center'; ctx.strokeStyle = '#071319'; ctx.lineWidth = 3; ctx.fillStyle = '#f3fbff'; ctx.strokeText(player.name, x + 32.5 * view.scale, y - 4); ctx.fillText(player.name, x + 32.5 * view.scale, y - 4); ctx.restore();
   }
-  const physicsPlayerState = activePhysicsPlayer();
-  if (physicsPlayerState) { const tuning = simulation?.room?.debugTuning?.() ?? {}; const box = hitboxForPlayer(physicsPlayerState, { width: Number(tuning.hitboxWidth) || 37, height: Number(tuning.hitboxHeight) || 48, offsetX: 16, normalOffsetY: 19, invertedOffsetY: 9 }); const left = view.x + box.left * view.scale; const top = view.y + box.top * view.scale; ctx.save(); ctx.setLineDash([4, 3]); ctx.strokeStyle = '#ffeb70'; ctx.lineWidth = 2; ctx.strokeRect(left, top, (box.right - box.left) * view.scale, (box.bottom - box.top) * view.scale); ctx.restore(); }
+  const tuning = simulation?.room?.debugTuning?.() ?? {};
+  const dimensions = physicsDimensions(tuning);
+  for (const physicsPlayerState of presented?.players ?? []) { const box = hitboxForPlayer(physicsPlayerState, dimensions); const left = view.x + box.left * view.scale; const top = view.y + box.top * view.scale; ctx.save(); ctx.setLineDash([4, 3]); ctx.strokeStyle = '#ffeb70'; ctx.lineWidth = 2; ctx.strokeRect(left, top, (box.right - box.left) * view.scale, (box.bottom - box.top) * view.scale); ctx.restore(); }
   for (const key of selectedCells) { const box = cellScreen(cellFromKey(key)); ctx.lineWidth = 3; ctx.strokeStyle = key === (selected ? cellKey(selected) : '') ? '#fff' : '#ffdf6b'; ctx.setLineDash(key === (selected ? cellKey(selected) : '') ? [] : [5, 3]); ctx.strokeRect(box.x + 1, box.y + 1, box.size - 2, box.size - 2); }
 }
 function editAt(point) {
@@ -480,15 +485,10 @@ function applyProperties() {
 function applyPhysics() {
   try {
     if (!simulation) resetSimulation();
-    simulation.room.setDebugTuning({
-      ...simulation.room.debugTuning(),
-      hitboxWidth: physicsHitboxWidth.value,
-      hitboxHeight: physicsHitboxHeight.value,
-      gravityMultiplier: physicsGravity.value,
-      recoveryMultiplier: physicsRecovery.value
-    });
+    for (const [key, value] of [['hitboxWidth', physicsHitboxWidth.value], ['hitboxHeight', physicsHitboxHeight.value], ['gravityMultiplier', physicsGravity.value], ['recoveryMultiplier', physicsRecovery.value]]) history = updateEditorProperty(history, { path: ['playerPhysics', key], value });
+    simulation.room.setDebugTuning({ ...simulation.room.debugTuning(), ...history.current.playerPhysics });
     advanceSimulation(1);
-    setStatus('物理参数已应用，并已执行单帧验证');
+    scheduleCacheSave(); setStatus('公共角色物理参数已应用到全部玩家，并已执行单帧验证');
   } catch (error) { setStatus(`物理参数无效：${error.message}`); }
 }
 function scrubToTick(value) {
@@ -574,7 +574,6 @@ document.addEventListener('click', (event) => {
 spawnIndex.addEventListener('change', updatePropertyEditor);
 localPlayerCount.addEventListener('change', () => { resetSimulation(); });
 latencyInput.addEventListener('input', configureLab); lossInput.addEventListener('input', configureLab);
-physicsPlayer.addEventListener('change', updatePhysicsInspector);
 timelineScrub.addEventListener('input', () => scrubToTick(timelineScrub.value));
 animationCharacter.addEventListener('change', () => drawAnimation(performance.now()));
 animationState.addEventListener('change', () => setAnimationPreset(animationState.value));

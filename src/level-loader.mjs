@@ -18,6 +18,7 @@ const multiplayerSpawns = [
 ];
 
 const world = { cellSize: 34, originY: 425 };
+const playerPhysics = Object.freeze({ hitboxWidth: 37, hitboxHeight: 28 });
 // A recovered checkpoint beam scans in from the side and dissipates for 0.9 s;
 // only after it is gone do player atlas frames 23–44 begin at 20 FPS.  The
 // server runs at 40 Hz, so the complete authoritative opening is 80 ticks.
@@ -35,6 +36,7 @@ function prepareLevel(data) {
   return {
     ...data,
     world,
+    playerPhysics,
     colliders: data.colliders.map((collider) => ({ ...collider })),
     spawns: data.spawns.map((spawn, index) => ({ ...spawn, ...multiplayerSpawns[index] }))
   };
@@ -76,6 +78,7 @@ function loadMarathon() {
     tileSize: firstLevel.tileSize,
     world,
     openingMorphTicks: OPENING_INTRO_TICKS,
+    playerPhysics,
     colliders,
     spawns: firstLevel.spawns.map((spawn, index) => ({ ...spawn, ...multiplayerSpawns[index] })),
     finishX: offsetCells * world.cellSize,
