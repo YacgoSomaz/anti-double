@@ -205,13 +205,7 @@ export class GameRoom {
     // Sweep the complete base-plus-recovery movement so catch-up cannot cross
     // a side block.
     const nextX = baseNextX + correction;
-    // X and Y move within the same 40 Hz physics frame.  Predict vertical
-    // travel before the horizontal sweep so a corner entered diagonally cannot
-    // cross the side face before the floor/ceiling resolver sees it.
-    player.vy = Math.max(-MAX_VERTICAL_SPEED, Math.min(MAX_VERTICAL_SPEED, player.vy + player.gravity * GRAVITY * dt));
-    const nextY = player.y + player.vy * dt;
-    const landingBlock = this.#firstSolidUnder(player, nextY);
-    const sideBlock = this.#firstSolidAhead(player, nextX, nextY, landingBlock);
+    const sideBlock = this.#firstSolidAhead(player, nextX);
     player.blockedX = Boolean(sideBlock);
     if (sideBlock) {
       player.recoveringCameraPosition = true;
@@ -229,7 +223,9 @@ export class GameRoom {
       }
     }
     player.score = Math.max(player.score, Math.max(0, Math.floor(player.x - player.startX)));
-    const block = landingBlock;
+    player.vy = Math.max(-MAX_VERTICAL_SPEED, Math.min(MAX_VERTICAL_SPEED, player.vy + player.gravity * GRAVITY * dt));
+    const nextY = player.y + player.vy * dt;
+    const block = this.#firstSolidUnder(player, nextY);
     if (block) {
       if (player.gravity > 0) player.y = block.y - player.hitbox.offsetY - PLAYER_HEIGHT;
       else player.y = block.y + block.height - player.hitbox.offsetY;
@@ -314,22 +310,14 @@ export class GameRoom {
     }
   }
 
-  #firstSolidAhead(player, nextX, nextY, landingBlock = null) {
+  #firstSolidAhead(player, nextX) {
     if (nextX <= player.x) return null;
     const previousRight = player.x + player.hitbox.offsetX + PLAYER_WIDTH;
     const nextRight = nextX + player.hitbox.offsetX + PLAYER_WIDTH;
     const top = player.y + player.hitbox.offsetY;
     const bottom = top + PLAYER_HEIGHT;
-    const nextTop = nextY + player.hitbox.offsetY;
-    const nextBottom = nextTop + PLAYER_HEIGHT;
     return this.#collisionIndex.find(previousRight, nextRight, (block) => {
-      const verticalOverlap = Math.min(Math.max(bottom, nextBottom), block.y + block.height)
-        - Math.max(Math.min(top, nextTop), block.y);
-      const joinsLandingSurface = landingBlock && (player.gravity >= 0
-        ? block.y === landingBlock.y
-        : block.y + block.height === landingBlock.y + landingBlock.height);
-      const entersBlockVertically = !joinsLandingSurface && ((bottom <= block.y && nextBottom > block.y)
-        || (top >= block.y + block.height && nextTop < block.y + block.height));
+      const verticalOverlap = Math.min(bottom, block.y + block.height) - Math.max(top, block.y);
       // Ordinary floor-edge contact needs substantial overlap so a runner can
       // still fall through a genuine narrow gap.  An inverted runner rising
       // into a ceiling corner is different: its overlap deepens every frame,
@@ -337,7 +325,7 @@ export class GameRoom {
       const blocksDuringFlip = player.flipWallGuard > 0 && verticalOverlap > 0;
       const risingIntoCeilingCorner = player.gravity < 0 && player.vy < 0 && verticalOverlap > 0;
       return previousRight <= block.x && nextRight >= block.x
-        && (verticalOverlap > PLAYER_HEIGHT / 2 || entersBlockVertically || blocksDuringFlip || risingIntoCeilingCorner);
+        && (verticalOverlap > PLAYER_HEIGHT / 2 || blocksDuringFlip || risingIntoCeilingCorner);
     });
   }
 
