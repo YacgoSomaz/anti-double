@@ -17,6 +17,10 @@ test('serves the playable browser client with strict security headers', async (c
   assert.match(response.headers.get('content-security-policy'), /default-src 'self'/);
   assert.match(await response.text(), /G-Switch Online/);
 
+  const editor = await fetch(`http://127.0.0.1:${port}/dev`);
+  assert.equal(editor.status, 200);
+  assert.match(await editor.text(), /赛道编辑器/);
+
   const sprite = await fetch(`http://127.0.0.1:${port}/assets/players/player-blue.png`);
   assert.equal(sprite.status, 200);
   assert.equal(sprite.headers.get('content-type'), 'image/png');
