@@ -18,10 +18,12 @@ const multiplayerSpawns = [
 ];
 
 const world = { cellSize: 34, originY: 425 };
-// The recovered player atlas uses frames 23–44 at 20 FPS before physics
-// begins.  The server runs at 40 Hz, therefore the real opening holds for 44
-// authoritative ticks rather than being a client-only visual effect.
+// A recovered checkpoint beam first obscures the runner for 0.4 s; only after
+// it dissipates do the recovered player atlas frames 23–44 begin at 20 FPS.
+// The server runs at 40 Hz, so the complete authoritative opening is 60 ticks.
+const OPENING_BEAM_TICKS = 16;
 const OPENING_MORPH_TICKS = 44;
+const OPENING_INTRO_TICKS = OPENING_BEAM_TICKS + OPENING_MORPH_TICKS;
 
 function readLevel(name) {
   const file = levelFiles.get(name);
@@ -71,7 +73,7 @@ function loadMarathon() {
   return {
     tileSize: firstLevel.tileSize,
     world,
-    openingMorphTicks: OPENING_MORPH_TICKS,
+    openingMorphTicks: OPENING_INTRO_TICKS,
     colliders,
     spawns: firstLevel.spawns.map((spawn, index) => ({ ...spawn, ...multiplayerSpawns[index] })),
     finishX: offsetCells * world.cellSize,

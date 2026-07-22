@@ -137,9 +137,11 @@ const FINAL_TUNNEL_ASSETS = new Set([
 // 每局开始前完成整个 marathon 的地图、装饰和图像解码。它们均使用
 // content-hash URL，浏览器会复用磁盘缓存；比赛中不再触发资源加载。
 const RACE_RESOURCE_TOTAL = 14;
-// Recovered original 19×84 checkpoint beam. Keep its native width and stretch
-// only the vertical axis so the spawn effect stays narrow like the Flash art.
-const OPENING_BEAM_HEIGHT = 124;
+// Recovered original 19×84 checkpoint beam.  It is composited in three narrow
+// layers so it reaches beyond the stage, covers the runner, then dissipates.
+const OPENING_BEAM_HEIGHT = 620;
+const OPENING_BEAM_DURATION_MS = 400;
+const OPENING_SEQUENCE_DURATION_MS = OPENING_BEAM_DURATION_MS + MORPH_DURATION_MS;
 const packetTiming = createPacketTimingMonitor(); const frameTiming = createFrameTimingMonitor(); let lastDiagnosticsUpdate = 0;
 let socket; let joinTimeout; let sequence = 0; let state = { phase: 'lobby', players: [] }; let map; let visualMaps = new Map(); let lastPing = 0; let stateReceivedAt = performance.now(); let localSlot; let roomCode; let cameraX = 0; let cameraUpdatedAt = performance.now(); let showingEnd = false; let resourcesReady = false; let raceReady = false; let resourcesFailed = false; let readySent = false; let readySoundPlayed = false; let raceResourceLoaded = 0; let soloRoom; let soloAccumulator = 0; let soloLastAt = 0;
 const latestRaceState = createLatestRaceStateBuffer();
@@ -535,14 +537,22 @@ function drawPlayerName(player, x, y) {
   ctx.fillText(player.name, x + PLAYER_FRAME_WIDTH / 2, labelY);
   ctx.restore();
 }
-function drawOpeningBeam(player, x, y) {
-  if (state.introTicksRemaining <= 0 || !openingBeam.complete || !openingBeam.naturalWidth) return;
-  const morphProgress = 1 - Math.min(1, state.introTicksRemaining * 25 / MORPH_DURATION_MS);
-  const height = OPENING_BEAM_HEIGHT * (0.72 + morphProgress * 0.28);
-  const width = openingBeam.naturalWidth;
+function drawOpeningBeam(x, now, openingElapsed) {
+  if (!openingBeam.complete || !openingBeam.naturalWidth) return;
+  const fade = Math.max(0, Math.min(1, (openingElapsed - 210) / (OPENING_BEAM_DURATION_MS - 210)));
+  const pulse = 0.82 + Math.sin(now / 26) * 0.12;
+  const drift = Math.sin(now / 17) * (1 + fade * 2);
+  const height = OPENING_BEAM_HEIGHT * (1 - fade * 0.16);
+  const bottom = 550;
+  const drawLayer = (width, opacity, offset) => {
+    ctx.globalAlpha = Math.max(0, opacity * pulse * (1 - fade * 0.78));
+    ctx.drawImage(openingBeam, x + PLAYER_FRAME_WIDTH / 2 - width / 2 + drift + offset, bottom - height, width, height);
+  };
   ctx.save();
-  ctx.globalAlpha = 0.58 + morphProgress * 0.42;
-  ctx.drawImage(openingBeam, x + PLAYER_FRAME_WIDTH / 2 - width / 2, y + PLAYER_FRAME_HEIGHT - height, width, height);
+  ctx.globalCompositeOperation = 'screen';
+  drawLayer(48, 0.18, -1);
+  drawLayer(31, 0.46, 1);
+  drawLayer(openingBeam.naturalWidth, 1, 0);
   ctx.restore();
 }
 function draw() {
@@ -582,10 +592,15 @@ function draw() {
     const x = player.x - camera;
     const y = player.y;
     const sprite = sprites[player.slot - 1];
-    drawOpeningBeam(player, x, y);
-    const introElapsed = MORPH_DURATION_MS - Math.max(0, Number(state.introTicksRemaining) || 0) * 25;
+    const openingElapsed = OPENING_SEQUENCE_DURATION_MS - Math.max(0, Number(state.introTicksRemaining) || 0) * 25;
+    const isBeamPhase = state.introTicksRemaining > 0 && openingElapsed < OPENING_BEAM_DURATION_MS;
+    if (isBeamPhase) {
+      drawOpeningBeam(x, now, openingElapsed);
+      continue;
+    }
+    const morphElapsed = Math.max(0, openingElapsed - OPENING_BEAM_DURATION_MS);
     const source = frameSourceRect(state.introTicksRemaining > 0
-      ? morphFrame(introElapsed)
+      ? morphFrame(morphElapsed)
       : animationFrame(now, player.vy !== 0));
     if (sprite.complete && sprite.naturalWidth) {
       drawPlayerSprite(ctx, sprite, source, { ...player, x, y });
