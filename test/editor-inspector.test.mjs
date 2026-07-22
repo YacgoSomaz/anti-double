@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { contactsForPlayer, hitboxForPlayer, predictTrajectory } from '../public/editor-inspector.js';
+import { contactsForPlayer, hitboxForPlayer, playerContactsForPlayer, predictTrajectory } from '../public/editor-inspector.js';
 
 const world = { cellSize: 34, originY: 425 };
 
@@ -22,4 +22,9 @@ test('predicts a bounded local trajectory without mutating the player', () => {
   assert.equal(trajectory.at(-1).x > 100, true);
   assert.equal(trajectory.at(-1).y > 200, true);
   assert.deepEqual(player, { x: 100, y: 200, vx: 300, vy: 0, gravity: 1 });
+});
+
+test('reports another local runner as a contact object', () => {
+  const contacts = playerContactsForPlayer({ slot: 1, x: 100, y: 200, gravity: 1 }, [{ slot: 2, x: 110, y: 205, gravity: 1 }]);
+  assert.deepEqual(contacts, [{ slot: 2, type: 'player-overlap' }]);
 });
