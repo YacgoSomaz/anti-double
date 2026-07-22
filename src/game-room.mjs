@@ -119,6 +119,11 @@ export class GameRoom {
     for (const player of this.#players.values()) this.#updatePlayer(player, dt);
     this.#advanceCamera(dt);
     this.#separateOverlappingPlayers(dt);
+    // Player-to-player separation changes coordinates after each runner has
+    // completed its normal world sweep.  Recheck that displacement against
+    // terrain before publishing a snapshot, otherwise a shove can leave a
+    // runner embedded in—or on the far side of—a world block.
+    this.#resolvePlayersAgainstWorld();
     this.#eliminatePlayersOutsideView();
     return this.snapshot();
   }
@@ -139,6 +144,7 @@ export class GameRoom {
     if (player.finished || player.eliminated) return;
     player.previousX = player.x;
     player.previousY = player.y;
+    player.worldContactDirty = false;
     // Original multiplayer follows one shared camera runner, not the current
     // first-place player.  All runners may approach that centre, but none may
     // pass it.  A lagging runner receives a distance-proportional correction,
@@ -271,13 +277,107 @@ export class GameRoom {
     const bottom = top + PLAYER_HEIGHT;
     return this.#blocks.find((block) => {
       const verticalOverlap = Math.min(bottom, block.y + block.height) - Math.max(top, block.y);
-      // A gravity switch changes the hitbox offset by ten pixels.  For the
-      // next four fixed frames, an outside corner can have a thin but real
-      // overlap which must block the X sweep.  Outside that transition window
-      // retain the stricter map rule so floor edges do not become air walls.
+      // Ordinary floor-edge contact needs substantial overlap so a runner can
+      // still fall through a genuine narrow gap.  An inverted runner rising
+      // into a ceiling corner is different: its overlap deepens every frame,
+      // and allowing even one X crossing loses the block's left edge forever.
       const blocksDuringFlip = player.flipWallGuard > 0 && verticalOverlap > 0;
-      return previousRight <= block.x && nextRight >= block.x && (verticalOverlap > PLAYER_HEIGHT / 2 || blocksDuringFlip);
+      const risingIntoCeilingCorner = player.gravity < 0 && player.vy < 0 && verticalOverlap > 0;
+      return previousRight <= block.x && nextRight >= block.x
+        && (verticalOverlap > PLAYER_HEIGHT / 2 || blocksDuringFlip || risingIntoCeilingCorner);
     });
+  }
+
+  #resolvePlayersAgainstWorld() {
+    for (const player of this.#players.values()) {
+      if (player.finished || player.eliminated || !player.worldContactDirty) continue;
+      // One player contact can cause at most one correction on each axis, but
+      // allow a short bounded pass for an inside corner made by two tiles.
+      for (let pass = 0; pass < 4; pass += 1) {
+        if (!this.#resolveWorldSweep(player) && !this.#resolveWorldOverlap(player)) break;
+      }
+    }
+  }
+
+  #resolveWorldSweep(player) {
+    const previousLeft = player.previousX + player.hitbox.offsetX;
+    const previousRight = previousLeft + PLAYER_WIDTH;
+    const currentLeft = player.x + player.hitbox.offsetX;
+    const currentRight = currentLeft + PLAYER_WIDTH;
+    const previousTop = player.previousY + player.hitbox.offsetY;
+    const previousBottom = previousTop + PLAYER_HEIGHT;
+    const currentTop = player.y + player.hitbox.offsetY;
+    const currentBottom = currentTop + PLAYER_HEIGHT;
+    const overlapsVerticalPath = (block) => Math.max(previousBottom, currentBottom) > block.y
+      && Math.min(previousTop, currentTop) < block.y + block.height;
+    const overlapsHorizontalPath = (block) => Math.max(previousRight, currentRight) > block.x
+      && Math.min(previousLeft, currentLeft) < block.x + block.width;
+
+    if (currentLeft < previousLeft) {
+      const block = this.#blocks.find((item) => previousLeft >= item.x + item.width
+        && currentLeft < item.x + item.width && overlapsVerticalPath(item));
+      if (block) {
+        player.x = block.x + block.width - player.hitbox.offsetX;
+        player.blockedX = true;
+        return true;
+      }
+    }
+    if (currentRight > previousRight) {
+      const block = this.#blocks.find((item) => previousRight <= item.x
+        && currentRight > item.x && overlapsVerticalPath(item));
+      if (block) {
+        player.x = block.x - player.hitbox.offsetX - PLAYER_WIDTH;
+        player.blockedX = true;
+        return true;
+      }
+    }
+    if (currentTop < previousTop) {
+      const block = this.#blocks.find((item) => previousTop >= item.y + item.height
+        && currentTop < item.y + item.height && overlapsHorizontalPath(item));
+      if (block) {
+        player.y = block.y + block.height - player.hitbox.offsetY;
+        player.vy = 0;
+        return true;
+      }
+    }
+    if (currentBottom > previousBottom) {
+      const block = this.#blocks.find((item) => previousBottom <= item.y
+        && currentBottom > item.y && overlapsHorizontalPath(item));
+      if (block) {
+        player.y = block.y - player.hitbox.offsetY - PLAYER_HEIGHT;
+        player.vy = 0;
+        return true;
+      }
+    }
+    return false;
+  }
+
+  #resolveWorldOverlap(player) {
+    const left = player.x + player.hitbox.offsetX;
+    const right = left + PLAYER_WIDTH;
+    const top = player.y + player.hitbox.offsetY;
+    const bottom = top + PLAYER_HEIGHT;
+    const block = this.#blocks.find((item) => right > item.x && left < item.x + item.width
+      && bottom > item.y && top < item.y + item.height);
+    if (!block) return false;
+
+    const overlapX = Math.min(right, block.x + block.width) - Math.max(left, block.x);
+    const overlapY = Math.min(bottom, block.y + block.height) - Math.max(top, block.y);
+    if (overlapX <= overlapY) {
+      const cameFromRight = player.previousX + player.hitbox.offsetX >= block.x + block.width;
+      const centreIsRight = left + PLAYER_WIDTH / 2 >= block.x + block.width / 2;
+      player.x = (cameFromRight || centreIsRight)
+        ? block.x + block.width - player.hitbox.offsetX
+        : block.x - player.hitbox.offsetX - PLAYER_WIDTH;
+      player.blockedX = true;
+    } else if (player.gravity < 0) {
+      player.y = block.y + block.height - player.hitbox.offsetY;
+      player.vy = 0;
+    } else {
+      player.y = block.y - player.hitbox.offsetY - PLAYER_HEIGHT;
+      player.vy = 0;
+    }
+    return true;
   }
 
   #resolveGravityFlipOverlap(player, previousOffsetY) {
@@ -358,6 +458,8 @@ export class GameRoom {
       if (Math.abs(previousVerticalGap) < 0.001) {
         first.y = first.previousY;
         second.y = second.previousY;
+        first.worldContactDirty = true;
+        second.worldContactDirty = true;
       } else {
         // On the first impact there is no shared contact to preserve. Split
         // only this initial correction by the distance each runner travelled,
@@ -374,6 +476,8 @@ export class GameRoom {
           first.y += verticalOverlap * firstShare;
           second.y -= verticalOverlap * secondShare;
         }
+        first.worldContactDirty = true;
+        second.worldContactDirty = true;
       }
       first.vy = 0;
       second.vy = 0;
@@ -383,6 +487,7 @@ export class GameRoom {
     const upper = firstTop <= secondTop ? first : second;
     const lower = upper === first ? second : first;
     upper.y = lower.y + lower.hitbox.offsetY - upper.hitbox.offsetY - PLAYER_HEIGHT;
+    upper.worldContactDirty = true;
     if (first.gravity > 0) {
       // With matching downward gravity the upper runner is carried by the
       // lower one, so the pair falls together instead of trading places.
@@ -399,6 +504,7 @@ export class GameRoom {
     const leader = firstWasAhead ? first : second;
     const follower = firstWasAhead ? second : first;
     follower.x = leader.x - PLAYER_WIDTH * 1.1;
+    follower.worldContactDirty = true;
   }
 
 }
