@@ -18,6 +18,9 @@ export const ITEM_EFFECT_TICKS = Object.freeze({
 const ITEM_TYPE_ORDER = Object.freeze([ITEM_TYPES.gravityBurst, ITEM_TYPES.phase, ITEM_TYPES.speedBoost]);
 const DEFAULT_COUNT = 200;
 const DEFAULT_SEED = 44052;
+const ITEM_HALF_SIZE = 29;
+const DEFAULT_ITEM_TOP = -90;
+const DEFAULT_ITEM_BOTTOM = 560;
 
 function number(value, fallback) {
   return Number.isFinite(Number(value)) ? Number(value) : fallback;
@@ -53,6 +56,41 @@ function normaliseExplicitItem(item, index) {
   };
 }
 
+function collisionBlocks(level) {
+  const cellSize = number(level?.world?.cellSize ?? level?.tileSize, 34);
+  const hasWorldTransform = Boolean(level?.world);
+  const originY = number(level?.world?.originY, 0);
+  return (level?.colliders ?? []).map((collider) => ({
+    x: Number(collider.x) * cellSize,
+    y: hasWorldTransform ? originY - Number(collider.y) * cellSize : Number(collider.y) * cellSize,
+    width: cellSize,
+    height: cellSize
+  }));
+}
+
+function overlapsBlock(x, y, block) {
+  return x + ITEM_HALF_SIZE > block.x
+    && x - ITEM_HALF_SIZE < block.x + block.width
+    && y + ITEM_HALF_SIZE > block.y
+    && y - ITEM_HALF_SIZE < block.y + block.height;
+}
+
+function safeItemY(level, x, preferredY, blocks) {
+  const nearby = blocks.filter((block) => x + ITEM_HALF_SIZE > block.x && x - ITEM_HALF_SIZE < block.x + block.width);
+  if (!nearby.some((block) => overlapsBlock(x, preferredY, block))) return preferredY;
+
+  const minY = number(level?.elimination?.top, DEFAULT_ITEM_TOP) + ITEM_HALF_SIZE;
+  const maxY = number(level?.elimination?.bottom, DEFAULT_ITEM_BOTTOM) - ITEM_HALF_SIZE;
+  const candidates = [];
+  for (let offset = 8; offset <= maxY - minY; offset += 8) {
+    candidates.push(preferredY - offset, preferredY + offset);
+  }
+  candidates.push(minY, maxY);
+  return candidates
+    .map((candidate) => Math.min(maxY, Math.max(minY, candidate)))
+    .find((candidate) => !nearby.some((block) => overlapsBlock(x, candidate, block))) ?? preferredY;
+}
+
 export function createItemState(level) {
   const explicit = Array.isArray(level?.itemSpawns)
     ? level.itemSpawns.map(normaliseExplicitItem).filter(Boolean)
@@ -72,6 +110,7 @@ export function createItemState(level) {
   const minimumSpacing = Math.max(180, number(level.itemConfig.minimumSpacing, 420));
   const spacing = (maxX - minX) / Math.max(1, count - 1);
   const horizontalJitter = Math.min(48, spacing * 0.12);
+  const blocks = collisionBlocks(level);
   const positions = [];
   for (let index = 0; index < count; index += 1) {
     // Put the first pickup at the beginning of the playable stretch.  Using
@@ -95,7 +134,7 @@ export function createItemState(level) {
     id: `item-${index + 1}`,
     type: ITEM_TYPE_ORDER[index % ITEM_TYPE_ORDER.length],
     x: Math.round(x * 10) / 10,
-    y: [100, 190, 280, 370, 440][Math.floor(nextRandom() * 5)],
+    y: safeItemY(level, x, [100, 190, 280, 370, 440][Math.floor(nextRandom() * 5)], blocks),
     active: true
   }));
 }
