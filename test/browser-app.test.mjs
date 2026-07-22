@@ -98,6 +98,10 @@ test('ships a Chinese original-style opening menu and animated end screen', asyn
   assert.match(app, /assets\/effects\/checkpoint-beamlight\.png/);
   assert.match(app, /assets\/effects\/elimination-boundary\.png/);
   assert.match(app, /drawEliminationBoundary\(now\)/);
+  assert.match(app, /ELIMINATION_BOUNDARY_WIDTH = 12/);
+  assert.match(app, /ELIMINATION_BOUNDARY_GLOW_WIDTH = 18/);
+  assert.match(app, /const x = -34/);
+  assert.match(app, /ctx\.filter = 'saturate\(1\.65\) contrast\(1\.18\)'/);
   assert.match(app, /OPENING_BEAM_THICKNESS = 64/);
   assert.match(app, /OPENING_BEAM_DURATION_MS = 900/);
   assert.match(app, /OPENING_BEAM_APPROACH_MS = 560/);
