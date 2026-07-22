@@ -318,6 +318,10 @@ test('keeps developer controls opt-in and binds them only to local solo physics'
   assert.match(app, /exportDevConfig\(devTuning\)/);
   assert.match(devMode, /角色碰撞箱/);
   assert.match(devMode, /淘汰边界/);
+  assert.match(devMode, /起跑速度/);
+  assert.match(devMode, /单帧/);
+  assert.match(devMode, /结算预览/);
+  assert.match(app, /updateDeveloperReadout/);
 });
 
 test('keeps the next-round action above every transient overlay and clears stale result UI before returning to menu', async () => {
