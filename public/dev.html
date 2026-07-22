@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex">
+    <title>G-Switch 赛道编辑器</title>
+    <link rel="stylesheet" href="/editor.css">
+  </head>
+  <body>
+    <main id="editor-app" aria-label="G-Switch 赛道编辑器">
+      <header class="editor-toolbar"><strong>重力小子 · 赛道编辑器</strong><span id="draft-status">正在载入草稿…</span><nav><button data-editor-action="run">运行</button><button data-editor-action="pause">暂停</button><button data-editor-action="step">单帧</button><button data-editor-action="reset">重置</button><button data-editor-action="export">导出草稿</button><label>导入草稿<input id="draft-import" type="file" accept="application/json,.json"></label></nav></header>
+      <aside class="editor-tree"><h2>赛道 / 图层</h2><button class="tree-item active" data-editor-layer="collision">碰撞层</button><button class="tree-item" data-editor-layer="spawn">出生点</button><button class="tree-item" data-editor-layer="visual" disabled>装饰层（第二阶段）</button><section><h3>分段</h3><ol id="segment-list"></ol></section><section><h3>工具</h3><label><input name="brush" type="radio" value="paint" checked> 画方块</label><label><input name="brush" type="radio" value="erase"> 擦方块</label><button data-editor-action="undo">撤销</button><button data-editor-action="redo">重做</button></section></aside>
+      <section class="editor-stage"><canvas id="editor-canvas" width="1100" height="640" aria-label="可编辑赛道画布"></canvas><p>滚轮缩放 · 拖拽平移 · 左键画/擦碰撞格</p></section>
+      <aside class="editor-inspector"><h2>属性检查器</h2><dl id="inspector"><dt>选择</dt><dd>尚未选择对象</dd></dl><section><h3>验证</h3><output id="validation">等待草稿加载</output></section><section><h3>时间轴 / 调试台</h3><output id="simulation-readout">尚未运行</output><p>回放、碰撞日志和网络实验室将在后续阶段接入。</p></section></aside>
+    </main>
+    <script type="module" src="/editor.js"></script>
+  </body>
+</html>

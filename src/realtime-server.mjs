@@ -13,6 +13,7 @@ const DEFAULT_RACE_BROADCAST_HZ = 40;
 const publicDir = resolve(fileURLToPath(new URL('../public/', import.meta.url)));
 const soloGameModule = fileURLToPath(new URL('./game-room.mjs', import.meta.url));
 const collisionIndexModule = fileURLToPath(new URL('./collision-index.mjs', import.meta.url));
+const editorPage = fileURLToPath(new URL('../public/dev.html', import.meta.url));
 const mimeTypes = new Map([
   ['.html', 'text/html; charset=utf-8'],
   ['.js', 'text/javascript; charset=utf-8'],
@@ -230,7 +231,8 @@ export function createRealtimeServer({ level, autoTick = true, raceBroadcastHz =
     } catch { return response.writeHead(404).end(); }
     const virtualModules = new Map([
       ['/solo-game.mjs', soloGameModule],
-      ['/collision-index.mjs', collisionIndexModule]
+      ['/collision-index.mjs', collisionIndexModule],
+      ['/dev', editorPage]
     ]);
     const candidate = virtualModules.get(pathname)
       ?? resolve(publicDir, pathname === '/' ? 'index.html' : pathname.replace(/^\/+/, ''));
