@@ -297,6 +297,24 @@ test('pins a runner against a side block without taking away its momentum', () =
   assert.equal(player.blockedX, true);
 });
 
+test('does not let a late gravity-flip corner overlap tunnel through a side block', () => {
+  const room = new GameRoom({
+    tileSize: 48,
+    colliders: [{ x: 9, y: 3 }],
+    spawns: [{ x: 320, y: 220, gravity: 1, speedX: 400 }]
+  });
+  room.join('runner');
+  room.start('runner');
+  room.input('runner', { type: 'flip', sequence: 1 });
+
+  for (let frame = 0; frame < 12; frame += 1) room.tick(1 / 40);
+
+  const player = room.snapshot().players[0];
+  // The block starts at x=432; a left-side collision must pin the sprite at
+  // 432 - 16 px hitbox offset - 37 px hitbox width = 379.
+  assert.equal(player.x <= 379, true);
+});
+
 test('lets a runner catch the shared multiplayer camera after clearing a side block', () => {
   const room = new GameRoom({
     tileSize: 48,
@@ -613,4 +631,23 @@ test('keeps opposite-gravity runners at their existing stacked contact without e
   assert.equal(invertedRunner.y, 158);
   assert.equal(downwardRunner.vy, 0);
   assert.equal(invertedRunner.vy, 0);
+});
+
+test('does not let player side separation shove a runner into a world block', () => {
+  const room = new GameRoom({
+    tileSize: 48,
+    colliders: [{ x: 2, y: 0 }],
+    spawns: [
+      { x: 160, y: 0, gravity: 0, speedX: 0 },
+      { x: 158, y: 0, gravity: 0, speedX: 0 }
+    ]
+  });
+  startRoom(room, 'leader', 'follower');
+
+  room.tick(1 / 40);
+
+  const [, follower] = room.snapshot().players;
+  // The follower started to the right of the block, so player separation may
+  // not place its hitbox into the block's right edge at x=144.
+  assert.equal(follower.x + follower.hitbox.offsetX >= 144, true);
 });
