@@ -5,6 +5,7 @@ import {
   createEditorDraft,
   createHistory,
   exportEditorDraft,
+  updateEditorProperty,
   parseEditorDraft,
   redo,
   undo,
@@ -50,4 +51,23 @@ test('exports only valid drafts and rejects malformed imported data', () => {
   assert.deepEqual(parseEditorDraft(exportEditorDraft(draft)), draft);
   assert.deepEqual(validateEditorDraft({ ...draft, colliders: [{ x: 1.5, y: 2 }] }).errors, ['碰撞格必须使用整数坐标']);
   assert.throws(() => parseEditorDraft('{"version":999}'), /草稿/);
+});
+
+test('edits spawn, finish, and elimination properties through the same undoable history', () => {
+  let history = createHistory(createEditorDraft(level));
+  history = updateEditorProperty(history, { path: ['spawns', 0, 'x'], value: 240 });
+  history = updateEditorProperty(history, { path: ['finishX'], value: 1200 });
+  history = updateEditorProperty(history, { path: ['elimination', 'leftMargin'], value: 90 });
+  assert.equal(history.current.spawns[0].x, 240);
+  assert.equal(history.current.finishX, 1200);
+  assert.equal(history.current.elimination.leftMargin, 90);
+  assert.equal(history.undoStack.length, 3);
+  history = undo(history);
+  assert.equal(history.current.elimination.leftMargin, 60);
+});
+
+test('rejects unsafe editor property paths and invalid elimination bounds', () => {
+  assert.throws(() => updateEditorProperty(createHistory(createEditorDraft(level)), { path: ['colliders'], value: [] }), /属性/);
+  const draft = createEditorDraft(level);
+  assert.equal(validateEditorDraft({ ...draft, elimination: { leftMargin: -1, top: 600, bottom: 10 } }).valid, false);
 });
