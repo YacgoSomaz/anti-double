@@ -47,6 +47,9 @@ test('serves the playable browser client with strict security headers', async (c
   const visualCache = await fetch(`http://127.0.0.1:${port}/visual-cache.js`);
   assert.equal(visualCache.status, 200);
   assert.equal(visualCache.headers.get('cache-control'), 'no-store');
+  const soloPhysics = await fetch(`http://127.0.0.1:${port}/solo-game.mjs`);
+  assert.equal(soloPhysics.status, 200);
+  assert.match(await soloPhysics.text(), /export class GameRoom/);
   const menuMusic = await fetch(`http://127.0.0.1:${port}/assets/sounds/032_SndMenuMusic.mp3`);
   assert.equal(menuMusic.status, 200);
   assert.equal(menuMusic.headers.get('content-type'), 'audio/mpeg');
@@ -70,6 +73,7 @@ test('ships a Chinese original-style opening menu and animated end screen', asyn
 
   assert.match(html, /id="front-screen"/);
   assert.match(html, /id="menu-start"/);
+  assert.match(html, /id="solo-start"/);
   assert.match(html, /id="nickname"/);
   assert.match(html, /id="sound-toggle"/);
   assert.match(html, /id="menu-start" disabled/);
@@ -104,6 +108,25 @@ test('ships a Chinese original-style opening menu and animated end screen', asyn
   assert.match(app, /加入房间超时，请重试/);
   assert.match(app, /restoreJoinScreen/);
   assert.match(stylesheet, /data-phase="lobby"/);
+});
+
+test('runs a solo race entirely in the browser without a room socket or coordinate packets', async () => {
+  const app = await readFile(new URL('../public/app.js', import.meta.url), 'utf8');
+
+  assert.match(app, /import \{ GameRoom \} from '\/solo-game\.mjs';/);
+  assert.match(app, /function startSolo\(\)/);
+  assert.match(app, /soloRoom\.join\('solo'/);
+  assert.match(app, /soloRoom\.tick\(1 \/ 40\)/);
+  assert.match(app, /soloRoom\.input\('solo'/);
+  assert.match(app, /soloStart\.addEventListener\('click', startSolo\)/);
+});
+
+test('keeps the 7ee collision timing for online player contact', async () => {
+  const gameRoom = await readFile(new URL('../src/game-room.mjs', import.meta.url), 'utf8');
+
+  assert.match(gameRoom, /#resolvePlayersAgainstWorld\(\)/);
+  assert.match(gameRoom, /#firstSolidAhead\(player, nextX\)/);
+  assert.doesNotMatch(gameRoom, /#movePlayerThroughWorld\(/);
 });
 
 test('keeps eliminated players spectating and renders final server rankings without changing the game stage', async () => {
