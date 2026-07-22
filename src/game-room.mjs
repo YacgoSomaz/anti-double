@@ -31,7 +31,7 @@ const CAMERA_RECOVERY_MAX_SPEED_RATIO = 0.75;
 const CAMERA_TARGET_TOLERANCE = 4;
 const BLOCKED_CAMERA_SAFETY_FRAMES = 12;
 const CHARACTERS = ['blue', 'green', 'yellow', 'red'];
-const DEFAULT_DEBUG_TUNING = Object.freeze({ cameraSpeedMultiplier: 1, recoveryMultiplier: 1, gravityMultiplier: 1, hitboxWidth: PLAYER_WIDTH, hitboxHeight: PLAYER_HEIGHT, eliminationMargin: 60 });
+const DEFAULT_DEBUG_TUNING = Object.freeze({ speedMultiplier: 1, cameraSpeedMultiplier: 1, recoveryMultiplier: 1, gravityMultiplier: 1, hitboxWidth: PLAYER_WIDTH, hitboxHeight: PLAYER_HEIGHT, eliminationMargin: 60 });
 
 function clamp(value, min, max, fallback) {
   const numeric = Number(value);
@@ -39,6 +39,7 @@ function clamp(value, min, max, fallback) {
 }
 function normaliseDebugTuning(value = {}) {
   return {
+    speedMultiplier: clamp(value.speedMultiplier, 0.5, 2, DEFAULT_DEBUG_TUNING.speedMultiplier),
     cameraSpeedMultiplier: clamp(value.cameraSpeedMultiplier, 0.5, 2, DEFAULT_DEBUG_TUNING.cameraSpeedMultiplier),
     recoveryMultiplier: clamp(value.recoveryMultiplier, 0.1, 3, DEFAULT_DEBUG_TUNING.recoveryMultiplier),
     gravityMultiplier: clamp(value.gravityMultiplier, 0.25, 2, DEFAULT_DEBUG_TUNING.gravityMultiplier),
@@ -78,11 +79,14 @@ export class GameRoom {
   }
 
   setDebugTuning(value) {
+    const previousTuning = this.#debugTuning;
     this.#debugTuning = normaliseDebugTuning(value);
     for (const player of this.#players.values()) {
       player.hitbox.width = this.#debugTuning.hitboxWidth;
       player.hitbox.height = this.#debugTuning.hitboxHeight;
       player.hitbox.offsetX = PLAYER_OFFSET_X + (PLAYER_WIDTH - player.hitbox.width) / 2;
+      player.startSpeedX *= this.#debugTuning.speedMultiplier / previousTuning.speedMultiplier;
+      if (this.#phase === 'lobby') { player.speedX = player.startSpeedX; player.vx = player.startSpeedX; }
     }
     return this.debugTuning();
   }
@@ -97,9 +101,9 @@ export class GameRoom {
     const spawn = this.#level.spawns[slot - 1];
     if (!spawn) return { ok: false, error: 'level_missing_spawn' };
     const player = {
-      id, slot, x: spawn.x, y: spawn.y, vx: spawn.speedX, vy: 0, startX: spawn.x, score: 0,
+      id, slot, x: spawn.x, y: spawn.y, vx: spawn.speedX * this.#debugTuning.speedMultiplier, vy: 0, startX: spawn.x, score: 0,
       previousX: spawn.x, previousY: spawn.y,
-      speedX: spawn.speedX, startSpeedX: spawn.speedX, character: CHARACTERS[slot - 1], name: playerName(name, slot), ready: Boolean(ready),
+      speedX: spawn.speedX * this.#debugTuning.speedMultiplier, startSpeedX: spawn.speedX * this.#debugTuning.speedMultiplier, character: CHARACTERS[slot - 1], name: playerName(name, slot), ready: Boolean(ready),
       gravity: spawn.gravity, finished: false, eliminated: false, outcomeTick: null, blockedX: false, recoveringCameraPosition: false, cameraRecoveryBoost: false, hasReachedCameraCentre: Math.abs(spawn.x - CAMERA_TARGET_SCREEN_X) <= CAMERA_TARGET_TOLERANCE, cameraSafetyFrames: 0, flipWallGuard: 0,
       hitbox: { width: this.#debugTuning.hitboxWidth, height: this.#debugTuning.hitboxHeight, offsetX: PLAYER_OFFSET_X + (PLAYER_WIDTH - this.#debugTuning.hitboxWidth) / 2, offsetY: spawn.gravity < 0 ? INVERTED_PLAYER_OFFSET_Y : NORMAL_PLAYER_OFFSET_Y }
     };

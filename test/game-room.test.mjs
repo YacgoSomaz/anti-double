@@ -719,7 +719,7 @@ test('applies developer collision, gravity, recovery and elimination tuning only
   room.join('solo', '调试玩家');
 
   const player = room.snapshot().players[0];
-  assert.deepEqual(tuning, { hitboxWidth: 30, hitboxHeight: 60, gravityMultiplier: 0.5, recoveryMultiplier: 1.6, cameraSpeedMultiplier: 1.2, eliminationMargin: 120 });
+  assert.deepEqual(tuning, { speedMultiplier: 1, hitboxWidth: 30, hitboxHeight: 60, gravityMultiplier: 0.5, recoveryMultiplier: 1.6, cameraSpeedMultiplier: 1.2, eliminationMargin: 120 });
   assert.equal(player.hitbox.width, 30);
   assert.equal(player.hitbox.height, 60);
 });

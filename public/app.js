@@ -153,7 +153,7 @@ const packetTiming = createPacketTimingMonitor(); const frameTiming = createFram
 let socket; let joinTimeout; let sequence = 0; let state = { phase: 'lobby', players: [] }; let map; let visualMaps = new Map(); let lastPing = 0; let stateReceivedAt = performance.now(); let localSlot; let roomCode; let cameraX = 0; let cameraUpdatedAt = performance.now(); let showingEnd = false; let resourcesReady = false; let raceReady = false; let resourcesFailed = false; let readySent = false; let readySoundPlayed = false; let raceResourceLoaded = 0; let soloRoom; let soloAccumulator = 0; let soloLastAt = 0;
 const developerMode = isDeveloperMode(location.search);
 const devTuning = developerMode ? loadDevTuning(localStorage) : { ...DEFAULT_DEV_TUNING };
-let devPanelState; let devPaused = false; let devSlowMotion = false;
+let devPanelState; let devPaused = false; let devSlowMotion = false; let lastDevReadout = 0;
 const latestRaceState = createLatestRaceStateBuffer();
 
 function updateDiagnostics(now) {
@@ -349,7 +349,16 @@ function initialiseDeveloperMode() {
     if (!action) return;
     if (action === 'restart') { devPaused = false; await startSolo(); }
     if (action === 'pause') { devPaused = !devPaused; event.target.textContent = devPaused ? '继续' : '暂停'; }
+    if (action === 'step' && soloRoom) {
+      state = soloRoom.tick(1 / 40); soloAccumulator = 0; soloLastAt = performance.now();
+      stateReceivedAt = soloLastAt; cameraX = state.cameraX; cameraUpdatedAt = soloLastAt;
+    }
     if (action === 'slow') { devSlowMotion = !devSlowMotion; event.target.textContent = `慢放：${devSlowMotion ? '开' : '关'}`; }
+    if (action === 'preview') {
+      const player = state.players[0] ?? { slot: 1, name: nickname.value || '玩家', score: 0 };
+      state = { ...state, phase: 'results', players: [player], results: [{ slot: player.slot, rank: 1, outcome: 'finished', score: player.score ?? 0 }] };
+      soloRoom = undefined; showingEnd = false; showEndScreen(player);
+    }
     if (action === 'reset') { Object.assign(devTuning, DEFAULT_DEV_TUNING); saveDevTuning(localStorage, devTuning); devPanelState.paint(devTuning); soloRoom?.setDebugTuning(devTuning); }
     if (action === 'collapse') { devPanelState.setCollapsed(!devPanelState.panel.classList.contains('collapsed')); }
     if (action === 'export') {
@@ -483,6 +492,10 @@ function showEndScreen(player) {
   if (showingEnd) return;
   showingEnd = true;
   flip.disabled = true;
+  // A reconnect/loading veil must never sit over the only escape route from
+  // the score board.  Clear both competing layers before revealing it.
+  overlay.hidden = true;
+  frontScreen.hidden = true;
   stopAudio(music);
   setStatus('本局排名已确定', true);
   renderRankings(state.results);
@@ -657,6 +670,16 @@ function drawDeveloperOverlay(playersToDraw, camera, viewport, world) {
   }
   ctx.restore();
 }
+function updateDeveloperReadout(playersToDraw, camera, now) {
+  if (!developerMode || !devPanelState || now - lastDevReadout < 120) return;
+  lastDevReadout = now;
+  const player = playersToDraw[0];
+  const output = devPanelState.panel.querySelector('[data-dev-readout]');
+  if (!player) { output.textContent = '等待单人局开始…'; return; }
+  const screenX = player.x - camera;
+  const gap = 320 - screenX;
+  output.textContent = `坐标 ${Math.round(player.x)}, ${Math.round(player.y)} · 屏幕 X ${Math.round(screenX)} · 中线差 ${Math.round(gap)} · 角色 ${Math.round(player.vx ?? 0)} · 镜头 ${Math.round(state.cameraSpeed ?? 0)} · ${devPaused ? '已暂停' : '运行中'}`;
+}
 function draw() {
   ctx.fillStyle='#9bcde3'; ctx.fillRect(0, 0, canvas.width, canvas.height); if (!map) return;
   const now = performance.now();
@@ -665,6 +688,7 @@ function draw() {
   // independent of the local runner and never accumulates prediction error.
   const camera = soloRoom ? cameraX : advanceCamera(cameraX, now - cameraUpdatedAt, state.cameraSpeed);
   const world = map.world ?? { cellSize: 34, originY: 425 };
+  updateDeveloperReadout(renderPlayers, camera, now);
   const viewport = worldViewportBounds({ cameraX: camera, width: canvas.width, height: canvas.height });
   ctx.save();
   applyRaceViewport(ctx, canvas.width, canvas.height);
