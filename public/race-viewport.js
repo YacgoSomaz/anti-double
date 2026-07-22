@@ -1,6 +1,10 @@
 // Keep the canvas dimensions compatible with the recovered Flash stage while
 // showing 10% more of the race world in both directions.
 export const RACE_VIEW_SCALE = 1 / 1.1;
+// Background art was authored to reach the lower edge of the 640×501 stage.
+// Counter-scale it inside the zoomed race transform so it keeps covering that
+// edge instead of exposing the canvas fill beneath the city skyline.
+export const RACE_BACKDROP_SCALE = 1 / RACE_VIEW_SCALE;
 
 export function worldViewportBounds({ cameraX, width, height }) {
   const worldWidth = width / RACE_VIEW_SCALE;

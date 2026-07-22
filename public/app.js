@@ -6,7 +6,7 @@ import { advancePresentation, presentationOffset } from '/player-presentation.js
 import { drawPlayerSprite } from '/player-render.js';
 import { createFrameTimingMonitor, createPacketTimingMonitor, formatDiagnostics } from '/network-diagnostics.js';
 import { createLatestRaceStateBuffer } from '/latest-race-state.js';
-import { applyRaceViewport, worldViewportBounds } from '/race-viewport.js';
+import { applyRaceViewport, RACE_BACKDROP_SCALE, worldViewportBounds } from '/race-viewport.js';
 
 const canvas = document.querySelector('#game');
 const gameShell = document.querySelector('.game-shell');
@@ -514,9 +514,19 @@ function draw() {
   const viewport = worldViewportBounds({ cameraX: camera, width: canvas.width, height: canvas.height });
   ctx.save();
   applyRaceViewport(ctx, canvas.width, canvas.height);
-  if (scene.background.complete) ctx.drawImage(scene.background, 0, 59);
-  if (scene.cityFar.complete) for (let x = -((camera * 0.1) % scene.cityFar.width); x < canvas.width; x += scene.cityFar.width) ctx.drawImage(scene.cityFar, x, 264);
-  if (scene.cityNear.complete) for (let x = -((camera * 0.2) % scene.cityNear.width); x < canvas.width; x += scene.cityNear.width) ctx.drawImage(scene.cityNear, x, 254);
+  // The race world is zoomed out by 10%, but the backdrop art is authored to
+  // meet the original stage edges.  Counter-scaling preserves those edges and
+  // prevents the lower skyline from shrinking away into a blank band.
+  const backdropCoordinate = (value, centre) => centre + (value - centre) * RACE_BACKDROP_SCALE;
+  const drawBackdrop = (image, scroll, y) => {
+    const start = -((camera * scroll) % image.width) - image.width;
+    for (let x = start; x < canvas.width + image.width; x += image.width) {
+      ctx.drawImage(image, backdropCoordinate(x, canvas.width / 2), backdropCoordinate(y, canvas.height / 2), image.width * RACE_BACKDROP_SCALE, image.height * RACE_BACKDROP_SCALE);
+    }
+  };
+  if (scene.background.complete) ctx.drawImage(scene.background, backdropCoordinate(0, canvas.width / 2), backdropCoordinate(59, canvas.height / 2), scene.background.width * RACE_BACKDROP_SCALE, scene.background.height * RACE_BACKDROP_SCALE);
+  if (scene.cityFar.complete) drawBackdrop(scene.cityFar, 0.1, 264);
+  if (scene.cityNear.complete) drawBackdrop(scene.cityNear, 0.2, 254);
   if (!drawMarathonDecorations(camera, 'visualInfo', viewport)) for (const tile of map.colliders) {
     const x = tile.x * world.cellSize - camera;
     const y = world.originY - tile.y * world.cellSize;
