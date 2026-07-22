@@ -302,12 +302,22 @@ export class GameRoom {
 
   #maxHorizontalSpeed() { return MAX_HORIZONTAL_SPEED * this.#debugTuning.cameraSpeedMultiplier; }
   #cameraAcceleration() { return HORIZONTAL_ACCELERATION * this.#debugTuning.cameraSpeedMultiplier; }
-  #leftEscapeScreenX() { return CAMERA_TARGET_SCREEN_X - 350 - this.#debugTuning.eliminationMargin; }
+  #leftEscapeScreenX() {
+    const margin = Number(this.#level.elimination?.leftMargin);
+    return CAMERA_TARGET_SCREEN_X - 350 - (Number.isFinite(margin) ? margin : this.#debugTuning.eliminationMargin);
+  }
+
+  #eliminationBounds() {
+    const top = Number(this.#level.elimination?.top);
+    const bottom = Number(this.#level.elimination?.bottom);
+    return { top: Number.isFinite(top) ? top : STAGE_TOP, bottom: Number.isFinite(bottom) ? bottom : STAGE_BOTTOM };
+  }
 
   #eliminatePlayersOutsideView() {
+    const bounds = this.#eliminationBounds();
     for (const player of this.#players.values()) {
       if (player.finished || player.eliminated) continue;
-      if (player.y <= STAGE_BOTTOM && player.y >= STAGE_TOP && player.x >= this.#cameraX + this.#leftEscapeScreenX()) continue;
+      if (player.y <= bounds.bottom && player.y >= bounds.top && player.x >= this.#cameraX + this.#leftEscapeScreenX()) continue;
       player.eliminated = true;
       player.vx = 0;
       player.vy = 0;
