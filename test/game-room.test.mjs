@@ -334,13 +334,13 @@ test('pins a runner against a side block without taking away its momentum', () =
   assert.equal(player.blockedX, true);
 });
 
-test('does not let a runner phase through a side tile on a shallow real hitbox overlap', () => {
+test('sweeps a diagonal approach into a side tile before the runner can cross it', () => {
   const room = new GameRoom({
     tileSize: 48,
     colliders: [{ x: 7, y: 3 }],
-    // The 37 x 48 collision box overlaps the tile vertically by 23 px.  It
-    // is a real collision, even though it is just under half the hitbox tall.
-    spawns: [{ x: 280, y: 150, gravity: 0, speedX: 400 }]
+    // The runner enters the tile vertically and horizontally in one 40 Hz
+    // frame. Testing only the pre-gravity box lets this corner tunnel.
+    spawns: [{ x: 280, y: 75, gravity: 1, speedX: 400 }]
   });
   room.join('runner');
   room.start('runner');
