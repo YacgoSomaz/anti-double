@@ -340,3 +340,11 @@ test('keeps the next-round action above every transient overlay and clears stale
   assert.match(app, /function returnToMenu\(\) \{[\s\S]*endScreen\.hidden = true[\s\S]*frontScreen\.hidden = false/);
   assert.match(stylesheet, /#end-screen\s*\{[^}]*z-index:4/);
 });
+
+test('routes editor layer buttons to the canvas mode and supports visual dragging', async () => {
+  const editor = await readFile(new URL('../public/editor.js', import.meta.url), 'utf8');
+  assert.match(editor, /if \(event\.target\.dataset\.editorLayer\)/);
+  assert.match(editor, /activeLayer = event\.target\.dataset\.editorLayer/);
+  assert.match(editor, /event\.target\.closest\('\[data-editor-layer\]'\)/);
+  assert.match(editor, /visualDrag/);
+});
