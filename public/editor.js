@@ -7,6 +7,7 @@ import { animationFrameFromSequence, animationPreset, frameSourceRect } from '/p
 import { projectVisual } from '/visual-projection.js';
 import { contactsForPlayer, hitboxForPlayer, playerContactsForPlayer, predictTrajectory } from '/editor-inspector.js';
 import { resolveEditorGesture } from '/editor-input.js';
+import { cellFromWorld } from '/editor-grid.js';
 
 const canvas = document.querySelector('#editor-canvas');
 const ctx = canvas.getContext('2d');
@@ -88,7 +89,7 @@ function pointAt(event) {
 function worldAt(point) { return { x: (point.x - view.x) / view.scale, y: (point.y - view.y) / view.scale }; }
 function cellAt(point) {
   const world = levelWorld(); const position = worldAt(point); const size = courseCell();
-  return { x: Math.floor(position.x / size), y: Math.round((world.originY - position.y) / size) };
+  return cellFromWorld({ ...position, originY: world.originY, size });
 }
 function cellScreen(cell) {
   const world = levelWorld(); const size = courseCell();
