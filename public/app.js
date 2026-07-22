@@ -662,9 +662,12 @@ function drawItems(items, camera, viewport, now) {
     if (item.active === false) continue;
     const index = ITEM_ICON_INDEX[item.type];
     if (!Number.isInteger(index)) continue;
-    const x = Number(item.x) - camera;
+    const worldX = Number(item.x);
+    const x = worldX - camera;
     const y = Number(item.y);
-    if (x < viewport.left - size || x > viewport.right + size || y < viewport.top - size || y > viewport.bottom + size) continue;
+    // viewport.left/right are world coordinates. Comparing them with the
+    // camera-relative x made every pickup disappear as soon as cameraX grew.
+    if (worldX < viewport.left - size || worldX > viewport.right + size || y < viewport.top - size || y > viewport.bottom + size) continue;
     const pulse = 0.86 + Math.sin(now / 180 + index) * 0.12;
     const glow = ITEM_GLOW_COLORS[item.type] ?? '#ffffff';
     ctx.shadowColor = glow;
