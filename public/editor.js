@@ -11,6 +11,7 @@ import { cellFromWorld } from '/editor-grid.js';
 import { preserveSelectionOnDrag, resolveEditorShortcut } from '/editor-selection.js';
 import { preserveSelectIndex } from '/editor-form.js';
 import { addVisual, removeSelectedObjects, uniqueVisualAssets } from '/editor-assets.js';
+import { clearEditorDraftCache, loadEditorDraftCache, saveEditorDraftCache } from '/editor-storage.js';
 
 const canvas = document.querySelector('#editor-canvas');
 const ctx = canvas.getContext('2d');
@@ -73,6 +74,8 @@ let editorClipboard;
 let pasteSerial = 0;
 let paletteAssets = [];
 let paletteAsset;
+const draftStorage = typeof localStorage === 'undefined' ? null : localStorage;
+let cacheSaveTimer;
 let visualMaps = new Map();
 let running = false;
 let simulation;
@@ -120,10 +123,16 @@ function visualAt(point) {
 }
 function cellKey(cell) { return `${cell.x}:${cell.y}`; }
 function cellFromKey(key) { const [x, y] = String(key).split(':').map(Number); return { x, y }; }
+function scheduleCacheSave() {
+  if (!draftStorage || !history) return;
+  clearTimeout(cacheSaveTimer);
+  cacheSaveTimer = setTimeout(() => saveEditorDraftCache(draftStorage, history.current), 200);
+}
 function commitDraft(next, message) {
   const valid = validateEditorDraft(next);
   if (!valid.valid) throw new TypeError(valid.errors.join('；'));
   history = { current: next, undoStack: [...history.undoStack, history.current], redoStack: [] };
+  scheduleCacheSave();
   if (message) setStatus(message);
 }
 function clearSelection() {
@@ -390,7 +399,8 @@ function editAt(point) {
   }
   if (activeLayer !== 'collision') return;
   const cell = cellAt(point); selectCell(cell);
-  history = applyColliderEdit(history, { ...cell, solid: editorTool === 'paint' });
+  const previous = history; history = applyColliderEdit(history, { ...cell, solid: editorTool === 'paint' });
+  if (history !== previous) scheduleCacheSave();
   updateInspector(); draw();
 }
 function selectAt(point) {
@@ -402,7 +412,7 @@ function resetDraft() {
   sourceDraft = sourceDraft ?? createEditorDraft(originalLevel, 'marathon');
   history = createHistory(structuredClone(sourceDraft));
   eventLog.length = 0; renderCollisionLog();
-  clearSelection(); visualDrag = undefined; view = { x: 0, y: 150, scale: 0.55 }; setStatus('已恢复为原始 marathon 草稿'); updateInspector(); draw();
+  clearSelection(); visualDrag = undefined; view = { x: 0, y: 150, scale: 0.55 }; setStatus('已恢复为原始 marathon 草稿'); scheduleCacheSave(); updateInspector(); draw();
 }
 function resetSimulation(replayMode = false) {
   const room = new GameRoom(history.current);
@@ -459,7 +469,7 @@ function applyProperties() {
   try {
     const index = Number(spawnIndex.value); const values = [[['spawns', index, 'x'], spawnX.value], [['spawns', index, 'y'], spawnY.value], [['spawns', index, 'gravity'], spawnGravity.value], [['spawns', index, 'speedX'], spawnSpeed.value], [['finishX'], finishX.value], [['elimination', 'leftMargin'], eliminationMargin.value], [['elimination', 'top'], eliminationTop.value], [['elimination', 'bottom'], eliminationBottom.value]];
     for (const [path, value] of values) history = updateEditorProperty(history, { path, value });
-    setStatus('场景属性已应用，并已进入撤销历史'); renderSegments(); updateInspector(); draw();
+    setStatus('场景属性已应用，并已进入撤销历史'); scheduleCacheSave(); renderSegments(); updateInspector(); draw();
   } catch (error) { setStatus(error.message); }
 }
 function applyPhysics() {
@@ -504,7 +514,11 @@ async function load() {
   const responses = await Promise.all(['marathon', 'mp02-visual', 'mp03-visual', 'mp04-visual'].map((name) => fetch(`/data/${name}.json`)));
   if (responses.some((response) => !response.ok)) throw new Error('无法读取赛道或装饰数据');
   const [level, mp02, mp03, mp04] = await Promise.all(responses.map((response) => response.json())); visualMaps = new Map([['mp02', mp02], ['mp03', mp03], ['mp04', mp04]]);
-  originalLevel = { ...level, visuals: flattenVisuals(level, visualMaps) }; paletteAssets = uniqueVisualAssets(originalLevel.visuals); renderAssetPalette(); resetDraft(); renderSegments();
+  originalLevel = { ...level, visuals: flattenVisuals(level, visualMaps) }; paletteAssets = uniqueVisualAssets(originalLevel.visuals); renderAssetPalette(); sourceDraft = createEditorDraft(originalLevel, 'marathon');
+  const cachedDraft = loadEditorDraftCache(draftStorage, (raw) => parseEditorDraft(raw));
+  if (cachedDraft) { history = createHistory(cachedDraft); setStatus('已自动恢复本地草稿'); updateInspector(); draw(); }
+  else resetDraft();
+  renderSegments();
 }
 
 canvas.addEventListener('contextmenu', (event) => event.preventDefault());
@@ -564,11 +578,12 @@ animationSpeed.addEventListener('input', updateAnimationConfig);
 document.addEventListener('click', (event) => {
   const action = event.target.dataset.editorAction;
   if (!action || !history) return;
-  if (action === 'undo') { history = undo(history); syncSelection(); }
-  if (action === 'redo') { history = redo(history); syncSelection(); }
+  if (action === 'undo') { history = undo(history); syncSelection(); scheduleCacheSave(); }
+  if (action === 'redo') { history = redo(history); syncSelection(); scheduleCacheSave(); }
   if (action === 'copy') copySelection();
   if (action === 'paste') pasteSelection();
   if (action === 'delete') deleteSelection();
+  if (action === 'clear-cache') { resetDraft(); clearTimeout(cacheSaveTimer); clearEditorDraftCache(draftStorage); setStatus('已清除本地缓存并恢复原始草稿'); }
   if (action === 'reset') resetDraft();
   if (action === 'export') downloadDraft();
   if (action === 'run') { if (!simulation) resetSimulation(); running = true; }
@@ -593,7 +608,7 @@ document.addEventListener('click', (event) => {
 });
 importer.addEventListener('change', async () => {
   if (!importer.files?.[0]) return;
-  try { history = createHistory(parseEditorDraft(await importer.files[0].text())); setStatus('已导入本地草稿'); renderSegments(); updateInspector(); draw(); }
+  try { history = createHistory(parseEditorDraft(await importer.files[0].text())); scheduleCacheSave(); setStatus('已导入本地草稿'); renderSegments(); updateInspector(); draw(); }
   catch (error) { setStatus(error.message); }
   importer.value = '';
 });
@@ -601,7 +616,7 @@ packageImporter.addEventListener('change', async () => {
   if (!packageImporter.files?.[0]) return;
   try {
     const pack = parseTestPackage(await packageImporter.files[0].text());
-    history = createHistory(pack.draft); replay = pack.replay;
+    history = createHistory(pack.draft); scheduleCacheSave(); replay = pack.replay;
     if (pack.parameters?.localPlayers) localPlayerCount.value = String(Math.min(4, Math.max(1, Number(pack.parameters.localPlayers))));
     if (pack.parameters?.latencyMs !== undefined) latencyInput.value = String(pack.parameters.latencyMs);
     if (pack.parameters?.lossPercent !== undefined) lossInput.value = String(pack.parameters.lossPercent);
@@ -625,5 +640,6 @@ addEventListener('keydown', (event) => {
   if (action === 'paste') pasteSelection();
   updateInspector(); draw();
 });
+addEventListener('beforeunload', () => { if (history && draftStorage) saveEditorDraftCache(draftStorage, history.current); });
 load().catch((error) => { setStatus(error.message); validation.textContent = error.message; });
 requestAnimationFrame(advanceLoop);

@@ -26,10 +26,13 @@ test('serves the playable browser client with strict security headers', async (c
   assert.match(editorHtml, /data-editor-action="copy"/);
   assert.match(editorHtml, /data-editor-action="delete"/);
   assert.match(editorHtml, /id="asset-palette"/);
+  assert.match(editorHtml, /data-editor-action="clear-cache"/);
   assert.match(editorHtml, /Ctrl\/Cmd\+C\/V/);
   const editorScript = await fetch(`http://127.0.0.1:${port}/editor.js`);
   assert.equal(editorScript.status, 200);
-  assert.match(await editorScript.text(), /createLocalNetworkLab/);
+  const editorScriptText = await editorScript.text();
+  assert.match(editorScriptText, /createLocalNetworkLab/);
+  assert.match(editorScriptText, /已自动恢复本地草稿/);
   const editorSelection = await fetch(`http://127.0.0.1:${port}/editor-selection.js`);
   assert.equal(editorSelection.status, 200);
   assert.match(await editorSelection.text(), /resolveEditorShortcut/);
@@ -39,6 +42,9 @@ test('serves the playable browser client with strict security headers', async (c
   const editorAssets = await fetch(`http://127.0.0.1:${port}/editor-assets.js`);
   assert.equal(editorAssets.status, 200);
   assert.match(await editorAssets.text(), /uniqueVisualAssets/);
+  const editorStorage = await fetch(`http://127.0.0.1:${port}/editor-storage.js`);
+  assert.equal(editorStorage.status, 200);
+  assert.match(await editorStorage.text(), /EDITOR_DRAFT_CACHE_KEY/);
   const animationScript = await fetch(`http://127.0.0.1:${port}/player-animation.js`);
   assert.equal(animationScript.status, 200);
 
