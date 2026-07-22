@@ -125,6 +125,7 @@ const scene = {
   block: loadImage(assetUrl('assets/scene/block.png')),
   hud: loadImage(assetUrl('assets/scene/hud.png'))
 };
+const openingBeam = loadImage(assetUrl('assets/effects/checkpoint-beamlight.png'));
 const decorationImages = new Map();
 const visualPlacementCache = new WeakMap();
 const readyVisualMaps = new WeakSet();
@@ -135,7 +136,10 @@ const FINAL_TUNNEL_ASSETS = new Set([
 ]);
 // 每局开始前完成整个 marathon 的地图、装饰和图像解码。它们均使用
 // content-hash URL，浏览器会复用磁盘缓存；比赛中不再触发资源加载。
-const RACE_RESOURCE_TOTAL = 13;
+const RACE_RESOURCE_TOTAL = 14;
+// Recovered original 19×84 checkpoint beam. Keep its native width and stretch
+// only the vertical axis so the spawn effect stays narrow like the Flash art.
+const OPENING_BEAM_HEIGHT = 124;
 const packetTiming = createPacketTimingMonitor(); const frameTiming = createFrameTimingMonitor(); let lastDiagnosticsUpdate = 0;
 let socket; let joinTimeout; let sequence = 0; let state = { phase: 'lobby', players: [] }; let map; let visualMaps = new Map(); let lastPing = 0; let stateReceivedAt = performance.now(); let localSlot; let roomCode; let cameraX = 0; let cameraUpdatedAt = performance.now(); let showingEnd = false; let resourcesReady = false; let raceReady = false; let resourcesFailed = false; let readySent = false; let readySoundPlayed = false; let raceResourceLoaded = 0; let soloRoom; let soloAccumulator = 0; let soloLastAt = 0;
 const latestRaceState = createLatestRaceStateBuffer();
@@ -199,7 +203,7 @@ const minimumSplash = new Promise((resolve) => setTimeout(resolve, 900));
 minimumSplash.then(() => {
   if (!frontScreen.hidden) frontScreen.dataset.phase = 'menu';
 });
-Promise.all([mapLoad, ...[...sprites, ...Object.values(scene)].map((image) => waitForImage(image).then(markRaceResourceLoaded))]).then(() => {
+Promise.all([mapLoad, ...[...sprites, ...Object.values(scene), openingBeam].map((image) => waitForImage(image).then(markRaceResourceLoaded))]).then(() => {
   raceReady = true;
   resourcesReady = true;
   join.disabled = false;
@@ -531,6 +535,16 @@ function drawPlayerName(player, x, y) {
   ctx.fillText(player.name, x + PLAYER_FRAME_WIDTH / 2, labelY);
   ctx.restore();
 }
+function drawOpeningBeam(player, x, y) {
+  if (state.introTicksRemaining <= 0 || !openingBeam.complete || !openingBeam.naturalWidth) return;
+  const morphProgress = 1 - Math.min(1, state.introTicksRemaining * 25 / MORPH_DURATION_MS);
+  const height = OPENING_BEAM_HEIGHT * (0.72 + morphProgress * 0.28);
+  const width = openingBeam.naturalWidth;
+  ctx.save();
+  ctx.globalAlpha = 0.58 + morphProgress * 0.42;
+  ctx.drawImage(openingBeam, x + PLAYER_FRAME_WIDTH / 2 - width / 2, y + PLAYER_FRAME_HEIGHT - height, width, height);
+  ctx.restore();
+}
 function draw() {
   ctx.fillStyle='#9bcde3'; ctx.fillRect(0, 0, canvas.width, canvas.height); if (!map) return;
   const now = performance.now();
@@ -568,6 +582,7 @@ function draw() {
     const x = player.x - camera;
     const y = player.y;
     const sprite = sprites[player.slot - 1];
+    drawOpeningBeam(player, x, y);
     const introElapsed = MORPH_DURATION_MS - Math.max(0, Number(state.introTicksRemaining) || 0) * 25;
     const source = frameSourceRect(state.introTicksRemaining > 0
       ? morphFrame(introElapsed)
