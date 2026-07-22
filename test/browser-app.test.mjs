@@ -350,6 +350,8 @@ test('renders synchronized item pickups and temporary player effects', async () 
   assert.match(app, /const size = 58/);
   assert.match(app, /shadowColor/);
   assert.match(app, /ctx\.globalCompositeOperation = 'source-over'/);
+  assert.match(app, /const worldX = Number\(item\.x\)/);
+  assert.match(app, /worldX < viewport\.left - size/);
 });
 
 test('ships the recovered visual and foreground placements for all three multiplayer courses', async () => {
