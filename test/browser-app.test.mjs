@@ -349,6 +349,7 @@ test('renders synchronized item pickups and temporary player effects', async () 
   assert.match(app, /drawItems/);
   assert.match(app, /const size = 58/);
   assert.match(app, /shadowColor/);
+  assert.match(app, /ctx\.globalCompositeOperation = 'source-over'/);
 });
 
 test('ships the recovered visual and foreground placements for all three multiplayer courses', async () => {
