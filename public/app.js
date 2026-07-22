@@ -145,6 +145,8 @@ const OPENING_BEAM_THICKNESS = 64;
 const OPENING_BEAM_DURATION_MS = 900;
 const OPENING_BEAM_APPROACH_MS = 560;
 const OPENING_SEQUENCE_DURATION_MS = OPENING_BEAM_DURATION_MS + MORPH_DURATION_MS;
+const ELIMINATION_BOUNDARY_WIDTH = 12;
+const ELIMINATION_BOUNDARY_GLOW_WIDTH = 18;
 const packetTiming = createPacketTimingMonitor(); const frameTiming = createFrameTimingMonitor(); let lastDiagnosticsUpdate = 0;
 let socket; let joinTimeout; let sequence = 0; let state = { phase: 'lobby', players: [] }; let map; let visualMaps = new Map(); let lastPing = 0; let stateReceivedAt = performance.now(); let localSlot; let roomCode; let cameraX = 0; let cameraUpdatedAt = performance.now(); let showingEnd = false; let resourcesReady = false; let raceReady = false; let resourcesFailed = false; let readySent = false; let readySoundPlayed = false; let raceResourceLoaded = 0; let soloRoom; let soloAccumulator = 0; let soloLastAt = 0;
 const latestRaceState = createLatestRaceStateBuffer();
@@ -572,16 +574,17 @@ function drawEliminationBoundary(now) {
   if (!eliminationBoundary.complete || !eliminationBoundary.naturalWidth) return;
   const frameWidth = eliminationBoundary.naturalWidth / ELIMINATION_BOUNDARY_FRAME_COUNT;
   const frame = eliminationBoundaryFrame(now);
-  const pulse = 0.88 + Math.sin(now / 37) * 0.12;
+  const pulse = 0.94 + Math.sin(now / 37) * 0.06;
   // The visual warning sits on the left view edge. The server retains a short
   // off-screen recovery margin before it marks a runner eliminated.
-  const x = -32;
+  const x = -34;
   ctx.save();
-  ctx.globalCompositeOperation = 'screen';
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.filter = 'saturate(1.65) contrast(1.18)';
   ctx.globalAlpha = pulse;
-  ctx.drawImage(eliminationBoundary, frame * frameWidth, 0, frameWidth, eliminationBoundary.naturalHeight, x, -74, 28, 650);
-  ctx.globalAlpha = pulse * 0.28;
-  ctx.drawImage(eliminationBoundary, frame * frameWidth, 0, frameWidth, eliminationBoundary.naturalHeight, x - 4, -74, 36, 650);
+  ctx.drawImage(eliminationBoundary, frame * frameWidth, 0, frameWidth, eliminationBoundary.naturalHeight, x, -74, ELIMINATION_BOUNDARY_WIDTH, 650);
+  ctx.globalAlpha = pulse * 0.16;
+  ctx.drawImage(eliminationBoundary, frame * frameWidth, 0, frameWidth, eliminationBoundary.naturalHeight, x - 3, -74, ELIMINATION_BOUNDARY_GLOW_WIDTH, 650);
   ctx.restore();
 }
 function draw() {
