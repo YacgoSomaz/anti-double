@@ -1,4 +1,6 @@
 import { applyColliderEdit, createEditorDraft, createHistory, exportEditorDraft, parseEditorDraft, redo, undo, validateEditorDraft } from '/editor-draft.js';
+import { createReplay, eventsAtTick, exportTestPackage, recordFlip } from '/editor-replay.js';
+import { GameRoom } from '/solo-game.mjs';
 
 const canvas = document.querySelector('#editor-canvas');
 const ctx = canvas.getContext('2d');
@@ -17,6 +19,13 @@ let pan;
 let view = { x: 0, y: 150, scale: 0.55 };
 let selected;
 let running = false;
+let simulation;
+let replay = createReplay();
+let recording = false;
+let replaying = false;
+let simulationSequence = 0;
+let simulationAccumulator = 0;
+let simulationLastAt = performance.now();
 
 function levelWorld() { return history.current.world ?? { cellSize: history.current.tileSize, originY: 425 }; }
 function courseCell() { return levelWorld().cellSize ?? history.current.tileSize; }
@@ -43,7 +52,10 @@ function updateInspector() {
     const dd = document.createElement('dd'); dd.textContent = description;
     return [dt, dd];
   }));
-  simulationReadout.textContent = running ? '模拟准备中：第二阶段接入本地 GameRoom。' : '已停止。可画碰撞格、撤销重做、导入导出草稿。';
+  const player = simulation?.state?.players?.[0];
+  simulationReadout.textContent = player
+    ? `${running ? '运行中' : '已暂停'} · tick ${simulation.state.tick}\n位置 ${Math.round(player.x)}, ${Math.round(player.y)}\n速度 ${Math.round(player.vx)}, ${Math.round(player.vy)} · 镜头 ${Math.round(simulation.state.cameraSpeed)}\n回放事件 ${replay.events.length}${recording ? ' · 正在录制' : ''}${replaying ? ' · 回放中' : ''}`
+    : '尚未运行。可先画碰撞格，再按“运行”验证本地物理。';
 }
 function drawGrid() {
   const size = courseCell() * view.scale;
@@ -70,6 +82,12 @@ function draw() {
     ctx.fillStyle = spawn.gravity < 0 ? '#8dff8b' : '#3ce6df'; ctx.beginPath(); ctx.arc(x, y, 8, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = '#05303d'; ctx.font = 'bold 11px Arial'; ctx.fillText(`出生 ${spawn.gravity < 0 ? '↑' : '↓'}`, x + 10, y + 4);
   }
+  if (simulation?.state) for (const player of simulation.state.players) {
+    const x = view.x + (player.x - simulation.state.cameraX) * view.scale;
+    const y = view.y + player.y * view.scale;
+    ctx.save(); ctx.translate(x + 34 * view.scale, y + 34 * view.scale); if (player.gravity < 0) ctx.scale(1, -1);
+    ctx.fillStyle = '#20dce0'; ctx.fillRect(-12 * view.scale, -18 * view.scale, 24 * view.scale, 36 * view.scale); ctx.restore();
+  }
   if (selected) { const box = cellScreen(selected); ctx.lineWidth = 3; ctx.strokeStyle = '#fff'; ctx.strokeRect(box.x + 1, box.y + 1, box.size - 2, box.size - 2); }
 }
 function editAt(point) {
@@ -81,6 +99,36 @@ function editAt(point) {
 function resetDraft() {
   history = createHistory(createEditorDraft(originalLevel, 'marathon'));
   selected = undefined; view = { x: 0, y: 150, scale: 0.55 }; setStatus('已恢复为原始 marathon 草稿'); updateInspector(); draw();
+}
+function resetSimulation(replayMode = false) {
+  const room = new GameRoom(history.current);
+  room.join('editor', '编辑器', true); room.start('editor');
+  simulation = { room, state: room.snapshot() }; simulationSequence = 0; simulationAccumulator = 0; simulationLastAt = performance.now(); replaying = replayMode; running = false;
+  updateInspector(); draw();
+}
+function advanceSimulation(frames = 1) {
+  if (!simulation) resetSimulation(replaying);
+  for (let frame = 0; frame < frames && simulation.state.phase === 'playing'; frame += 1) {
+    const nextTick = simulation.state.tick + 1;
+    if (replaying) for (const event of eventsAtTick(replay, nextTick)) if (event.type === 'flip') simulation.room.input('editor', { type: 'flip', sequence: ++simulationSequence });
+    simulation.state = simulation.room.tick(1 / 40);
+  }
+  if (simulation.state.phase === 'results') running = false;
+  updateInspector(); draw();
+}
+function flipSimulation() {
+  if (!simulation) resetSimulation();
+  const tick = simulation.state.tick + 1;
+  const result = simulation.room.input('editor', { type: 'flip', sequence: ++simulationSequence });
+  if (result.ok && recording) replay = recordFlip(replay, tick);
+  updateInspector(); draw();
+}
+function advanceLoop(now) {
+  if (running && simulation) {
+    simulationAccumulator += Math.min(100, Math.max(0, now - simulationLastAt));
+    while (simulationAccumulator >= 25) { advanceSimulation(); simulationAccumulator -= 25; }
+  }
+  simulationLastAt = now; requestAnimationFrame(advanceLoop);
 }
 function downloadDraft() {
   const link = document.createElement('a'); const url = URL.createObjectURL(new Blob([exportEditorDraft(history.current)], { type: 'application/json' }));
@@ -123,9 +171,17 @@ document.addEventListener('click', (event) => {
   if (action === 'redo') history = redo(history);
   if (action === 'reset') resetDraft();
   if (action === 'export') downloadDraft();
-  if (action === 'run') running = true;
+  if (action === 'run') { if (!simulation) resetSimulation(); running = true; }
   if (action === 'pause') running = false;
-  if (action === 'step') simulationReadout.textContent = '单帧：等待物理模拟模块接入。';
+  if (action === 'step') advanceSimulation();
+  if (action === 'flip') flipSimulation();
+  if (action === 'record') { recording = !recording; if (recording) replay = createReplay(); event.target.textContent = `录制：${recording ? '开' : '关'}`; }
+  if (action === 'playback') { resetSimulation(true); running = true; }
+  if (action === 'sim-reset') resetSimulation();
+  if (action === 'test-package') {
+    const link = document.createElement('a'); const url = URL.createObjectURL(new Blob([exportTestPackage({ draft: history.current, replay, note: '从 /dev 导出的物理复现包' })], { type: 'application/json' }));
+    link.href = url; link.download = 'gswitch-test-package.json'; link.click(); URL.revokeObjectURL(url);
+  }
   updateInspector(); draw();
 });
 importer.addEventListener('change', async () => {
@@ -134,4 +190,6 @@ importer.addEventListener('change', async () => {
   catch (error) { setStatus(error.message); }
   importer.value = '';
 });
+addEventListener('keydown', (event) => { if (event.code === 'Space' && !event.repeat) { event.preventDefault(); flipSimulation(); } });
 load().catch((error) => { setStatus(error.message); validation.textContent = error.message; });
+requestAnimationFrame(advanceLoop);
