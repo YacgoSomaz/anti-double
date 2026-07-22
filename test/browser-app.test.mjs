@@ -161,7 +161,7 @@ test('ships a Chinese original-style opening menu and animated end screen', asyn
   assert.match(app, /presentationOffsetX/);
   assert.match(app, /图片加载失败/);
   assert.match(app, /image\.decode/);
-  assert.match(app, /RACE_RESOURCE_TOTAL = 15/);
+  assert.match(app, /RACE_RESOURCE_TOTAL = 16/);
   assert.match(app, /loadJson\('\/data\/mp03-visual\.json'\)/);
   assert.match(app, /loadJson\('\/data\/mp04-visual\.json'\)/);
   assert.match(app, /Promise\.all\(\[mp02, mp03, mp04\]\.map\(preloadDecorationImages\)\)/);
@@ -334,6 +334,16 @@ test('uses the decoded authoritative camera coordinate for compact race packets'
   assert.match(app, /cameraX: message\.c\[0\] \/ 100/);
   assert.match(app, /const authoritativeCamera = Math\.max\(0, Number\(state\.cameraX\) \|\| 0\)/);
   assert.doesNotMatch(app, /cameraX = Math\.max\(0, Number\(message\.cameraX\) \|\| 0\)/);
+});
+
+test('renders synchronized item pickups and temporary player effects', async () => {
+  const app = await readFile(new URL('../public/app.js', import.meta.url), 'utf8');
+
+  assert.match(app, /assets\/items\/item-icons-sheet\.png/);
+  assert.match(app, /message\.o/);
+  assert.match(app, /phaseTicks/);
+  assert.match(app, /speedBoostTicks/);
+  assert.match(app, /drawItems/);
 });
 
 test('ships the recovered visual and foreground placements for all three multiplayer courses', async () => {
