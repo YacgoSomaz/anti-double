@@ -6,6 +6,7 @@ import { GameRoom } from '/solo-game.mjs';
 import { animationFrameFromSequence, animationPreset, frameSourceRect } from '/player-animation.js';
 import { projectVisual } from '/visual-projection.js';
 import { contactsForPlayer, hitboxForPlayer, playerContactsForPlayer, predictTrajectory } from '/editor-inspector.js';
+import { resolveEditorGesture } from '/editor-input.js';
 
 const canvas = document.querySelector('#editor-canvas');
 const ctx = canvas.getContext('2d');
@@ -53,7 +54,7 @@ let originalLevel;
 let sourceDraft;
 let history;
 let activeLayer = 'collision';
-let brush = 'paint';
+let editorTool = 'select';
 let painting = false;
 let pan;
 let view = { x: 0, y: 150, scale: 0.55 };
@@ -276,8 +277,13 @@ function editAt(point) {
   }
   if (activeLayer !== 'collision') return;
   const cell = cellAt(point); selected = cell;
-  history = applyColliderEdit(history, { ...cell, solid: brush === 'paint' });
+  history = applyColliderEdit(history, { ...cell, solid: editorTool === 'paint' });
   updateInspector(); draw();
+}
+function selectAt(point) {
+  if (activeLayer === 'spawn') { editAt(point); return; }
+  if (activeLayer !== 'collision') return;
+  selected = cellAt(point); updateInspector(); draw();
 }
 function resetDraft() {
   sourceDraft = sourceDraft ?? createEditorDraft(originalLevel, 'marathon');
@@ -391,9 +397,14 @@ async function load() {
 canvas.addEventListener('contextmenu', (event) => event.preventDefault());
 canvas.addEventListener('pointerdown', (event) => {
   const point = pointAt(event);
-  if (event.button === 1 || event.button === 2) { pan = { point, view: { ...view } }; canvas.setPointerCapture(event.pointerId); return; }
-  if (event.button === 0 && activeLayer === 'visual') { const index = visualAt(point); if (index >= 0) { selectedVisual = index; const item = history.current.visuals[index]; const position = worldAt(point); visualDrag = { index, x: item.x, y: item.y, offsetX: position.x - item.x, offsetY: position.y - item.y }; canvas.setPointerCapture(event.pointerId); updateInspector(); draw(); } return; }
-  painting = true; canvas.setPointerCapture(event.pointerId); editAt(point);
+  const gesture = resolveEditorGesture({ activeLayer, tool: editorTool, button: event.button, visualHit: visualAt(point) });
+  if (gesture.type === 'pan') { pan = { point, view: { ...view } }; canvas.setPointerCapture(event.pointerId); return; }
+  if (gesture.type === 'drag-visual') {
+    const index = gesture.index; selectedVisual = index; const item = history.current.visuals[index]; const position = worldAt(point);
+    visualDrag = { index, x: item.x, y: item.y, offsetX: position.x - item.x, offsetY: position.y - item.y }; canvas.setPointerCapture(event.pointerId); updateInspector(); draw(); return;
+  }
+  if (gesture.type === 'paint-collision') { painting = true; canvas.setPointerCapture(event.pointerId); editAt(point); return; }
+  if (gesture.type === 'select-cell' || gesture.type === 'select-spawn') { selectAt(point); canvas.setPointerCapture(event.pointerId); }
 });
 canvas.addEventListener('pointermove', (event) => {
   const point = pointAt(event);
@@ -406,14 +417,14 @@ canvas.addEventListener('wheel', (event) => {
   event.preventDefault(); const point = pointAt(event); const world = worldAt(point); const next = Math.max(0.08, Math.min(3, view.scale * (event.deltaY < 0 ? 1.12 : 0.89)));
   view = { scale: next, x: point.x - world.x * next, y: point.y - world.y * next }; draw();
 }, { passive: false });
-document.addEventListener('change', (event) => { if (event.target.name === 'brush') brush = event.target.value; if (event.target.dataset.editorLayer) { activeLayer = event.target.dataset.editorLayer; updateInspector(); } });
+document.addEventListener('change', (event) => { if (event.target.name === 'editor-tool') editorTool = event.target.value; if (event.target.dataset.editorLayer) { activeLayer = event.target.dataset.editorLayer; updateInspector(); } });
 document.addEventListener('click', (event) => {
   const layerButton = event.target.closest('[data-editor-layer]');
   if (!layerButton || !history) return;
   activeLayer = layerButton.dataset.editorLayer;
   document.querySelectorAll('[data-editor-layer]').forEach((button) => button.classList.toggle('active', button === layerButton));
   selected = undefined; if (activeLayer !== 'visual') selectedVisual = undefined;
-  setStatus(activeLayer === 'visual' ? '装饰层：拖动装饰可预览位置，松开后写入撤销历史' : `当前图层：${activeLayer === 'spawn' ? '出生点' : '碰撞层'}`);
+  setStatus(activeLayer === 'visual' ? '装饰层：左键拖动素材，空白处拖动画布；中键/右键也可平移' : `当前图层：${activeLayer === 'spawn' ? '出生点' : '碰撞层'}；当前工具：${editorTool === 'select' ? '选择/移动' : editorTool === 'paint' ? '画方块' : '擦方块'}`);
   updateInspector(); draw();
 });
 spawnIndex.addEventListener('change', updatePropertyEditor);

@@ -19,7 +19,10 @@ test('serves the playable browser client with strict security headers', async (c
 
   const editor = await fetch(`http://127.0.0.1:${port}/dev`);
   assert.equal(editor.status, 200);
-  assert.match(await editor.text(), /赛道编辑器/);
+  const editorHtml = await editor.text();
+  assert.match(editorHtml, /游戏引擎/);
+  assert.match(editorHtml, /选择 \/ 移动/);
+  assert.match(editorHtml, /name="editor-tool"/);
   const editorScript = await fetch(`http://127.0.0.1:${port}/editor.js`);
   assert.equal(editorScript.status, 200);
   assert.match(await editorScript.text(), /createLocalNetworkLab/);
