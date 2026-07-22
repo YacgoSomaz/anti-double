@@ -6,6 +6,7 @@ import { advancePresentation, presentationOffset } from '/player-presentation.js
 import { drawPlayerSprite } from '/player-render.js';
 import { createFrameTimingMonitor, createPacketTimingMonitor, formatDiagnostics } from '/network-diagnostics.js';
 import { createLatestRaceStateBuffer } from '/latest-race-state.js';
+import { applyRaceViewport, worldViewportBounds } from '/race-viewport.js';
 
 const canvas = document.querySelector('#game');
 const gameShell = document.querySelector('.game-shell');
@@ -465,9 +466,9 @@ function cachedDecorations(visualMap, property) {
   if (!cached.has(property)) cached.set(property, buildVisualDrawList(visualMap, property));
   return cached.get(property);
 }
-function drawDecorations(visualMap, property, camera, offsetX = 0, hideFinalTunnel = false) {
+function drawDecorations(visualMap, property, camera, viewport, offsetX = 0, hideFinalTunnel = false) {
   if (!visualMap || !readyVisualMaps.has(visualMap)) return false;
-  const visible = visibleDrawList(cachedDecorations(visualMap, property), camera - offsetX, camera - offsetX + canvas.width, 0, canvas.height);
+  const visible = visibleDrawList(cachedDecorations(visualMap, property), viewport.left - offsetX, viewport.right - offsetX, viewport.top, viewport.bottom);
   for (const decoration of visible) {
     if (hideFinalTunnel && FINAL_TUNNEL_ASSETS.has(decoration.asset.file)) continue;
     const image = getDecorationImage(decoration.asset);
@@ -477,12 +478,12 @@ function drawDecorations(visualMap, property, camera, offsetX = 0, hideFinalTunn
   }
   return visible.length > 0;
 }
-function drawMarathonDecorations(camera, property) {
+function drawMarathonDecorations(camera, property, viewport) {
   let drawn = false;
   for (const segment of map?.segments ?? []) {
-    if (segment.endX < camera || segment.startX > camera + canvas.width) continue;
+    if (segment.endX < viewport.left || segment.startX > viewport.right) continue;
     const visualMap = visualMaps.get(segment.id);
-    if (visualMap) drawn = drawDecorations(visualMap, property, camera, segment.startX, !segment.isFinal) || drawn;
+    if (visualMap) drawn = drawDecorations(visualMap, property, camera, viewport, segment.startX, !segment.isFinal) || drawn;
   }
   return drawn;
 }
@@ -510,17 +511,20 @@ function draw() {
   // independent of the local runner and never accumulates prediction error.
   const camera = advanceCamera(cameraX, now - cameraUpdatedAt, state.cameraSpeed);
   const world = map.world ?? { cellSize: 34, originY: 425 };
+  const viewport = worldViewportBounds({ cameraX: camera, width: canvas.width, height: canvas.height });
+  ctx.save();
+  applyRaceViewport(ctx, canvas.width, canvas.height);
   if (scene.background.complete) ctx.drawImage(scene.background, 0, 59);
   if (scene.cityFar.complete) for (let x = -((camera * 0.1) % scene.cityFar.width); x < canvas.width; x += scene.cityFar.width) ctx.drawImage(scene.cityFar, x, 264);
   if (scene.cityNear.complete) for (let x = -((camera * 0.2) % scene.cityNear.width); x < canvas.width; x += scene.cityNear.width) ctx.drawImage(scene.cityNear, x, 254);
-  if (!drawMarathonDecorations(camera, 'visualInfo')) for (const tile of map.colliders) {
+  if (!drawMarathonDecorations(camera, 'visualInfo', viewport)) for (const tile of map.colliders) {
     const x = tile.x * world.cellSize - camera;
     const y = world.originY - tile.y * world.cellSize;
-    if (x <= -world.cellSize || x >= canvas.width || y <= -world.cellSize || y >= canvas.height) continue;
+    if (x <= viewport.left - camera - world.cellSize || x >= viewport.right - camera || y <= viewport.top - world.cellSize || y >= viewport.bottom) continue;
     if (scene.block.complete) ctx.drawImage(scene.block, x, y, world.cellSize, world.cellSize);
     else { ctx.fillStyle = '#68727a'; ctx.fillRect(x, y, world.cellSize, world.cellSize); }
   }
-  drawMarathonDecorations(camera, 'frontVisualInfo');
+  drawMarathonDecorations(camera, 'frontVisualInfo', viewport);
   for (const player of renderPlayers) {
     if (player.eliminated) continue;
     const x = player.x - camera;
@@ -532,6 +536,7 @@ function draw() {
     } else { ctx.fillStyle = colors[player.slot - 1]; ctx.fillRect(x + 16, y + 19, 37, 48); }
     drawPlayerName(player, x, y);
   }
+  ctx.restore();
   ctx.fillStyle='#fff'; ctx.font='bold 16px Arial'; ctx.fillText(String(Math.floor(state.tick ?? 0)).padStart(3, '0'), 590, 24);
 }
 join.addEventListener('click', connect); lobbyStart.addEventListener('click', startMatch); nextRound.addEventListener('click', returnToMenu); flip.addEventListener('click', sendFlip); soundToggle.addEventListener('click', toggleSound); canvas.addEventListener('click', sendFlip);

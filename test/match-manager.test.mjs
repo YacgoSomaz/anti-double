@@ -42,8 +42,8 @@ test('releases a completed room so its code can immediately host a fresh match',
   const resultsLevel = {
     ...tinyLevel,
     spawns: [
-      { x: 0, y: 500, gravity: 1, speedX: 0 },
-      { x: 0, y: 500, gravity: 1, speedX: 0 }
+      { x: 0, y: 570, gravity: 1, speedX: 0 },
+      { x: 0, y: 570, gravity: 1, speedX: 0 }
     ]
   };
   const matches = new MatchManager(resultsLevel);

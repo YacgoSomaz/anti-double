@@ -5,8 +5,11 @@ const NORMAL_PLAYER_OFFSET_Y = 19;
 const INVERTED_PLAYER_OFFSET_Y = 9;
 const FOOT_CONTACT_WIDTH = 28;
 const FOOT_CONTACT_OFFSET_X = PLAYER_OFFSET_X + (PLAYER_WIDTH - FOOT_CONTACT_WIDTH) / 2;
-const STAGE_TOP = -60;
-const STAGE_BOTTOM = 500;
+// The renderer now shows 10% more world above and below the original stage.
+// Leave a further small recovery margin so a runner on the lower route can
+// reverse gravity and return instead of being eliminated at the screen edge.
+const STAGE_TOP = -90;
+const STAGE_BOTTOM = 560;
 const GRAVITY = 30000;
 const MAX_VERTICAL_SPEED = 320.755;
 const MAX_STEP_SECONDS = 1 / 40;
@@ -15,8 +18,9 @@ const MAX_HORIZONTAL_SPEED = 769.812;
 const CAMERA_TARGET_SCREEN_X = 320;
 // Player.as checks x < _camera.x - 350.  The recovered Flash camera sprite
 // is at the centre of the 640 px stage; #cameraX is the left edge, so the
-// equivalent left-edge threshold is 320 - 350 = -30 px.
-const MULTIPLAYER_LEFT_ESCAPE_SCREEN_X = CAMERA_TARGET_SCREEN_X - 350;
+// equivalent left-edge threshold is 320 - 410 = -90 px.  The extra 60 px is
+// intentional recovery space beyond the zoomed-out left edge.
+const MULTIPLAYER_LEFT_ESCAPE_SCREEN_X = CAMERA_TARGET_SCREEN_X - 410;
 const CAMERA_FOLLOW_GAIN = 0.2;
 // Once a runner has entered the shared camera rhythm, being behind centre
 // adds up to 75% of the current shared speed. The percentage is proportional

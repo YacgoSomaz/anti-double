@@ -10,6 +10,6 @@ test('zooms the race view out by ten percent around its centre', () => {
   assert.equal(bounds.height, 551.1);
   assert.equal(bounds.left, 968);
   assert.equal(bounds.right, 1672);
-  assert.equal(bounds.top, -25.05);
-  assert.equal(bounds.bottom, 526.05);
+  assert.ok(Math.abs(bounds.top + 25.05) < 0.000001);
+  assert.ok(Math.abs(bounds.bottom - 526.05) < 0.000001);
 });

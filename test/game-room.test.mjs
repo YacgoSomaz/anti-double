@@ -192,7 +192,7 @@ test('marks a player eliminated when their sprite leaves the multiplayer stage',
   const room = new GameRoom({
     tileSize: 48,
     colliders: [],
-    spawns: [{ x: 100, y: 500, gravity: 1, speedX: 0 }]
+    spawns: [{ x: 100, y: 570, gravity: 1, speedX: 0 }]
   });
   room.join('a');
   room.start('a');
@@ -220,7 +220,7 @@ test('identifies a fully completed room separately from a race that is still run
   const room = new GameRoom({
     tileSize: 48,
     colliders: [],
-    spawns: [{ x: 100, y: 500, gravity: 1, speedX: 0 }]
+    spawns: [{ x: 100, y: 570, gravity: 1, speedX: 0 }]
   });
   room.join('a');
   room.start('a');
@@ -235,8 +235,8 @@ test('keeps an eliminated runner in the authoritative match until results rank e
     tileSize: 48,
     colliders: [],
     spawns: [
-      { x: 0, y: 500, gravity: 1, speedX: 0 },
-      { x: 100, y: 490, gravity: 1, speedX: 0 }
+      { x: 0, y: 570, gravity: 1, speedX: 0 },
+      { x: 100, y: 550, gravity: 1, speedX: 0 }
     ]
   });
   room.join('first', '先淘汰');
@@ -263,7 +263,7 @@ test('ranks completed runners ahead of eliminated runners at the authoritative f
     finishX: 320,
     spawns: [
       { x: 320, y: 0, gravity: 0, speedX: 0 },
-      { x: 0, y: 500, gravity: 1, speedX: 0 }
+      { x: 0, y: 570, gravity: 1, speedX: 0 }
     ]
   });
   room.join('winner', '冠军');
@@ -457,7 +457,7 @@ test('holds the shared camera at the safety boundary while a side block pins a r
   for (let frame = 0; frame < 8; frame += 1) room.tick(1 / 40);
 
   const snapshot = room.snapshot();
-  assert.equal(snapshot.cameraX <= snapshot.players[0].x + 30, true);
+  assert.equal(snapshot.cameraX <= snapshot.players[0].x + 90, true);
   assert.equal(snapshot.players[0].eliminated, false);
 });
 
