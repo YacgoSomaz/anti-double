@@ -1,4 +1,4 @@
-import { applyColliderEdit, createEditorDraft, createHistory, exportEditorDraft, parseEditorDraft, redo, undo, validateEditorDraft } from '/editor-draft.js';
+import { applyColliderEdit, createEditorDraft, createHistory, exportEditorDraft, parseEditorDraft, redo, undo, updateEditorProperty, validateEditorDraft } from '/editor-draft.js';
 import { createReplay, eventsAtTick, exportTestPackage, parseTestPackage, recordFlip } from '/editor-replay.js';
 import { createLocalNetworkLab, deliverSnapshots, queueSnapshot } from '/editor-network.js';
 import { createDraftDiff } from '/editor-package.js';
@@ -23,6 +23,16 @@ const animationCanvas = document.querySelector('#animation-preview');
 const animationCtx = animationCanvas.getContext('2d');
 const animationCharacter = document.querySelector('#animation-character');
 const animationState = document.querySelector('#animation-state');
+const spawnIndex = document.querySelector('#spawn-index');
+const spawnX = document.querySelector('#spawn-x');
+const spawnY = document.querySelector('#spawn-y');
+const spawnGravity = document.querySelector('#spawn-gravity');
+const spawnSpeed = document.querySelector('#spawn-speed');
+const finishX = document.querySelector('#finish-x');
+const eliminationMargin = document.querySelector('#elimination-margin');
+const eliminationTop = document.querySelector('#elimination-top');
+const eliminationBottom = document.querySelector('#elimination-bottom');
+const collisionLog = document.querySelector('#collision-log');
 let originalLevel;
 let sourceDraft;
 let history;
@@ -41,6 +51,7 @@ let simulationSequence = 0;
 let simulationAccumulator = 0;
 let simulationLastAt = performance.now();
 let lab = createLocalNetworkLab();
+const eventLog = [];
 const animationImages = new Map(['blue', 'green', 'yellow', 'red'].map((color) => {
   const image = new Image(); image.src = `/assets/players/player-${color}.png`; return [color, image];
 }));
@@ -61,6 +72,30 @@ function cellScreen(cell) {
   return { x: view.x + cell.x * size * view.scale, y: view.y + (world.originY - cell.y * size) * view.scale, size: size * view.scale };
 }
 function setStatus(value) { status.textContent = value; }
+function updatePropertyEditor() {
+  if (!history) return;
+  const draft = history.current;
+  spawnIndex.replaceChildren(...draft.spawns.map((spawn, index) => { const option = document.createElement('option'); option.value = String(index); option.textContent = `出生点 ${index + 1} · ${spawn.gravity < 0 ? '↑' : '↓'}`; return option; }));
+  const index = Math.min(Number(spawnIndex.value) || 0, Math.max(0, draft.spawns.length - 1)); spawnIndex.value = String(index);
+  const spawn = draft.spawns[index] ?? {};
+  spawnX.value = Math.round(spawn.x ?? 0); spawnY.value = Math.round(spawn.y ?? 0); spawnGravity.value = String(spawn.gravity < 0 ? -1 : 1); spawnSpeed.value = Math.round(spawn.speedX ?? 0);
+  finishX.value = Math.round(draft.finishX ?? 0);
+  eliminationMargin.value = Math.round(draft.elimination?.leftMargin ?? 60); eliminationTop.value = Math.round(draft.elimination?.top ?? -90); eliminationBottom.value = Math.round(draft.elimination?.bottom ?? 560);
+}
+function renderCollisionLog() {
+  collisionLog.replaceChildren(...eventLog.slice(-12).map((entry) => { const item = document.createElement('li'); item.textContent = entry; return item; }));
+}
+function logCollisionEvents(state) {
+  for (const player of state.players ?? []) {
+    for (const [flag, label] of [['blockedX', '水平碰撞'], ['finished', '抵达终点'], ['eliminated', '淘汰']]) {
+      if (!player[flag]) continue;
+      const key = `${state.tick}:${player.slot}:${flag}`;
+      if (eventLog.some((entry) => entry.startsWith(`${key} `))) continue;
+      eventLog.push(`${key} · 玩家 ${player.slot} ${label}`);
+    }
+  }
+  renderCollisionLog();
+}
 function updateInspector() {
   const draft = history.current; const valid = validateEditorDraft(draft);
   validation.textContent = valid.valid ? `草稿有效\n${draft.colliders.length} 个碰撞格\n撤销 ${history.undoStack.length} · 重做 ${history.redoStack.length}` : valid.errors.join('\n');
@@ -75,6 +110,7 @@ function updateInspector() {
   simulationReadout.textContent = player
     ? `${running ? '运行中' : '已暂停'} · tick ${presented.tick}\n位置 ${Math.round(player.x)}, ${Math.round(player.y)}\n速度 ${Math.round(player.vx)}, ${Math.round(player.vy)} · 镜头 ${Math.round(presented.cameraSpeed)}\n本地 ${localPlayerCount.value} 人 · 显示延迟 ${lab.latencyMs} ms · 丢包 ${lab.dropped}\n回放事件 ${replay.events.length}${recording ? ' · 正在录制' : ''}${replaying ? ' · 回放中' : ''}`
     : '尚未运行。可先画碰撞格，再按“运行”验证本地物理。';
+  updatePropertyEditor();
 }
 function drawGrid() {
   const size = courseCell() * view.scale;
@@ -90,6 +126,11 @@ function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.fillStyle = '#9bcde3'; ctx.fillRect(0, 0, canvas.width, canvas.height);
   drawGrid();
+  const guide = (worldX, color, label) => { const x = view.x + worldX * view.scale; ctx.save(); ctx.setLineDash([8, 6]); ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke(); ctx.fillStyle = color; ctx.font = 'bold 12px Arial'; ctx.fillText(label, x + 5, 18); ctx.restore(); };
+  guide(history.current.cameraTargetX ?? 320, '#23e6d2', '镜头目标');
+  guide(history.current.finishX, '#ffd166', '终点');
+  guide((history.current.cameraTargetX ?? 320) - 350 - (history.current.elimination?.leftMargin ?? 60), '#ff5f6d', '淘汰线');
+  const world = levelWorld(); const bounds = history.current.elimination ?? { top: -90, bottom: 560 }; ctx.save(); ctx.strokeStyle = '#ff5f6d80'; ctx.setLineDash([3, 5]); for (const y of [bounds.top, bounds.bottom]) { const screenY = view.y + (world.originY - y) * view.scale; ctx.beginPath(); ctx.moveTo(0, screenY); ctx.lineTo(canvas.width, screenY); ctx.stroke(); } ctx.restore();
   for (const cell of history.current.colliders) {
     const box = cellScreen(cell);
     if (box.x > canvas.width || box.y > canvas.height || box.x + box.size < 0 || box.y + box.size < 0) continue;
@@ -111,6 +152,12 @@ function draw() {
   if (selected) { const box = cellScreen(selected); ctx.lineWidth = 3; ctx.strokeStyle = '#fff'; ctx.strokeRect(box.x + 1, box.y + 1, box.size - 2, box.size - 2); }
 }
 function editAt(point) {
+  if (activeLayer === 'spawn') {
+    const position = worldAt(point); let nearest = -1; let distance = Infinity;
+    history.current.spawns.forEach((spawn, index) => { const candidate = Math.hypot(position.x - spawn.x, position.y - spawn.y); if (candidate < distance) { distance = candidate; nearest = index; } });
+    if (distance < 90) { spawnIndex.value = String(nearest); selected = undefined; updateInspector(); draw(); }
+    return;
+  }
   if (activeLayer !== 'collision') return;
   const cell = cellAt(point); selected = cell;
   history = applyColliderEdit(history, { ...cell, solid: brush === 'paint' });
@@ -119,6 +166,7 @@ function editAt(point) {
 function resetDraft() {
   sourceDraft = sourceDraft ?? createEditorDraft(originalLevel, 'marathon');
   history = createHistory(structuredClone(sourceDraft));
+  eventLog.length = 0; renderCollisionLog();
   selected = undefined; view = { x: 0, y: 150, scale: 0.55 }; setStatus('已恢复为原始 marathon 草稿'); updateInspector(); draw();
 }
 function resetSimulation(replayMode = false) {
@@ -127,7 +175,7 @@ function resetSimulation(replayMode = false) {
   for (let index = 0; index < count; index += 1) room.join(index ? `bot-${index}` : 'editor', index ? `本地机器人 ${index}` : '编辑器', true);
   room.start('editor');
   lab = createLocalNetworkLab({ latencyMs: lab.latencyMs, lossPercent: lab.lossPercent });
-  const state = room.snapshot(); simulation = { room, state, displayState: state }; simulationSequence = 0; simulationAccumulator = 0; simulationLastAt = performance.now(); replaying = replayMode; running = false;
+  const state = room.snapshot(); simulation = { room, state, displayState: state }; simulationSequence = 0; simulationAccumulator = 0; simulationLastAt = performance.now(); replaying = replayMode; running = false; eventLog.length = 0; renderCollisionLog();
   updateInspector(); draw();
 }
 function advanceSimulation(frames = 1) {
@@ -136,6 +184,7 @@ function advanceSimulation(frames = 1) {
     const nextTick = simulation.state.tick + 1;
     if (replaying) for (const event of eventsAtTick(replay, nextTick)) if (event.type === 'flip') simulation.room.input('editor', { type: 'flip', sequence: ++simulationSequence });
     simulation.state = simulation.room.tick(1 / 40);
+    logCollisionEvents(simulation.state);
     lab = queueSnapshot(lab, simulation.state, performance.now());
     lab = deliverSnapshots(lab, performance.now());
     simulation.displayState = lab.latest ?? simulation.displayState;
@@ -167,6 +216,13 @@ function drawAnimation(now) {
 function configureLab() {
   lab = createLocalNetworkLab({ latencyMs: latencyInput.value, lossPercent: lossInput.value });
   latencyOutput.textContent = `${lab.latencyMs} ms`; lossOutput.textContent = `${lab.lossPercent}%`; updateInspector();
+}
+function applyProperties() {
+  try {
+    const index = Number(spawnIndex.value); const values = [[['spawns', index, 'x'], spawnX.value], [['spawns', index, 'y'], spawnY.value], [['spawns', index, 'gravity'], spawnGravity.value], [['spawns', index, 'speedX'], spawnSpeed.value], [['finishX'], finishX.value], [['elimination', 'leftMargin'], eliminationMargin.value], [['elimination', 'top'], eliminationTop.value], [['elimination', 'bottom'], eliminationBottom.value]];
+    for (const [path, value] of values) history = updateEditorProperty(history, { path, value });
+    setStatus('场景属性已应用，并已进入撤销历史'); renderSegments(); updateInspector(); draw();
+  } catch (error) { setStatus(error.message); }
 }
 function downloadDraft() {
   const link = document.createElement('a'); const url = URL.createObjectURL(new Blob([exportEditorDraft(history.current)], { type: 'application/json' }));
@@ -202,6 +258,7 @@ canvas.addEventListener('wheel', (event) => {
   view = { scale: next, x: point.x - world.x * next, y: point.y - world.y * next }; draw();
 }, { passive: false });
 document.addEventListener('change', (event) => { if (event.target.name === 'brush') brush = event.target.value; if (event.target.dataset.editorLayer) { activeLayer = event.target.dataset.editorLayer; updateInspector(); } });
+spawnIndex.addEventListener('change', updatePropertyEditor);
 localPlayerCount.addEventListener('change', () => { resetSimulation(); });
 latencyInput.addEventListener('input', configureLab); lossInput.addEventListener('input', configureLab);
 document.addEventListener('click', (event) => {
@@ -218,6 +275,7 @@ document.addEventListener('click', (event) => {
   if (action === 'record') { recording = !recording; if (recording) replay = createReplay(); event.target.textContent = `录制：${recording ? '开' : '关'}`; }
   if (action === 'playback') { resetSimulation(true); running = true; }
   if (action === 'sim-reset') resetSimulation();
+  if (action === 'apply-properties') applyProperties();
   if (action === 'test-package') {
     const diff = createDraftDiff(sourceDraft, history.current);
     const link = document.createElement('a'); const url = URL.createObjectURL(new Blob([exportTestPackage({ draft: history.current, replay, diff, parameters: { localPlayers: Number(localPlayerCount.value), latencyMs: lab.latencyMs, lossPercent: lab.lossPercent }, note: '从 /dev 导出的物理复现包，请人工审核后再提交 Git' })], { type: 'application/json' }));
