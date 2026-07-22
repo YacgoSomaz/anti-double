@@ -1,4 +1,5 @@
 import { createCollisionIndex } from './collision-index.mjs';
+import { createItemState, ITEM_EFFECT_TICKS, ITEM_TYPES } from './item-system.mjs';
 
 const PLAYER_WIDTH = 37;
 const PLAYER_HEIGHT = 48;
@@ -32,6 +33,9 @@ const CAMERA_FOLLOW_GAIN = 0.2;
 const CAMERA_RECOVERY_MAX_SPEED_RATIO = 0.75;
 const CAMERA_TARGET_TOLERANCE = 4;
 const BLOCKED_CAMERA_SAFETY_FRAMES = 12;
+const ITEM_PICKUP_RADIUS_X = 48;
+const ITEM_PICKUP_RADIUS_Y = 56;
+const SPEED_BOOST_MULTIPLIER = 1.35;
 const CHARACTERS = ['blue', 'green', 'yellow', 'red'];
 const DEFAULT_DEBUG_TUNING = Object.freeze({ speedMultiplier: 1, cameraSpeedMultiplier: 1, recoveryMultiplier: 1, gravityMultiplier: 1, hitboxWidth: PLAYER_WIDTH, hitboxHeight: PLAYER_HEIGHT, eliminationMargin: 60 });
 
@@ -74,6 +78,7 @@ export class GameRoom {
   #phase = 'lobby';
   #hostId = null;
   #results = [];
+  #items = [];
   #debugTuning = { ...DEFAULT_DEBUG_TUNING };
 
   constructor(level) {
@@ -83,6 +88,7 @@ export class GameRoom {
       ? { x: collider.x * level.world.cellSize, y: level.world.originY - collider.y * level.world.cellSize, width: level.world.cellSize, height: level.world.cellSize }
       : { x: collider.x * level.tileSize, y: collider.y * level.tileSize, width: level.tileSize, height: level.tileSize });
     this.#collisionIndex = createCollisionIndex(this.#blocks, level.world?.cellSize ?? level.tileSize);
+    this.#items = createItemState(level);
     this.#debugTuning = normaliseDebugTuning(level.playerPhysics ?? {});
   }
 
@@ -114,6 +120,7 @@ export class GameRoom {
       previousX: spawn.x, previousY: spawn.y,
       speedX: spawn.speedX * this.#debugTuning.speedMultiplier, startSpeedX: spawn.speedX * this.#debugTuning.speedMultiplier, character: CHARACTERS[slot - 1], name: playerName(name, slot), ready: Boolean(ready),
       gravity: spawn.gravity, finished: false, eliminated: false, outcomeTick: null, blockedX: false, recoveringCameraPosition: false, cameraRecoveryBoost: false, hasReachedCameraCentre: Math.abs(spawn.x - CAMERA_TARGET_SCREEN_X) <= CAMERA_TARGET_TOLERANCE, cameraSafetyFrames: 0, flipWallGuard: 0,
+      phaseTicks: 0, speedBoostTicks: 0,
       hitbox: { width: this.#debugTuning.hitboxWidth, height: this.#debugTuning.hitboxHeight, offsetX: PLAYER_OFFSET_X + (PLAYER_WIDTH - this.#debugTuning.hitboxWidth) / 2, offsetY: playerOffsetY(spawn.gravity, this.#debugTuning.hitboxHeight) }
     };
     this.#players.set(id, player);
@@ -206,6 +213,7 @@ export class GameRoom {
       introTicksRemaining: this.#introTicksRemaining,
       hostSlot: this.#players.get(this.#hostId)?.slot ?? null,
       players: [...this.#players.values()].map((player) => ({ ...player })),
+      items: this.#items.map((item) => ({ ...item })),
       results: this.#results.map((result) => ({ ...result }))
     };
   }
@@ -215,6 +223,7 @@ export class GameRoom {
     player.previousX = player.x;
     player.previousY = player.y;
     player.worldContactDirty = false;
+    this.#collectItems(player);
     // Original multiplayer follows one shared camera runner, not the current
     // first-place player.  All runners may approach that centre, but none may
     // pass it.  A lagging runner receives a distance-proportional correction,
@@ -224,7 +233,8 @@ export class GameRoom {
     // Camera speed is the one shared base speed.  A player can only exceed it
     // while smoothly recovering from a position behind the centre target.
     player.speedX = nextCameraSpeed;
-    player.vx = nextCameraSpeed;
+    const speedMultiplier = player.speedBoostTicks > 0 ? SPEED_BOOST_MULTIPLIER : 1;
+    player.vx = nextCameraSpeed * speedMultiplier;
     const baseNextX = player.x + player.vx * dt;
     const distanceToCentre = cameraTargetX - baseNextX;
     // Recovery must be based on the current gap every physics frame.  Gating
@@ -252,7 +262,7 @@ export class GameRoom {
     // Keep the legacy two-argument shape documented for tooling while passing
     // the predicted Y needed for a continuous diagonal sweep.
     // #firstSolidAhead(player, nextX)
-    const sideBlock = this.#firstSolidAhead(player, nextX, nextY);
+    const sideBlock = player.phaseTicks > 0 ? null : this.#firstSolidAhead(player, nextX, nextY);
     player.blockedX = Boolean(sideBlock);
     if (sideBlock) {
       player.recoveringCameraPosition = true;
@@ -271,7 +281,7 @@ export class GameRoom {
     }
     player.score = Math.max(player.score, Math.max(0, Math.floor(player.x - player.startX)));
     player.vy = nextVy;
-    const block = this.#firstSolidUnder(player, nextY, player.x);
+    const block = player.phaseTicks > 0 ? null : this.#firstSolidUnder(player, nextY, player.x);
     if (block) {
       if (player.gravity > 0) player.y = block.y - player.hitbox.offsetY - player.hitbox.height;
       else player.y = block.y + block.height - player.hitbox.offsetY;
@@ -280,6 +290,8 @@ export class GameRoom {
       player.y = nextY;
     }
     if (player.flipWallGuard > 0) player.flipWallGuard -= 1;
+    if (player.phaseTicks > 0) player.phaseTicks -= 1;
+    if (player.speedBoostTicks > 0) player.speedBoostTicks -= 1;
     if (this.#level.finishX && player.x >= this.#level.finishX) {
       player.finished = true;
       player.outcomeTick = this.#tick;
@@ -402,7 +414,7 @@ export class GameRoom {
 
   #resolvePlayersAgainstWorld() {
     for (const player of this.#players.values()) {
-      if (player.finished || player.eliminated || !player.worldContactDirty) continue;
+      if (player.finished || player.eliminated || player.phaseTicks > 0 || !player.worldContactDirty) continue;
       // One player contact can cause at most one correction on each axis, but
       // allow a short bounded pass for an inside corner made by two tiles.
       for (let pass = 0; pass < 4; pass += 1) {
@@ -523,7 +535,7 @@ export class GameRoom {
   }
 
   #separateOverlappingPlayers(dt) {
-    const players = [...this.#players.values()].filter((player) => !player.finished && !player.eliminated);
+    const players = [...this.#players.values()].filter((player) => !player.finished && !player.eliminated && player.phaseTicks <= 0);
     // Resolve the recovered 37 x 48 multiplayer hitboxes as solid rectangles.
     // The original callback uses the current x when two runners are level;
     // under an authoritative 40 FPS server that makes tied runners swap leader
@@ -621,6 +633,30 @@ export class GameRoom {
     const follower = firstWasAhead ? second : first;
     follower.x = leader.x - follower.hitbox.width * 1.1;
     follower.worldContactDirty = true;
+  }
+
+  #collectItems(player) {
+    if (player.finished || player.eliminated) return;
+    const playerCentreX = player.x + player.hitbox.offsetX + player.hitbox.width / 2;
+    const playerCentreY = player.y + player.hitbox.offsetY + player.hitbox.height / 2;
+    for (const item of this.#items) {
+      if (!item.active || Math.abs(playerCentreX - item.x) > ITEM_PICKUP_RADIUS_X || Math.abs(playerCentreY - item.y) > ITEM_PICKUP_RADIUS_Y) continue;
+      item.active = false;
+      if (item.type === ITEM_TYPES.gravityBurst) {
+        for (const runner of this.#players.values()) {
+          if (runner.finished || runner.eliminated) continue;
+          const previousOffsetY = runner.hitbox.offsetY;
+          runner.gravity *= -1;
+          runner.hitbox.offsetY = playerOffsetY(runner.gravity, runner.hitbox.height);
+          runner.flipWallGuard = 4;
+          this.#resolveGravityFlipOverlap(runner, previousOffsetY);
+        }
+      } else if (item.type === ITEM_TYPES.phase) {
+        player.phaseTicks = Math.max(player.phaseTicks, ITEM_EFFECT_TICKS.phase);
+      } else if (item.type === ITEM_TYPES.speedBoost) {
+        player.speedBoostTicks = Math.max(player.speedBoostTicks, ITEM_EFFECT_TICKS.speedBoost);
+      }
+    }
   }
 
 }

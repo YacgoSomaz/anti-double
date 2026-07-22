@@ -179,6 +179,19 @@ test('encodes four-player race snapshots into a compact packet suitable for 40 H
   assert.equal(Buffer.byteLength(JSON.stringify(packet)) < 250, true);
 });
 
+test('encodes active item effects in the compact race packet', () => {
+  const packet = encodeRaceState({
+    tick: 8,
+    cameraX: 10,
+    cameraSpeed: 120,
+    items: [{ id: 'phase-1', type: 'phase', x: 320, y: 190, active: true }],
+    players: [{ slot: 1, x: 100, y: 100, vx: 150, vy: 0, gravity: 1, finished: false, eliminated: false, blockedX: false, phaseTicks: 119, speedBoostTicks: 0 }]
+  });
+
+  assert.deepEqual(packet.o, [[2, 32000, 19000]]);
+  assert.deepEqual(packet.p[0], [1, 10000, 10000, 15000, 0, 1, 0, 119, 0]);
+});
+
 test('adds only a compact server tick timing sample to a race packet', () => {
   const packet = encodeRaceState({ tick: 2, cameraX: 0, cameraSpeed: 120, players: [] }, 27.4);
 
