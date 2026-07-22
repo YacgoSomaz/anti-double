@@ -270,12 +270,12 @@ export class GameRoom {
     if (player.gravity > 0) {
       const previousBottom = player.y + player.hitbox.offsetY + PLAYER_HEIGHT;
       const nextBottom = nextY + player.hitbox.offsetY + PLAYER_HEIGHT;
-      return this.#collisionIndex.query(left, left + FOOT_CONTACT_WIDTH)
-        .find((block) => overlapsX(block) && previousBottom <= block.y && nextBottom >= block.y);
+      return this.#collisionIndex.find(left, left + FOOT_CONTACT_WIDTH,
+        (block) => overlapsX(block) && previousBottom <= block.y && nextBottom >= block.y);
     } else {
       const previousTop = player.y + player.hitbox.offsetY;
-      return this.#collisionIndex.query(left, left + FOOT_CONTACT_WIDTH)
-        .find((block) => overlapsX(block) && previousTop >= block.y + block.height && nextY + player.hitbox.offsetY <= block.y + block.height);
+      return this.#collisionIndex.find(left, left + FOOT_CONTACT_WIDTH,
+        (block) => overlapsX(block) && previousTop >= block.y + block.height && nextY + player.hitbox.offsetY <= block.y + block.height);
     }
   }
 
@@ -285,7 +285,7 @@ export class GameRoom {
     const nextRight = nextX + player.hitbox.offsetX + PLAYER_WIDTH;
     const top = player.y + player.hitbox.offsetY;
     const bottom = top + PLAYER_HEIGHT;
-    return this.#collisionIndex.query(previousRight, nextRight).find((block) => {
+    return this.#collisionIndex.find(previousRight, nextRight, (block) => {
       const verticalOverlap = Math.min(bottom, block.y + block.height) - Math.max(top, block.y);
       // Ordinary floor-edge contact needs substantial overlap so a runner can
       // still fall through a genuine narrow gap.  An inverted runner rising
@@ -323,9 +323,10 @@ export class GameRoom {
     const overlapsHorizontalPath = (block) => Math.max(previousRight, currentRight) > block.x
       && Math.min(previousLeft, currentLeft) < block.x + block.width;
 
-    const candidates = this.#collisionIndex.query(Math.min(previousLeft, currentLeft), Math.max(previousRight, currentRight));
+    const queryLeft = Math.min(previousLeft, currentLeft);
+    const queryRight = Math.max(previousRight, currentRight);
     if (currentLeft < previousLeft) {
-      const block = candidates.find((item) => previousLeft >= item.x + item.width
+      const block = this.#collisionIndex.find(queryLeft, queryRight, (item) => previousLeft >= item.x + item.width
         && currentLeft < item.x + item.width && overlapsVerticalPath(item));
       if (block) {
         player.x = block.x + block.width - player.hitbox.offsetX;
@@ -334,7 +335,7 @@ export class GameRoom {
       }
     }
     if (currentRight > previousRight) {
-      const block = candidates.find((item) => previousRight <= item.x
+      const block = this.#collisionIndex.find(queryLeft, queryRight, (item) => previousRight <= item.x
         && currentRight > item.x && overlapsVerticalPath(item));
       if (block) {
         player.x = block.x - player.hitbox.offsetX - PLAYER_WIDTH;
@@ -343,7 +344,7 @@ export class GameRoom {
       }
     }
     if (currentTop < previousTop) {
-      const block = candidates.find((item) => previousTop >= item.y + item.height
+      const block = this.#collisionIndex.find(queryLeft, queryRight, (item) => previousTop >= item.y + item.height
         && currentTop < item.y + item.height && overlapsHorizontalPath(item));
       if (block) {
         player.y = block.y + block.height - player.hitbox.offsetY;
@@ -352,7 +353,7 @@ export class GameRoom {
       }
     }
     if (currentBottom > previousBottom) {
-      const block = candidates.find((item) => previousBottom <= item.y
+      const block = this.#collisionIndex.find(queryLeft, queryRight, (item) => previousBottom <= item.y
         && currentBottom > item.y && overlapsHorizontalPath(item));
       if (block) {
         player.y = block.y - player.hitbox.offsetY - PLAYER_HEIGHT;
@@ -368,7 +369,7 @@ export class GameRoom {
     const right = left + PLAYER_WIDTH;
     const top = player.y + player.hitbox.offsetY;
     const bottom = top + PLAYER_HEIGHT;
-    const block = this.#collisionIndex.query(left, right).find((item) => right > item.x && left < item.x + item.width
+    const block = this.#collisionIndex.find(left, right, (item) => right > item.x && left < item.x + item.width
       && bottom > item.y && top < item.y + item.height);
     if (!block) return false;
 
@@ -404,15 +405,15 @@ export class GameRoom {
       // block whose bottom lies in that newly entered strip is a ceiling hit;
       // blocks already overlapping vertically are side walls, not teleport
       // targets.
-      const enteredCeilings = this.#collisionIndex.query(left, right)
-        .filter((block) => overlapsX(block) && top < block.y + block.height && block.y + block.height <= previousTop);
+      const enteredCeilings = this.#collisionIndex.filter(left, right,
+        (block) => overlapsX(block) && top < block.y + block.height && block.y + block.height <= previousTop);
       if (!enteredCeilings.length) return;
       player.y = Math.max(player.y, ...enteredCeilings.map((block) => block.y + block.height - player.hitbox.offsetY));
     } else {
       // Inverted -> normal moves it 10 px downward; mirror the same rule for
       // newly entered floor tops only.
-      const enteredFloors = this.#collisionIndex.query(left, right)
-        .filter((block) => overlapsX(block) && bottom > block.y && block.y >= previousBottom);
+      const enteredFloors = this.#collisionIndex.filter(left, right,
+        (block) => overlapsX(block) && bottom > block.y && block.y >= previousBottom);
       if (!enteredFloors.length) return;
       player.y = Math.min(player.y, ...enteredFloors.map((block) => block.y - player.hitbox.offsetY - PLAYER_HEIGHT));
     }

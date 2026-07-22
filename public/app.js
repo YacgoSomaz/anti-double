@@ -133,9 +133,9 @@ const FINAL_TUNNEL_ASSETS = new Set([
   '194_PlayState_ImgFinalTunnelFront.png',
   '278_PlayState_ImgFinalTunnelWindow.png'
 ]);
-// 首局只依赖完整碰撞地图、MP02 视觉、四个角色和五张公共场景图。
-// MP03/MP04 在后台预取，不能再把房间开始按钮卡在后续赛段资源上。
-const RACE_RESOURCE_TOTAL = 11;
+// 每局开始前完成整个 marathon 的地图、装饰和图像解码。它们均使用
+// content-hash URL，浏览器会复用磁盘缓存；比赛中不再触发资源加载。
+const RACE_RESOURCE_TOTAL = 13;
 const packetTiming = createPacketTimingMonitor(); const frameTiming = createFrameTimingMonitor(); let lastDiagnosticsUpdate = 0;
 let socket; let joinTimeout; let sequence = 0; let state = { phase: 'lobby', players: [] }; let map; let visualMaps = new Map(); let lastPing = 0; let stateReceivedAt = performance.now(); let localSlot; let roomCode; let cameraX = 0; let cameraUpdatedAt = performance.now(); let showingEnd = false; let resourcesReady = false; let raceReady = false; let resourcesFailed = false; let readySent = false; let readySoundPlayed = false; let raceResourceLoaded = 0; let soloRoom; let soloAccumulator = 0; let soloLastAt = 0;
 const latestRaceState = createLatestRaceStateBuffer();
@@ -185,21 +185,13 @@ function loadJson(source, countForRace = true) {
 }
 const mapLoad = Promise.all([
   loadJson('/data/marathon.json'), loadJson('/data/mp02-visual.json'),
-]).then(([level, mp02]) => {
+  loadJson('/data/mp03-visual.json'), loadJson('/data/mp04-visual.json'),
+]).then(async ([level, mp02, mp03, mp04]) => {
   map = level;
-  visualMaps = new Map([['mp02', mp02]]);
-  void preloadDecorationImages(mp02);
+  visualMaps = new Map([['mp02', mp02], ['mp03', mp03], ['mp04', mp04]]);
+  await Promise.all([mp02, mp03, mp04].map(preloadDecorationImages));
   draw();
 });
-// 后续赛段不影响人物、碰撞或首局开赛；在大厅/比赛期间静默补齐即可。
-const deferredVisualLoad = Promise.all([
-  loadJson('/data/mp03-visual.json', false), loadJson('/data/mp04-visual.json', false),
-]).then(([mp03, mp04]) => {
-  visualMaps.set('mp03', mp03);
-  visualMaps.set('mp04', mp04);
-  void Promise.all([preloadDecorationImages(mp03), preloadDecorationImages(mp04)]).then(draw);
-  draw();
-}).catch(() => {});
 const minimumSplash = new Promise((resolve) => setTimeout(resolve, 900));
 // The menu may become visible after the splash, but joining a room is held
 // back until every first-race resource has decoded.  A player can therefore
