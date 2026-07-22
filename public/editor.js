@@ -1,6 +1,8 @@
 import { applyColliderEdit, createEditorDraft, createHistory, exportEditorDraft, parseEditorDraft, redo, undo, validateEditorDraft } from '/editor-draft.js';
 import { createReplay, eventsAtTick, exportTestPackage, recordFlip } from '/editor-replay.js';
+import { createLocalNetworkLab, deliverSnapshots, queueSnapshot } from '/editor-network.js';
 import { GameRoom } from '/solo-game.mjs';
+import { animationFrame, frameSourceRect, morphFrame } from '/player-animation.js';
 
 const canvas = document.querySelector('#editor-canvas');
 const ctx = canvas.getContext('2d');
@@ -10,6 +12,15 @@ const inspector = document.querySelector('#inspector');
 const segmentList = document.querySelector('#segment-list');
 const simulationReadout = document.querySelector('#simulation-readout');
 const importer = document.querySelector('#draft-import');
+const localPlayerCount = document.querySelector('#local-player-count');
+const latencyInput = document.querySelector('#lab-latency');
+const lossInput = document.querySelector('#lab-loss');
+const latencyOutput = document.querySelector('#lab-latency-output');
+const lossOutput = document.querySelector('#lab-loss-output');
+const animationCanvas = document.querySelector('#animation-preview');
+const animationCtx = animationCanvas.getContext('2d');
+const animationCharacter = document.querySelector('#animation-character');
+const animationState = document.querySelector('#animation-state');
 let originalLevel;
 let history;
 let activeLayer = 'collision';
@@ -26,6 +37,10 @@ let replaying = false;
 let simulationSequence = 0;
 let simulationAccumulator = 0;
 let simulationLastAt = performance.now();
+let lab = createLocalNetworkLab();
+const animationImages = new Map(['blue', 'green', 'yellow', 'red'].map((color) => {
+  const image = new Image(); image.src = `/assets/players/player-${color}.png`; return [color, image];
+}));
 
 function levelWorld() { return history.current.world ?? { cellSize: history.current.tileSize, originY: 425 }; }
 function courseCell() { return levelWorld().cellSize ?? history.current.tileSize; }
@@ -52,9 +67,10 @@ function updateInspector() {
     const dd = document.createElement('dd'); dd.textContent = description;
     return [dt, dd];
   }));
-  const player = simulation?.state?.players?.[0];
+  const presented = simulation?.displayState ?? simulation?.state;
+  const player = presented?.players?.[0];
   simulationReadout.textContent = player
-    ? `${running ? '运行中' : '已暂停'} · tick ${simulation.state.tick}\n位置 ${Math.round(player.x)}, ${Math.round(player.y)}\n速度 ${Math.round(player.vx)}, ${Math.round(player.vy)} · 镜头 ${Math.round(simulation.state.cameraSpeed)}\n回放事件 ${replay.events.length}${recording ? ' · 正在录制' : ''}${replaying ? ' · 回放中' : ''}`
+    ? `${running ? '运行中' : '已暂停'} · tick ${presented.tick}\n位置 ${Math.round(player.x)}, ${Math.round(player.y)}\n速度 ${Math.round(player.vx)}, ${Math.round(player.vy)} · 镜头 ${Math.round(presented.cameraSpeed)}\n本地 ${localPlayerCount.value} 人 · 显示延迟 ${lab.latencyMs} ms · 丢包 ${lab.dropped}\n回放事件 ${replay.events.length}${recording ? ' · 正在录制' : ''}${replaying ? ' · 回放中' : ''}`
     : '尚未运行。可先画碰撞格，再按“运行”验证本地物理。';
 }
 function drawGrid() {
@@ -82,8 +98,9 @@ function draw() {
     ctx.fillStyle = spawn.gravity < 0 ? '#8dff8b' : '#3ce6df'; ctx.beginPath(); ctx.arc(x, y, 8, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = '#05303d'; ctx.font = 'bold 11px Arial'; ctx.fillText(`出生 ${spawn.gravity < 0 ? '↑' : '↓'}`, x + 10, y + 4);
   }
-  if (simulation?.state) for (const player of simulation.state.players) {
-    const x = view.x + (player.x - simulation.state.cameraX) * view.scale;
+  const presented = simulation?.displayState ?? simulation?.state;
+  if (presented) for (const player of presented.players) {
+    const x = view.x + player.x * view.scale;
     const y = view.y + player.y * view.scale;
     ctx.save(); ctx.translate(x + 34 * view.scale, y + 34 * view.scale); if (player.gravity < 0) ctx.scale(1, -1);
     ctx.fillStyle = '#20dce0'; ctx.fillRect(-12 * view.scale, -18 * view.scale, 24 * view.scale, 36 * view.scale); ctx.restore();
@@ -102,8 +119,11 @@ function resetDraft() {
 }
 function resetSimulation(replayMode = false) {
   const room = new GameRoom(history.current);
-  room.join('editor', '编辑器', true); room.start('editor');
-  simulation = { room, state: room.snapshot() }; simulationSequence = 0; simulationAccumulator = 0; simulationLastAt = performance.now(); replaying = replayMode; running = false;
+  const count = Number(localPlayerCount.value);
+  for (let index = 0; index < count; index += 1) room.join(index ? `bot-${index}` : 'editor', index ? `本地机器人 ${index}` : '编辑器', true);
+  room.start('editor');
+  lab = createLocalNetworkLab({ latencyMs: lab.latencyMs, lossPercent: lab.lossPercent });
+  const state = room.snapshot(); simulation = { room, state, displayState: state }; simulationSequence = 0; simulationAccumulator = 0; simulationLastAt = performance.now(); replaying = replayMode; running = false;
   updateInspector(); draw();
 }
 function advanceSimulation(frames = 1) {
@@ -112,6 +132,9 @@ function advanceSimulation(frames = 1) {
     const nextTick = simulation.state.tick + 1;
     if (replaying) for (const event of eventsAtTick(replay, nextTick)) if (event.type === 'flip') simulation.room.input('editor', { type: 'flip', sequence: ++simulationSequence });
     simulation.state = simulation.room.tick(1 / 40);
+    lab = queueSnapshot(lab, simulation.state, performance.now());
+    lab = deliverSnapshots(lab, performance.now());
+    simulation.displayState = lab.latest ?? simulation.displayState;
   }
   if (simulation.state.phase === 'results') running = false;
   updateInspector(); draw();
@@ -128,7 +151,18 @@ function advanceLoop(now) {
     simulationAccumulator += Math.min(100, Math.max(0, now - simulationLastAt));
     while (simulationAccumulator >= 25) { advanceSimulation(); simulationAccumulator -= 25; }
   }
-  simulationLastAt = now; requestAnimationFrame(advanceLoop);
+  drawAnimation(now); simulationLastAt = now; requestAnimationFrame(advanceLoop);
+}
+function drawAnimation(now) {
+  const image = animationImages.get(animationCharacter.value); if (!image?.complete || !image.naturalWidth) return;
+  const frame = animationState.value === 'morph' ? morphFrame(now % 1100) : animationFrame(now, animationState.value === 'fall');
+  const source = frameSourceRect(frame); animationCtx.clearRect(0, 0, animationCanvas.width, animationCanvas.height);
+  animationCtx.imageSmoothingEnabled = false; animationCtx.drawImage(image, source.x, source.y, source.width, source.height, 77, 20, 65, 77);
+  animationCtx.fillStyle = '#b8e6ec'; animationCtx.font = '11px ui-monospace'; animationCtx.fillText(`帧 ${frame} · ${animationState.value}`, 8, 119);
+}
+function configureLab() {
+  lab = createLocalNetworkLab({ latencyMs: latencyInput.value, lossPercent: lossInput.value });
+  latencyOutput.textContent = `${lab.latencyMs} ms`; lossOutput.textContent = `${lab.lossPercent}%`; updateInspector();
 }
 function downloadDraft() {
   const link = document.createElement('a'); const url = URL.createObjectURL(new Blob([exportEditorDraft(history.current)], { type: 'application/json' }));
@@ -164,6 +198,8 @@ canvas.addEventListener('wheel', (event) => {
   view = { scale: next, x: point.x - world.x * next, y: point.y - world.y * next }; draw();
 }, { passive: false });
 document.addEventListener('change', (event) => { if (event.target.name === 'brush') brush = event.target.value; if (event.target.dataset.editorLayer) { activeLayer = event.target.dataset.editorLayer; updateInspector(); } });
+localPlayerCount.addEventListener('change', () => { resetSimulation(); });
+latencyInput.addEventListener('input', configureLab); lossInput.addEventListener('input', configureLab);
 document.addEventListener('click', (event) => {
   const action = event.target.dataset.editorAction;
   if (!action || !history) return;

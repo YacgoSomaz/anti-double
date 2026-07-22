@@ -20,6 +20,11 @@ test('serves the playable browser client with strict security headers', async (c
   const editor = await fetch(`http://127.0.0.1:${port}/dev`);
   assert.equal(editor.status, 200);
   assert.match(await editor.text(), /赛道编辑器/);
+  const editorScript = await fetch(`http://127.0.0.1:${port}/editor.js`);
+  assert.equal(editorScript.status, 200);
+  assert.match(await editorScript.text(), /createLocalNetworkLab/);
+  const animationScript = await fetch(`http://127.0.0.1:${port}/player-animation.js`);
+  assert.equal(animationScript.status, 200);
 
   const sprite = await fetch(`http://127.0.0.1:${port}/assets/players/player-blue.png`);
   assert.equal(sprite.status, 200);
