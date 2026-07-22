@@ -529,7 +529,7 @@ function renderRankings(results) {
 function returnToMenu() {
   showingEnd = false;
   clearTimeout(joinTimeout);
-  socket?.close(); socket = undefined; latestRaceState.reset(); soloRoom = undefined; soloAccumulator = 0; soloLastAt = performance.now(); state = { phase: 'lobby', players: [] }; localSlot = undefined; roomCode = undefined; sequence = 0; raceIntroStartedAt = -Infinity;
+  socket?.close(); socket = undefined; latestRaceState.reset(); soloRoom = undefined; soloAccumulator = 0; soloLastAt = performance.now(); state = { phase: 'lobby', players: [] }; localSlot = undefined; roomCode = undefined; sequence = 0;
   stopAudio(music);
   playAudio(menuMusic);
   endScreen.hidden = true; overlay.hidden = true; frontScreen.hidden = false; frontScreen.dataset.phase = 'menu';
