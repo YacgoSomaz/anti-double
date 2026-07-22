@@ -1,5 +1,7 @@
 export const DEFAULT_SCROLL_SPEED = 211.6983;
-export const CAMERA_ACCELERATION = 7.740191;
+// Match the server's softened 15% acceleration ramp so prediction never
+// visibly outruns the authoritative camera.
+export const CAMERA_ACCELERATION = 6.57916235;
 export const MAX_CAMERA_SPEED = 769.812;
 export const CAMERA_MAX_PREDICTION_LEAD_PX = 20;
 // The browser owns presentation between packets. Three seconds absorbs a

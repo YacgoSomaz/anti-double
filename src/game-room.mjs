@@ -15,7 +15,9 @@ const STAGE_BOTTOM = 560;
 const GRAVITY = 30000;
 const MAX_VERTICAL_SPEED = 320.755;
 const MAX_STEP_SECONDS = 1 / 40;
-const HORIZONTAL_ACCELERATION = 7.740191;
+// The original ramp felt too abrupt at higher speeds. Keep the recovered
+// curve shape and cap, but soften its acceleration by 15% for readability.
+const HORIZONTAL_ACCELERATION = 6.57916235;
 const MAX_HORIZONTAL_SPEED = 769.812;
 const CAMERA_TARGET_SCREEN_X = 320;
 // Player.as checks x < _camera.x - 350.  The recovered Flash camera sprite

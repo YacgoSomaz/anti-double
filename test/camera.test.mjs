@@ -4,12 +4,12 @@ import { advanceCamera, reconcileCamera } from '../public/camera.js';
 
 test('locally integrates the shared-camera acceleration through a delayed packet', () => {
   const camera = advanceCamera(100, 250, 211.6983);
-  assert.equal(camera, 153.166);
-  assert.equal(advanceCamera(100, 1000, 211.6983), 315.568);
+  assert.equal(camera, 153.13);
+  assert.equal(advanceCamera(100, 1000, 211.6983), 314.988);
 });
 
 test('keeps locally integrating camera scroll through a multi-second packet stall', () => {
-  assert.equal(advanceCamera(100, 2500, 211.6983), 653.434);
+  assert.equal(advanceCamera(100, 2500, 211.6983), 649.806);
 });
 
 test('does not derive the shared camera from a local player position', () => {

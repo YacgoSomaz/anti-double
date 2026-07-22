@@ -632,7 +632,7 @@ test('accelerates every original 40 FPS physics frame instead of keeping the spa
   for (let frame = 0; frame < 40; frame += 1) room.tick(1 / 40);
 
   const player = room.snapshot().players[0];
-  assert.equal(Number(player.speedX.toFixed(6)), 207.740191);
+  assert.equal(Number(player.speedX.toFixed(6)), 206.579162);
   assert.equal(player.vx > player.speedX, true);
 });
 

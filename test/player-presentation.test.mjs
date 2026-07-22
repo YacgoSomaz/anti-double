@@ -21,5 +21,5 @@ test('keeps advancing player presentation through a multi-second packet stall', 
 test('matches the accelerating shared camera for a runner at base speed', () => {
   const result = advancePresentation({ x: 100, y: 0, vx: 200, vy: 0, blockedX: false }, 2500, 200);
 
-  assert.equal(Number(result.x.toFixed(3)), 624.188);
+  assert.equal(Number(result.x.toFixed(3)), 620.56);
 });
