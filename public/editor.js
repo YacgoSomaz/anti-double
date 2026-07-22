@@ -176,6 +176,8 @@ function updateTimeline() {
   const tick = simulation?.state?.tick ?? 0;
   timelineScrub.value = String(Math.min(Number(timelineScrub.max), tick));
   timelineTick.textContent = String(tick);
+  const events = eventLog.length ? eventLog.slice(-20).join('\n') : '暂无碰撞事件';
+  timelineConsole.textContent = `${simulationReadout.textContent}\n${events}`;
   timelineErrors.textContent = status.textContent?.includes('无效') || status.textContent?.includes('失败') ? `错误：${status.textContent}` : '错误：无';
 }
 function logCollisionEvents(state) {
