@@ -9,6 +9,7 @@ import { contactsForPlayer, hitboxForPlayer, playerContactsForPlayer, predictTra
 import { resolveEditorGesture } from '/editor-input.js';
 import { cellFromWorld } from '/editor-grid.js';
 import { resolveEditorShortcut } from '/editor-selection.js';
+import { preserveSelectIndex } from '/editor-form.js';
 
 const canvas = document.querySelector('#editor-canvas');
 const ctx = canvas.getContext('2d');
@@ -193,8 +194,9 @@ function setStatus(value) { status.textContent = value; }
 function updatePropertyEditor() {
   if (!history) return;
   const draft = history.current;
+  const previousIndex = spawnIndex.value;
   spawnIndex.replaceChildren(...draft.spawns.map((spawn, index) => { const option = document.createElement('option'); option.value = String(index); option.textContent = `出生点 ${index + 1} · ${spawn.gravity < 0 ? '↑' : '↓'}`; return option; }));
-  const index = Math.min(Number(spawnIndex.value) || 0, Math.max(0, draft.spawns.length - 1)); spawnIndex.value = String(index);
+  const index = preserveSelectIndex(previousIndex, draft.spawns.length); spawnIndex.value = String(index);
   const spawn = draft.spawns[index] ?? {};
   spawnX.value = Math.round(spawn.x ?? 0); spawnY.value = Math.round(spawn.y ?? 0); spawnGravity.value = String(spawn.gravity < 0 ? -1 : 1); spawnSpeed.value = Math.round(spawn.speedX ?? 0);
   finishX.value = Math.round(draft.finishX ?? 0);

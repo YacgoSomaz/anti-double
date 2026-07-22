@@ -31,6 +31,9 @@ test('serves the playable browser client with strict security headers', async (c
   const editorSelection = await fetch(`http://127.0.0.1:${port}/editor-selection.js`);
   assert.equal(editorSelection.status, 200);
   assert.match(await editorSelection.text(), /resolveEditorShortcut/);
+  const editorForm = await fetch(`http://127.0.0.1:${port}/editor-form.js`);
+  assert.equal(editorForm.status, 200);
+  assert.match(await editorForm.text(), /preserveSelectIndex/);
   const animationScript = await fetch(`http://127.0.0.1:${port}/player-animation.js`);
   assert.equal(animationScript.status, 200);
 
