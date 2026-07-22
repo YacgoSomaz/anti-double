@@ -347,6 +347,8 @@ test('renders synchronized item pickups and temporary player effects', async () 
   assert.match(app, /phaseTicks/);
   assert.match(app, /speedBoostTicks/);
   assert.match(app, /drawItems/);
+  assert.match(app, /const size = 58/);
+  assert.match(app, /shadowColor/);
 });
 
 test('ships the recovered visual and foreground placements for all three multiplayer courses', async () => {
