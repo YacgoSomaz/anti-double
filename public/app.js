@@ -7,6 +7,7 @@ import { drawPlayerSprite } from '/player-render.js';
 import { createFrameTimingMonitor, createPacketTimingMonitor, formatDiagnostics } from '/network-diagnostics.js';
 import { createLatestRaceStateBuffer } from '/latest-race-state.js';
 import { applyRaceViewport, RACE_BACKDROP_SCALE, worldViewportBounds } from '/race-viewport.js';
+import { ELIMINATION_BOUNDARY_FRAME_COUNT, eliminationBoundaryFrame } from '/elimination-boundary.js';
 import { GameRoom } from '/solo-game.mjs';
 
 const canvas = document.querySelector('#game');
@@ -126,6 +127,7 @@ const scene = {
   hud: loadImage(assetUrl('assets/scene/hud.png'))
 };
 const openingBeam = loadImage(assetUrl('assets/effects/checkpoint-beamlight.png'));
+const eliminationBoundary = loadImage(assetUrl('assets/effects/elimination-boundary.png'));
 const decorationImages = new Map();
 const visualPlacementCache = new WeakMap();
 const readyVisualMaps = new WeakSet();
@@ -136,7 +138,7 @@ const FINAL_TUNNEL_ASSETS = new Set([
 ]);
 // 每局开始前完成整个 marathon 的地图、装饰和图像解码。它们均使用
 // content-hash URL，浏览器会复用磁盘缓存；比赛中不再触发资源加载。
-const RACE_RESOURCE_TOTAL = 14;
+const RACE_RESOURCE_TOTAL = 15;
 // Recovered original 19×84 checkpoint beam. It falls from above to the runner
 // centre, fades away at the impact point, then lets the runner materialise.
 const OPENING_BEAM_THICKNESS = 64;
@@ -206,7 +208,7 @@ const minimumSplash = new Promise((resolve) => setTimeout(resolve, 900));
 minimumSplash.then(() => {
   if (!frontScreen.hidden) frontScreen.dataset.phase = 'menu';
 });
-Promise.all([mapLoad, ...[...sprites, ...Object.values(scene), openingBeam].map((image) => waitForImage(image).then(markRaceResourceLoaded))]).then(() => {
+Promise.all([mapLoad, ...[...sprites, ...Object.values(scene), openingBeam, eliminationBoundary].map((image) => waitForImage(image).then(markRaceResourceLoaded))]).then(() => {
   raceReady = true;
   resourcesReady = true;
   join.disabled = false;
@@ -566,6 +568,22 @@ function drawOpeningBeam(x, y, now, openingElapsed) {
   }
   ctx.restore();
 }
+function drawEliminationBoundary(now) {
+  if (!eliminationBoundary.complete || !eliminationBoundary.naturalWidth) return;
+  const frameWidth = eliminationBoundary.naturalWidth / ELIMINATION_BOUNDARY_FRAME_COUNT;
+  const frame = eliminationBoundaryFrame(now);
+  const pulse = 0.88 + Math.sin(now / 37) * 0.12;
+  // The visual warning sits on the left view edge. The server retains a short
+  // off-screen recovery margin before it marks a runner eliminated.
+  const x = -32;
+  ctx.save();
+  ctx.globalCompositeOperation = 'screen';
+  ctx.globalAlpha = pulse;
+  ctx.drawImage(eliminationBoundary, frame * frameWidth, 0, frameWidth, eliminationBoundary.naturalHeight, x, -74, 28, 650);
+  ctx.globalAlpha = pulse * 0.28;
+  ctx.drawImage(eliminationBoundary, frame * frameWidth, 0, frameWidth, eliminationBoundary.naturalHeight, x - 4, -74, 36, 650);
+  ctx.restore();
+}
 function draw() {
   ctx.fillStyle='#9bcde3'; ctx.fillRect(0, 0, canvas.width, canvas.height); if (!map) return;
   const now = performance.now();
@@ -598,6 +616,7 @@ function draw() {
     else { ctx.fillStyle = '#68727a'; ctx.fillRect(x, y, world.cellSize, world.cellSize); }
   }
   drawMarathonDecorations(camera, 'frontVisualInfo', viewport);
+  drawEliminationBoundary(now);
   for (const player of renderPlayers) {
     if (player.eliminated) continue;
     const x = player.x - camera;
