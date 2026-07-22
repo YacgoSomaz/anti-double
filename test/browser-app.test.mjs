@@ -25,6 +25,7 @@ test('serves the playable browser client with strict security headers', async (c
   assert.match(editorHtml, /name="editor-tool"/);
   assert.match(editorHtml, /data-editor-action="copy"/);
   assert.match(editorHtml, /data-editor-action="delete"/);
+  assert.match(editorHtml, /data-editor-action="save"/);
   assert.match(editorHtml, /id="asset-palette"/);
   assert.match(editorHtml, /data-editor-action="clear-cache"/);
   assert.match(editorHtml, /Ctrl\/Cmd\+C\/V/);

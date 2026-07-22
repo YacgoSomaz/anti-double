@@ -128,6 +128,11 @@ function scheduleCacheSave() {
   clearTimeout(cacheSaveTimer);
   cacheSaveTimer = setTimeout(() => saveEditorDraftCache(draftStorage, history.current), 200);
 }
+function saveDraftNow() {
+  if (!history || !draftStorage) { setStatus('当前环境不支持本地保存'); return; }
+  clearTimeout(cacheSaveTimer); saveEditorDraftCache(draftStorage, history.current);
+  setStatus(`草稿已保存 · ${new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`);
+}
 function commitDraft(next, message) {
   const valid = validateEditorDraft(next);
   if (!valid.valid) throw new TypeError(valid.errors.join('；'));
@@ -583,6 +588,7 @@ document.addEventListener('click', (event) => {
   if (action === 'copy') copySelection();
   if (action === 'paste') pasteSelection();
   if (action === 'delete') deleteSelection();
+  if (action === 'save') saveDraftNow();
   if (action === 'clear-cache') { resetDraft(); clearTimeout(cacheSaveTimer); clearEditorDraftCache(draftStorage); setStatus('已清除本地缓存并恢复原始草稿'); }
   if (action === 'reset') resetDraft();
   if (action === 'export') downloadDraft();
@@ -638,6 +644,7 @@ addEventListener('keydown', (event) => {
   if (action === 'redo') history = redo(history);
   if (action === 'copy') copySelection();
   if (action === 'paste') pasteSelection();
+  if (action === 'save') saveDraftNow();
   updateInspector(); draw();
 });
 addEventListener('beforeunload', () => { if (history && draftStorage) saveEditorDraftCache(draftStorage, history.current); });

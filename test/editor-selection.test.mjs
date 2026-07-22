@@ -9,6 +9,7 @@ test('recognizes undo, redo, copy and paste shortcuts on Windows and macOS', () 
   assert.equal(resolveEditorShortcut({ key: 'y', ctrlKey: true }), 'redo');
   assert.equal(resolveEditorShortcut({ key: 'c', ctrlKey: true }), 'copy');
   assert.equal(resolveEditorShortcut({ key: 'v', metaKey: true }), 'paste');
+  assert.equal(resolveEditorShortcut({ key: 's', ctrlKey: true }), 'save');
   assert.equal(resolveEditorShortcut({ key: 'z', ctrlKey: false }), null);
 });
 

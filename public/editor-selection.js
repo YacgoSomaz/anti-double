@@ -5,6 +5,7 @@ export function resolveEditorShortcut({ key = '', ctrlKey = false, metaKey = fal
   if (normalized === 'y') return 'redo';
   if (normalized === 'c') return 'copy';
   if (normalized === 'v') return 'paste';
+  if (normalized === 's') return 'save';
   return null;
 }
 
