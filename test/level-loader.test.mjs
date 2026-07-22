@@ -22,7 +22,26 @@ test('concatenates two recovered course rotations into one continuous marathon',
   assert.equal(marathon.openingMorphTicks, 80);
   assert.equal(marathon.colliders.length > mp02.colliders.length * 5, true);
   assert.equal(marathon.finishX, marathon.segments[2].endX * 2);
-  assert.deepEqual(marathon.spawns, mp02.spawns);
+  assert.deepEqual(marathon.spawns, [
+    { x: 316, y: 87, gravity: 1, speedX: 212 },
+    { x: 316, y: 317, gravity: -1, speedX: 212 },
+    { x: 288, y: 223, gravity: 1, speedX: 212 },
+    { x: 340, y: 178, gravity: -1, speedX: 212 }
+  ]);
+});
+
+test('uses the supplied editor marathon draft as the authoritative course', () => {
+  const marathon = loadLevel('marathon');
+
+  assert.equal(marathon.colliders.length, 6193);
+  assert.deepEqual(marathon.spawns, [
+    { x: 316, y: 87, gravity: 1, speedX: 212 },
+    { x: 316, y: 317, gravity: -1, speedX: 212 },
+    { x: 288, y: 223, gravity: 1, speedX: 212 },
+    { x: 340, y: 178, gravity: -1, speedX: 212 }
+  ]);
+  assert.deepEqual(marathon.elimination, { leftMargin: 60, top: -90, bottom: 560 });
+  assert.deepEqual(marathon.playerPhysics, { hitboxWidth: 37, hitboxHeight: 28 });
 });
 
 test('opens every internal marathon seam while retaining the final course wall', () => {
