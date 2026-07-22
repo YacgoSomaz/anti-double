@@ -19,6 +19,7 @@ const join = document.querySelector('#menu-start');
 const soloStart = document.querySelector('#solo-start');
 const flip = document.querySelector('#flip');
 const soundToggle = document.querySelector('#sound-toggle');
+const pageRefresh = document.querySelector('#page-refresh');
 const overlay = document.querySelector('#overlay');
 const frontScreen = document.querySelector('#front-screen');
 const endScreen = document.querySelector('#end-screen');
@@ -471,7 +472,7 @@ function renderRankings(results) {
 function returnToMenu() {
   showingEnd = false;
   clearTimeout(joinTimeout);
-  socket?.close(); socket = undefined; soloRoom = undefined; state = { phase: 'lobby', players: [] }; localSlot = undefined; roomCode = undefined; sequence = 0; raceIntroStartedAt = -Infinity;
+  socket?.close(); socket = undefined; latestRaceState.reset(); soloRoom = undefined; soloAccumulator = 0; soloLastAt = performance.now(); state = { phase: 'lobby', players: [] }; localSlot = undefined; roomCode = undefined; sequence = 0; raceIntroStartedAt = -Infinity;
   stopAudio(music);
   playAudio(menuMusic);
   endScreen.hidden = true; overlay.hidden = true; frontScreen.hidden = false; frontScreen.dataset.phase = 'menu';
@@ -643,7 +644,7 @@ function draw() {
   ctx.restore();
   ctx.fillStyle='#fff'; ctx.font='bold 16px Arial'; ctx.fillText(String(Math.floor(state.tick ?? 0)).padStart(3, '0'), 590, 24);
 }
-join.addEventListener('click', connect); soloStart.addEventListener('click', startSolo); lobbyStart.addEventListener('click', startMatch); nextRound.addEventListener('click', returnToMenu); flip.addEventListener('click', sendFlip); soundToggle.addEventListener('click', toggleSound); canvas.addEventListener('click', sendFlip);
+join.addEventListener('click', connect); soloStart.addEventListener('click', startSolo); lobbyStart.addEventListener('click', startMatch); nextRound.addEventListener('click', returnToMenu); flip.addEventListener('click', sendFlip); soundToggle.addEventListener('click', toggleSound); pageRefresh.addEventListener('click', () => location.reload()); canvas.addEventListener('click', sendFlip);
 fullscreen.addEventListener('click', () => {
   if (document.fullscreenElement) document.exitFullscreen?.();
   else gameShell.requestFullscreen?.();
