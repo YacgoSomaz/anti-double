@@ -16,7 +16,7 @@ export const ITEM_EFFECT_TICKS = Object.freeze({
 });
 
 const ITEM_TYPE_ORDER = Object.freeze([ITEM_TYPES.gravityBurst, ITEM_TYPES.phase, ITEM_TYPES.speedBoost]);
-const DEFAULT_COUNT = 18;
+const DEFAULT_COUNT = 36;
 const DEFAULT_SEED = 44052;
 
 function number(value, fallback) {
