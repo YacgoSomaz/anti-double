@@ -45,6 +45,10 @@ const animationSequence = document.querySelector('#animation-sequence');
 const animationSpeed = document.querySelector('#animation-speed');
 const animationSpeedOutput = document.querySelector('#animation-speed-output');
 const animationFrameReadout = document.querySelector('#animation-frame-readout');
+const timelineScrub = document.querySelector('#timeline-scrub');
+const timelineTick = document.querySelector('#timeline-tick');
+const timelineConsole = document.querySelector('#timeline-console');
+const timelineErrors = document.querySelector('#timeline-errors');
 let originalLevel;
 let sourceDraft;
 let history;
@@ -166,6 +170,13 @@ function updateAnimationConfig() {
 }
 function renderCollisionLog() {
   collisionLog.replaceChildren(...eventLog.slice(-12).map((entry) => { const item = document.createElement('li'); item.textContent = entry; return item; }));
+  if (timelineConsole) timelineConsole.textContent = eventLog.length ? eventLog.slice(-20).join('\n') : '暂无碰撞事件';
+}
+function updateTimeline() {
+  const tick = simulation?.state?.tick ?? 0;
+  timelineScrub.value = String(Math.min(Number(timelineScrub.max), tick));
+  timelineTick.textContent = String(tick);
+  timelineErrors.textContent = status.textContent?.includes('无效') || status.textContent?.includes('失败') ? `错误：${status.textContent}` : '错误：无';
 }
 function logCollisionEvents(state) {
   for (const player of state.players ?? []) {
@@ -198,6 +209,7 @@ function updateInspector() {
     : '尚未运行。可先画碰撞格，再按“运行”验证本地物理。';
   updatePropertyEditor();
   updatePhysicsInspector();
+  updateTimeline();
 }
 function drawGrid() {
   const size = courseCell() * view.scale;
@@ -343,6 +355,10 @@ function applyPhysics() {
     setStatus('物理参数已应用，并已执行单帧验证');
   } catch (error) { setStatus(`物理参数无效：${error.message}`); }
 }
+function scrubToTick(value) {
+  const target = Math.max(0, Math.min(Number(timelineScrub.max) || 2000, Math.floor(Number(value) || 0)));
+  resetSimulation(true); advanceSimulation(target); running = false; timelineScrub.value = String(target); timelineTick.textContent = String(target); setStatus(`已定位到 tick ${target}，可单帧检查碰撞`); updateInspector(); draw();
+}
 function downloadDraft() {
   const link = document.createElement('a'); const url = URL.createObjectURL(new Blob([exportEditorDraft(history.current)], { type: 'application/json' }));
   link.href = url; link.download = 'gswitch-course-draft.json'; link.click(); URL.revokeObjectURL(url);
@@ -402,6 +418,7 @@ spawnIndex.addEventListener('change', updatePropertyEditor);
 localPlayerCount.addEventListener('change', () => { resetSimulation(); });
 latencyInput.addEventListener('input', configureLab); lossInput.addEventListener('input', configureLab);
 physicsPlayer.addEventListener('change', updatePhysicsInspector);
+timelineScrub.addEventListener('input', () => scrubToTick(timelineScrub.value));
 animationCharacter.addEventListener('change', () => drawAnimation(performance.now()));
 animationState.addEventListener('change', () => setAnimationPreset(animationState.value));
 animationSequence.addEventListener('input', updateAnimationConfig);
@@ -420,6 +437,8 @@ document.addEventListener('click', (event) => {
   if (action === 'record') { recording = !recording; if (recording) replay = createReplay(); event.target.textContent = `录制：${recording ? '开' : '关'}`; }
   if (action === 'playback') { resetSimulation(true); running = true; }
   if (action === 'sim-reset') resetSimulation();
+  if (action === 'timeline-rewind') { resetSimulation(false); setStatus('时间轴已回到起点'); }
+  if (action === 'timeline-current' && simulation) { timelineScrub.value = String(simulation.state.tick); timelineTick.textContent = String(simulation.state.tick); }
   if (action === 'apply-properties') applyProperties();
   if (action === 'apply-physics') applyPhysics();
   if (action === 'animation-toggle') { animationConfig.playing = !animationConfig.playing; event.target.textContent = `动画：${animationConfig.playing ? '播放' : '暂停'}`; animationConfig.lastAt = performance.now(); }

@@ -366,7 +366,7 @@ test('ships the physics and editable animation inspectors in the standalone edit
 test('keeps a real bottom timeline console with tick scrubbing and replay controls', async () => {
   const html = await readFile(new URL('../public/dev.html', import.meta.url), 'utf8');
   const editor = await readFile(new URL('../public/editor.js', import.meta.url), 'utf8');
-  const stylesheet = await readFile(new URL('../public/editor.css', import.meta.url), 'utf8');
+  const stylesheet = `${await readFile(new URL('../public/editor.css', import.meta.url), 'utf8')}\n${await readFile(new URL('../public/editor-overrides.css', import.meta.url), 'utf8')}`;
   assert.match(html, /class="editor-timeline"/);
   assert.match(html, /id="timeline-scrub"/);
   assert.match(html, /id="timeline-console"/);
