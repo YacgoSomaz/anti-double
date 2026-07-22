@@ -1,6 +1,6 @@
 import { buildVisualDrawList, visibleDrawList } from '/visual-cache.js';
 import { assetUrl } from '/asset-urls.js';
-import { animationFrame, frameSourceRect, PLAYER_FRAME_HEIGHT, PLAYER_FRAME_WIDTH } from '/player-animation.js';
+import { animationFrame, frameSourceRect, MORPH_DURATION_MS, morphFrame, PLAYER_FRAME_HEIGHT, PLAYER_FRAME_WIDTH } from '/player-animation.js';
 import { advanceCamera, reconcileCamera } from '/camera.js';
 import { advancePresentation, presentationOffset } from '/player-presentation.js';
 import { drawPlayerSprite } from '/player-render.js';
@@ -137,8 +137,12 @@ const FINAL_TUNNEL_ASSETS = new Set([
 // content-hash URL，浏览器会复用磁盘缓存；比赛中不再触发资源加载。
 const RACE_RESOURCE_TOTAL = 13;
 const packetTiming = createPacketTimingMonitor(); const frameTiming = createFrameTimingMonitor(); let lastDiagnosticsUpdate = 0;
-let socket; let joinTimeout; let sequence = 0; let state = { phase: 'lobby', players: [] }; let map; let visualMaps = new Map(); let lastPing = 0; let stateReceivedAt = performance.now(); let localSlot; let roomCode; let cameraX = 0; let cameraUpdatedAt = performance.now(); let showingEnd = false; let resourcesReady = false; let raceReady = false; let resourcesFailed = false; let readySent = false; let readySoundPlayed = false; let raceResourceLoaded = 0; let soloRoom; let soloAccumulator = 0; let soloLastAt = 0;
+let socket; let joinTimeout; let sequence = 0; let state = { phase: 'lobby', players: [] }; let map; let visualMaps = new Map(); let lastPing = 0; let stateReceivedAt = performance.now(); let localSlot; let roomCode; let cameraX = 0; let cameraUpdatedAt = performance.now(); let showingEnd = false; let resourcesReady = false; let raceReady = false; let resourcesFailed = false; let readySent = false; let readySoundPlayed = false; let raceResourceLoaded = 0; let soloRoom; let soloAccumulator = 0; let soloLastAt = 0; let raceIntroStartedAt = -Infinity;
 const latestRaceState = createLatestRaceStateBuffer();
+
+function beginRaceIntro(now = performance.now()) {
+  raceIntroStartedAt = now;
+}
 
 function updateDiagnostics(now) {
   if (now - lastDiagnosticsUpdate < 500) return;
@@ -315,6 +319,7 @@ async function startSolo() {
   soloRoom.join('solo', nickname.value, true);
   soloRoom.start('solo');
   state = soloRoom.snapshot();
+  beginRaceIntro(soloLastAt);
   stateReceivedAt = soloLastAt; cameraX = state.cameraX; cameraUpdatedAt = soloLastAt;
   frontScreen.hidden = true; endScreen.hidden = true; overlay.hidden = true; spectatorBanner.hidden = true;
   flip.disabled = false; players.textContent = '单人模式 · 本地运行'; courseStatus.textContent = '单人赛道 · 本地物理';
@@ -413,7 +418,7 @@ function handle(message, connection = socket, consumeRaceState = false) {
     return;
   }
   if (message.type === 'ready_ok') return;
-  if (message.type === 'started') { stopAudio(menuMusic); playAudio(music); setStatus('比赛开始', true); return; }
+  if (message.type === 'started') { beginRaceIntro(); stopAudio(menuMusic); playAudio(music); setStatus('比赛开始', true); return; }
   if (message.type === 'pong') { ping.textContent = `${Math.round(performance.now() - lastPing)} ms`; return; }
   if (message.type === 'error') { setStatus(`错误：${message.error}`); }
 }
@@ -455,7 +460,7 @@ function renderRankings(results) {
 function returnToMenu() {
   showingEnd = false;
   clearTimeout(joinTimeout);
-  socket?.close(); socket = undefined; soloRoom = undefined; state = { phase: 'lobby', players: [] }; localSlot = undefined; roomCode = undefined; sequence = 0;
+  socket?.close(); socket = undefined; soloRoom = undefined; state = { phase: 'lobby', players: [] }; localSlot = undefined; roomCode = undefined; sequence = 0; raceIntroStartedAt = -Infinity;
   stopAudio(music);
   playAudio(menuMusic);
   endScreen.hidden = true; overlay.hidden = true; frontScreen.hidden = false; frontScreen.dataset.phase = 'menu';
@@ -563,7 +568,10 @@ function draw() {
     const x = player.x - camera;
     const y = player.y;
     const sprite = sprites[player.slot - 1];
-    const source = frameSourceRect(animationFrame(performance.now(), player.vy !== 0));
+    const introElapsed = now - raceIntroStartedAt;
+    const source = frameSourceRect(introElapsed >= 0 && introElapsed < MORPH_DURATION_MS
+      ? morphFrame(introElapsed)
+      : animationFrame(now, player.vy !== 0));
     if (sprite.complete && sprite.naturalWidth) {
       drawPlayerSprite(ctx, sprite, source, { ...player, x, y });
     } else { ctx.fillStyle = colors[player.slot - 1]; ctx.fillRect(x + 16, y + 19, 37, 48); }

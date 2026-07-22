@@ -8,11 +8,18 @@ export const PLAYER_ATLAS_FRAME_WIDTH = PLAYER_FRAME_WIDTH;
 export const PLAYER_ATLAS_FRAME_HEIGHT = PLAYER_FRAME_HEIGHT;
 const RUN_FRAMES = Array.from({ length: 13 }, (_, index) => index);
 const FALL_FRAMES = [19, 20, 21, 22, 13, 14, 15, 16, 17, 18];
+const MORPH_FRAMES = Array.from({ length: 22 }, (_, index) => index + 23);
+export const MORPH_DURATION_MS = 1100;
 
 export function animationFrame(milliseconds, airborne = false) {
   const frames = airborne ? FALL_FRAMES : RUN_FRAMES;
   const frameDuration = airborne ? 1000 / 12 : 1000 / 20;
   return frames[Math.floor(milliseconds / frameDuration) % frames.length];
+}
+
+export function morphFrame(milliseconds) {
+  const index = Math.min(MORPH_FRAMES.length - 1, Math.max(0, Math.floor(milliseconds / (1000 / 20))));
+  return MORPH_FRAMES[index];
 }
 
 export function frameSourceRect(frame) {
