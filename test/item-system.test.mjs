@@ -26,6 +26,14 @@ test('generates deterministic compact item placements from a room seed', () => {
   assert.equal(first.every((item) => item.active && item.x > 0 && item.x < level.finishX), true);
 });
 
+test('puts the first procedural item inside the opening playable stretch', () => {
+  const level = { ...openLevel, finishX: 99892, itemConfig: { seed: 44052, count: 18, minimumSpacing: 420 } };
+  const items = createItemState(level);
+
+  assert.equal(items[0].x <= 2000, true);
+  assert.equal(items.at(-1).x < level.finishX, true);
+});
+
 test('collecting a gravity burst flips every active runner exactly once', () => {
   const level = {
     ...openLevel,
