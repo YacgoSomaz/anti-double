@@ -199,7 +199,7 @@ curl -fsS http://127.0.0.1:1000/health
 4. 先本机检查 `/health`，再使用域名从外部检查；确认反向代理和 WebSocket 都指向当前服务。
 5. 从外部浏览器加入一个新的房间码，确认菜单、WebSocket 和翻转按钮。
 
-凭据不能进入仓库、报告、截图或日志。若改为 HTTPS，请在前置反向代理中处理 TLS，并使客户端自动转为 `wss:`（`app.js` 已按页面协议选择 `ws/wss`）。
+凭据不能进入仓库、报告、截图或日志。生产环境现已由 Nginx/Let’s Encrypt 处理 HTTPS，证书位于服务器 `/etc/letsencrypt/live/g.anyq.site/`，并由 certbot 定时续期；客户端按页面协议自动使用 `ws/wss`（`app.js` 已支持）。
 
 ## 8. 下一位 AI 的推荐工作顺序
 
