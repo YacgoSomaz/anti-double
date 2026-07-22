@@ -232,6 +232,7 @@ test('uses the original result board with character slots and a next-round actio
   assert.match(app, /ctx\.fillText\(player\.name/);
   assert.match(app, /nextRound\.addEventListener\('click', returnToMenu\)/);
   assert.match(app, /function returnToMenu\(\) \{[\s\S]*latestRaceState\.reset\(\)/);
+  assert.doesNotMatch(app, /raceIntroStartedAt\s*=\s*-Infinity/);
   assert.match(app, /pageRefresh\.addEventListener\('click', \(\) => location\.reload\(\)\)/);
   assert.match(stylesheet, /#end-rankings li:nth-child\(1\)/);
   assert.match(stylesheet, /#end-rankings li:nth-child\(2\)/);
