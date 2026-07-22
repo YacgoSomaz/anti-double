@@ -82,6 +82,7 @@ export class GameRoom {
   #hostId = null;
   #results = [];
   #items = [];
+  #speedControlTicks = 0;
   #debugTuning = { ...DEFAULT_DEBUG_TUNING };
 
   constructor(level) {
@@ -204,6 +205,7 @@ export class GameRoom {
     // runner embedded in—or on the far side of—a world block.
     this.#resolvePlayersAgainstWorld();
     this.#eliminatePlayersOutsideView();
+    if (this.#speedControlTicks > 0) this.#speedControlTicks -= 1;
     return this.snapshot();
   }
 
@@ -212,7 +214,7 @@ export class GameRoom {
       tick: this.#tick,
       phase: this.#phase,
       cameraX: this.#cameraX,
-      cameraSpeed: this.#cameraSpeed,
+      cameraSpeed: this.#effectiveCameraSpeed(this.#cameraSpeed),
       introTicksRemaining: this.#introTicksRemaining,
       hostSlot: this.#players.get(this.#hostId)?.slot ?? null,
       players: [...this.#players.values()].map((player) => ({ ...player })),
@@ -231,13 +233,12 @@ export class GameRoom {
     // first-place player.  All runners may approach that centre, but none may
     // pass it.  A lagging runner receives a distance-proportional correction,
     // which smoothly fades to zero as it reaches the centre.
-    const nextCameraSpeed = Math.min(this.#maxHorizontalSpeed(), this.#cameraSpeed + this.#cameraAcceleration() * dt);
+    const nextCameraSpeed = this.#effectiveCameraSpeed(Math.min(this.#maxHorizontalSpeed(), this.#cameraSpeed + this.#cameraAcceleration() * dt));
     const cameraTargetX = this.#cameraX + nextCameraSpeed * dt + CAMERA_TARGET_SCREEN_X;
     // Camera speed is the one shared base speed.  A player can only exceed it
     // while smoothly recovering from a position behind the centre target.
     player.speedX = nextCameraSpeed;
-    const speedMultiplier = player.speedBoostTicks > 0 ? SPEED_CONTROL_MULTIPLIER : 1;
-    player.vx = nextCameraSpeed * speedMultiplier;
+    player.vx = nextCameraSpeed;
     const baseNextX = player.x + player.vx * dt;
     const distanceToCentre = cameraTargetX - baseNextX;
     // Recovery must be based on the current gap every physics frame.  Gating
@@ -305,7 +306,7 @@ export class GameRoom {
     const runners = [...this.#players.values()].filter((player) => !player.finished && !player.eliminated);
     if (!runners.length) return;
     this.#cameraSpeed = Math.min(this.#maxHorizontalSpeed(), this.#cameraSpeed + this.#cameraAcceleration() * dt);
-    const requestedCameraX = this.#cameraX + this.#cameraSpeed * dt;
+    const requestedCameraX = this.#cameraX + this.#effectiveCameraSpeed(this.#cameraSpeed) * dt;
     // A terrain side collision is not a failure condition.  Hold the shared
     // camera at the survivor boundary until that runner can clear the block,
     // then the existing percentage catch-up returns them to centre.
@@ -330,6 +331,9 @@ export class GameRoom {
 
   #maxHorizontalSpeed() { return MAX_HORIZONTAL_SPEED * this.#debugTuning.cameraSpeedMultiplier; }
   #cameraAcceleration() { return HORIZONTAL_ACCELERATION * this.#debugTuning.cameraSpeedMultiplier; }
+  #effectiveCameraSpeed(speed) {
+    return this.#speedControlTicks > 0 ? speed * SPEED_CONTROL_MULTIPLIER : speed;
+  }
   #leftEscapeScreenX() {
     const margin = Number(this.#level.elimination?.leftMargin);
     return CAMERA_TARGET_SCREEN_X - 350 - (Number.isFinite(margin) ? margin : this.#debugTuning.eliminationMargin);
@@ -657,7 +661,11 @@ export class GameRoom {
       } else if (item.type === ITEM_TYPES.phase) {
         player.phaseTicks = Math.max(player.phaseTicks, ITEM_EFFECT_TICKS.phase);
       } else if (item.type === ITEM_TYPES.speedBoost) {
-        player.speedBoostTicks = Math.max(player.speedBoostTicks, ITEM_EFFECT_TICKS.speedBoost);
+        this.#speedControlTicks = Math.max(this.#speedControlTicks, ITEM_EFFECT_TICKS.speedBoost);
+        for (const runner of this.#players.values()) {
+          if (runner.finished || runner.eliminated) continue;
+          runner.speedBoostTicks = Math.max(runner.speedBoostTicks, ITEM_EFFECT_TICKS.speedBoost);
+        }
       }
     }
   }
