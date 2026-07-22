@@ -650,11 +650,12 @@ function drawEliminationBoundary(now) {
   ctx.restore();
 }
 const ITEM_ICON_INDEX = Object.freeze({ gravity_burst: 0, phase: 1, speed_boost: 2 });
+const ITEM_GLOW_COLORS = Object.freeze({ gravity_burst: '#ff65e8', phase: '#55f6ff', speed_boost: '#ffc04d' });
 function drawItems(items, camera, viewport, now) {
   if (!itemIconSheet.complete || !itemIconSheet.naturalWidth) return;
   const frameWidth = itemIconSheet.naturalWidth / 3;
   const frameHeight = itemIconSheet.naturalHeight;
-  const size = 44;
+  const size = 58;
   ctx.save();
   ctx.globalCompositeOperation = 'lighter';
   for (const item of items ?? []) {
@@ -665,6 +666,15 @@ function drawItems(items, camera, viewport, now) {
     const y = Number(item.y);
     if (x < viewport.left - size || x > viewport.right + size || y < viewport.top - size || y > viewport.bottom + size) continue;
     const pulse = 0.86 + Math.sin(now / 180 + index) * 0.12;
+    const glow = ITEM_GLOW_COLORS[item.type] ?? '#ffffff';
+    ctx.shadowColor = glow;
+    ctx.shadowBlur = 14;
+    ctx.globalAlpha = pulse * 0.72;
+    ctx.strokeStyle = glow;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(x, y, size * 0.46, 0, Math.PI * 2);
+    ctx.stroke();
     ctx.globalAlpha = pulse;
     ctx.drawImage(itemIconSheet, index * frameWidth, 0, frameWidth, frameHeight, x - size / 2, y - size / 2, size, size);
   }
