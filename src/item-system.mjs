@@ -64,12 +64,20 @@ export function createItemState(level) {
   const count = Math.round(clamp(level.itemConfig.count, 1, 64, DEFAULT_COUNT));
   const seed = number(level.itemConfig.seed, DEFAULT_SEED);
   const nextRandom = random(seed);
-  const minX = Math.min(1200, finishX * 0.08);
+  // Keep the first pickup close enough to the starting camera that a short
+  // solo run can actually see it before an early elimination.  The remaining
+  // pickups still span the full course up to the finish.
+  const minX = Math.min(480, Math.max(240, finishX * 0.02));
   const maxX = Math.max(minX + 300, finishX - 500);
   const minimumSpacing = Math.max(180, number(level.itemConfig.minimumSpacing, 420));
   const positions = [];
   for (let index = 0; index < count; index += 1) {
-    let x = minX + (index + 0.5) * (maxX - minX) / count;
+    // Put the first pickup at the beginning of the playable stretch.  Using
+    // the centre of the first bucket delayed it by half an item interval;
+    // short solo runs could end before ever reaching a pickup.  Keep the
+    // final pickup near the finish while distributing the rest evenly.
+    const progress = index / Math.max(1, count - 1);
+    let x = minX + progress * (maxX - minX);
     for (let attempt = 0; attempt < 4; attempt += 1) {
       x += (nextRandom() - 0.5) * minimumSpacing * 0.7;
       x = Math.min(maxX, Math.max(minX, x));
