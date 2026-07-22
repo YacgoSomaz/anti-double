@@ -16,3 +16,9 @@ test('rejects an unbounded or malformed diff before export', () => {
   assert.equal(validateDraftDiff({ addedColliders: Array.from({ length: 50001 }, () => ({ x: 1, y: 1 })) }).valid, false);
   assert.equal(validateDraftDiff({ addedColliders: [{ x: 1.5, y: 1 }], removedColliders: [] }).valid, false);
 });
+
+test('marks a moved visual placement in the review diff', () => {
+  const current = { ...base, visuals: [{ id: 'block', x: 180, y: 20 }] };
+  const diff = createDraftDiff({ ...base, visuals: [{ id: 'block', x: 100, y: 20 }] }, current);
+  assert.equal(diff.visualsChanged, true);
+});
