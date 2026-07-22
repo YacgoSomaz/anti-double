@@ -1,0 +1,24 @@
+[Unit]
+Description=G-Switch Online authoritative game server (port 3000)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=gswitch
+Group=gswitch
+WorkingDirectory=/opt/gswitch-online
+Environment=HOST=0.0.0.0
+Environment=PORT=3000
+Environment=RACE_BROADCAST_HZ=40
+ExecStart=/usr/bin/node src/server.mjs
+Restart=on-failure
+RestartSec=2
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths=/opt/gswitch-online
+
+[Install]
+WantedBy=multi-user.target
