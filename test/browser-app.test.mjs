@@ -154,7 +154,7 @@ test('keeps the 7ee collision timing for online player contact', async () => {
   const gameRoom = await readFile(new URL('../src/game-room.mjs', import.meta.url), 'utf8');
 
   assert.match(gameRoom, /#resolvePlayersAgainstWorld\(\)/);
-  assert.match(gameRoom, /#firstSolidAhead\(player, nextX\)/);
+  assert.match(gameRoom, /#firstSolidAhead\(player, nextX, nextY, landingBlock\)/);
   assert.doesNotMatch(gameRoom, /#movePlayerThroughWorld\(/);
 });
 
