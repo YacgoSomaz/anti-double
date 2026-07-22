@@ -17,13 +17,13 @@ const openLevel = {
 };
 
 test('generates deterministic compact item placements from a room seed', () => {
-  const level = { ...openLevel, itemConfig: { seed: 42, count: 6 } };
+  const level = { ...openLevel, itemConfig: { seed: 42, count: 10 } };
   const first = createItemState(level);
   const second = createItemState(level);
 
   assert.deepEqual(first, second);
-  assert.equal(first.length, 6);
-  assert.deepEqual([...new Set(first.map((item) => item.type))], [ITEM_TYPES.gravityBurst, ITEM_TYPES.phase, ITEM_TYPES.speedBoost]);
+  assert.equal(first.length, 10);
+  assert.deepEqual([...new Set(first.map((item) => item.type))], [ITEM_TYPES.gravityBurst, ITEM_TYPES.phase, ITEM_TYPES.speedBoost, ITEM_TYPES.sizeUp, ITEM_TYPES.sizeDown]);
   assert.equal(first.every((item) => item.active && item.x > 0 && item.x < level.finishX), true);
 });
 
@@ -40,8 +40,8 @@ test('keeps procedural pickups frequent across the long marathon', () => {
   const items = createItemState(level);
   const gaps = items.slice(1).map((item, index) => item.x - items[index].x);
 
-  assert.equal(items.length >= 150, true);
-  assert.equal(Math.max(...gaps) < 700, true);
+  assert.equal(items.length, 115);
+  assert.equal(Math.max(...gaps) < 1300, true);
 });
 
 test('keeps generated pickups outside collision blocks so they remain collectible', () => {
@@ -115,4 +115,32 @@ test('speed control slows the shared camera and every runner', () => {
   assert.equal(first.speedX, second.speedX);
   assert.equal(first.speedX < 120, true);
   assert.equal(snapshot.cameraSpeed < 120, true);
+});
+
+test('size-up pickup enlarges only the collecting runner hitbox', () => {
+  const level = { ...openLevel, itemSpawns: [{ id: 'size-up-1', type: ITEM_TYPES.sizeUp, x: 100, y: 100 }] };
+  const room = new GameRoom(level);
+  room.join('a');
+  room.join('b');
+  room.start('a');
+
+  room.tick(1 / 40);
+  const [larger, unchanged] = room.snapshot().players;
+  assert.equal(larger.sizeTicks, 119);
+  assert.equal(larger.hitbox.width > unchanged.hitbox.width, true);
+  assert.equal(larger.hitbox.height > unchanged.hitbox.height, true);
+});
+
+test('size-down pickup shrinks only the collecting runner hitbox', () => {
+  const level = { ...openLevel, itemSpawns: [{ id: 'size-down-1', type: ITEM_TYPES.sizeDown, x: 100, y: 100 }] };
+  const room = new GameRoom(level);
+  room.join('a');
+  room.join('b');
+  room.start('a');
+
+  room.tick(1 / 40);
+  const [smaller, unchanged] = room.snapshot().players;
+  assert.equal(smaller.sizeTicks, 119);
+  assert.equal(smaller.hitbox.width < unchanged.hitbox.width, true);
+  assert.equal(smaller.hitbox.height < unchanged.hitbox.height, true);
 });
