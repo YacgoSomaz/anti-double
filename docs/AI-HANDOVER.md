@@ -136,7 +136,9 @@ worldX = collider.x * 34
 worldY = 425 - collider.y * 34
 ```
 
-`loadMarathon()` 遍历 MP02、MP03、MP04 两轮，以每段最右碰撞 cell + 2 cells 作为下段偏移。每个中间段会去除完整高度的原终点封关列和下一段首列，只保留最终 MP04 的终点墙；`segments` 对象给客户端标明每段的 `startX/endX/isFinal`，不要写死终点坐标。生成浏览器数据的唯一入口是 `build/generate-marathon.mjs`。
+`loadLevel('marathon')` 当前读取 `src/data/marathon-authored.json`，这是从用户提供的 `gswitch-course-draft (1).json` 提取出的正式关卡源，包含 6 段顺序、每段独立的碰撞修改、出生点、终点和淘汰边界。不要再用旧的 MP02/MP03/MP04 拼接逻辑覆盖它；`segments` 对象给客户端标明每段的 `startX/endX/isFinal`，不要写死终点坐标。`build/generate-marathon.mjs` 会据此生成 `public/data/marathon.json`。
+
+用户草稿不是服务器可自动读取的临时附件：导入后必须落入 `src/data/marathon-authored.json`，再生成浏览器地图并部署。编辑器的 `localStorage` 草稿只用于个人浏览器的临时修改，联机权威地图不会读取它。
 
 三段多人赛道的视觉均不是按碰撞格绘制，而是各自 `public/data/mp02-visual.json`、`mp03-visual.json`、`mp04-visual.json` 中的原始对象放置，通过 `public/visual-projection.js` 将 Flixel placement 投影到 640×501 Stage。客户端再按 `segments` 的 `startX` 拼接投影坐标。`tools/extract_visual_source.py` 从 FFDec 导出的 plist 重建 `tools/mp0*-visual-source.json`，`npm run build:visuals` 生成浏览器数据和需要的位图副本。
 

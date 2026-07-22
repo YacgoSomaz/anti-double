@@ -151,7 +151,7 @@ const OPENING_SEQUENCE_DURATION_MS = OPENING_BEAM_DURATION_MS + MORPH_DURATION_M
 const ELIMINATION_BOUNDARY_WIDTH = 12;
 const ELIMINATION_BOUNDARY_GLOW_WIDTH = 18;
 const packetTiming = createPacketTimingMonitor(); const frameTiming = createFrameTimingMonitor(); let lastDiagnosticsUpdate = 0;
-let socket; let joinTimeout; let sequence = 0; let state = { phase: 'lobby', players: [] }; let map; let visualMaps = new Map(); let lastPing = 0; let stateReceivedAt = performance.now(); let localSlot; let roomCode; let cameraX = 0; let cameraUpdatedAt = performance.now(); let showingEnd = false; let resourcesReady = false; let raceReady = false; let resourcesFailed = false; let readySent = false; let readySoundPlayed = false; let raceResourceLoaded = 0; let soloRoom; let soloAccumulator = 0; let soloLastAt = 0;
+let socket; let joinTimeout; let sequence = 0; let state = { phase: 'lobby', players: [] }; let map; let bakedLevel; let visualMaps = new Map(); let lastPing = 0; let stateReceivedAt = performance.now(); let localSlot; let roomCode; let cameraX = 0; let cameraUpdatedAt = performance.now(); let showingEnd = false; let resourcesReady = false; let raceReady = false; let resourcesFailed = false; let readySent = false; let readySoundPlayed = false; let raceResourceLoaded = 0; let soloRoom; let soloAccumulator = 0; let soloLastAt = 0;
 const developerMode = isDeveloperMode(location.search);
 const devTuning = developerMode ? loadDevTuning(localStorage) : { ...DEFAULT_DEV_TUNING };
 let devPanelState; let devPaused = false; let devSlowMotion = false; let lastDevReadout = 0;
@@ -204,8 +204,9 @@ const mapLoad = Promise.all([
   loadJson('/data/marathon.json'), loadJson('/data/mp02-visual.json'),
   loadJson('/data/mp03-visual.json'), loadJson('/data/mp04-visual.json'),
 ]).then(async ([level, mp02, mp03, mp04]) => {
+  bakedLevel = level;
   const cachedDraft = loadCachedEditorDraft();
-  map = applyEditorDraftToLevel(level, cachedDraft);
+  map = applyEditorDraftToLevel(bakedLevel, cachedDraft);
   if (cachedDraft) courseStatus.textContent = '已应用本地赛道草稿 · 单人模式使用编辑器调整';
   visualMaps = new Map([['mp02', mp02], ['mp03', mp03], ['mp04', mp04]]);
   await Promise.all([mp02, mp03, mp04].map(preloadDecorationImages));
@@ -326,6 +327,12 @@ async function connect() {
 async function startSolo() {
   if (resourcesFailed || !raceReady || !map) return setStatus(resourcesFailed ? '资源加载失败，请刷新重试' : '角色和赛道仍在加载');
   if (!nickname.value.trim()) return setStatus('请输入昵称');
+  // Re-read the editor cache at click time. The editor and game are often
+  // kept open in separate tabs, so a one-time map-load read would leave this
+  // page using stale spawn coordinates after the editor saves a draft.
+  const cachedDraft = loadCachedEditorDraft();
+  map = applyEditorDraftToLevel(bakedLevel, cachedDraft);
+  if (cachedDraft) courseStatus.textContent = '已应用最新本地赛道草稿 · 单人模式';
   await unlockAudio();
   clearTimeout(joinTimeout);
   socket?.close(); socket = undefined; latestRaceState.reset();

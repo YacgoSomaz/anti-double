@@ -68,23 +68,25 @@ test('opens every internal marathon seam while retaining the final course wall',
   assert.deepEqual(cellsAt(finalWallCell).filter((y) => y >= 1 && y <= 11).sort((first, second) => first - second), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]);
 });
 
-test('keeps the edited MP03 and MP04 obstacles in both marathon rotations', () => {
+test('keeps the per-segment edits from the supplied marathon draft', () => {
   const mp03 = loadLevel('mp03');
   const mp04 = loadLevel('mp04');
   const marathon = loadLevel('marathon');
   const hasCell = (cells, x, y) => cells.some((cell) => cell.x === x && cell.y === y);
 
-  // These are representative cells from the supplied editor draft: MP03 has
-  // the replacement stair near its end, while MP04 removes the blocking cell.
+  // The supplied draft intentionally differs between the first and second
+  // occurrence of each source map; do not rebuild the second loop from the
+  // older MP03/MP04 source files.
   assert.equal(hasCell(mp03.colliders, 437, 3), true);
   assert.equal(hasCell(mp03.colliders, 436, 5), false);
   assert.equal(hasCell(mp04.colliders, 441, 4), false);
 
   const starts = marathon.segments.map((segment) => segment.startX / marathon.world.cellSize);
   assert.equal(hasCell(marathon.colliders, starts[0] + 437, 3), true);
-  assert.equal(hasCell(marathon.colliders, starts[3] + 437, 3), true);
+  assert.equal(hasCell(marathon.colliders, starts[3] + 437, 3), false);
+  assert.equal(hasCell(marathon.colliders, starts[3] + 437, 5), true);
   assert.equal(hasCell(marathon.colliders, starts[1] + 441, 4), false);
-  assert.equal(hasCell(marathon.colliders, starts[4] + 441, 4), false);
+  assert.equal(hasCell(marathon.colliders, starts[4] + 441, 4), true);
 });
 
 test('does not load an unknown level name', () => {
