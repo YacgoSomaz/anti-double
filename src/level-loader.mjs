@@ -18,10 +18,10 @@ const multiplayerSpawns = [
 ];
 
 const world = { cellSize: 34, originY: 425 };
-// A recovered checkpoint beam first obscures the runner for 0.4 s; only after
-// it dissipates do the recovered player atlas frames 23–44 begin at 20 FPS.
-// The server runs at 40 Hz, so the complete authoritative opening is 60 ticks.
-const OPENING_BEAM_TICKS = 16;
+// A recovered checkpoint beam scans in from the side and dissipates for 0.9 s;
+// only after it is gone do player atlas frames 23–44 begin at 20 FPS.  The
+// server runs at 40 Hz, so the complete authoritative opening is 80 ticks.
+const OPENING_BEAM_TICKS = 36;
 const OPENING_MORPH_TICKS = 44;
 const OPENING_INTRO_TICKS = OPENING_BEAM_TICKS + OPENING_MORPH_TICKS;
 
