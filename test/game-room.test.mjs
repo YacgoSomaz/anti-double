@@ -227,6 +227,48 @@ test('marks a player eliminated when their sprite leaves the multiplayer stage',
   assert.equal(room.input('a', { type: 'flip', sequence: 1 }).error, 'eliminated');
 });
 
+test('shares one collision profile across every player and preserves gravity-specific offsets', () => {
+  const room = new GameRoom({
+    tileSize: 48,
+    colliders: [],
+    spawns: [
+      { x: 24, y: 96, gravity: 1, speedX: 120 },
+      { x: 24, y: 96, gravity: -1, speedX: 120 }
+    ]
+  });
+  room.join('a');
+  room.join('b');
+
+  room.setDebugTuning({ hitboxHeight: 28 });
+
+  assert.deepEqual(room.snapshot().players.map((player) => ({ height: player.hitbox.height, width: player.hitbox.width })), [
+    { width: 37, height: 28 },
+    { width: 37, height: 28 }
+  ]);
+  assert.deepEqual(room.snapshot().players.map((player) => player.hitbox.offsetY), [29, 19]);
+});
+
+test('allows the smaller shared collision box through a one-cell world gap', () => {
+  const room = new GameRoom({
+    tileSize: 48,
+    world: { cellSize: 34, originY: 425 },
+    colliders: [
+      ...Array.from({ length: 10 }, (_, x) => ({ x, y: 0 })),
+      ...Array.from({ length: 10 }, (_, x) => ({ x, y: 2 }))
+    ],
+    spawns: [{ x: 24, y: 362, gravity: 1, speedX: 120 }]
+  });
+  room.join('a');
+  room.setDebugTuning({ hitboxHeight: 28 });
+  room.start('a');
+  room.tick(1 / 40);
+
+  const player = room.snapshot().players[0];
+  assert.equal(player.eliminated, false);
+  assert.equal(player.blockedX, false);
+  assert.equal(player.x > 24, true);
+});
+
 test('keeps a runner on the newly visible lower route in the race', () => {
   const room = new GameRoom({
     tileSize: 48,
