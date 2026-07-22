@@ -1,6 +1,7 @@
 import { applyColliderEdit, createEditorDraft, createHistory, exportEditorDraft, parseEditorDraft, redo, undo, validateEditorDraft } from '/editor-draft.js';
-import { createReplay, eventsAtTick, exportTestPackage, recordFlip } from '/editor-replay.js';
+import { createReplay, eventsAtTick, exportTestPackage, parseTestPackage, recordFlip } from '/editor-replay.js';
 import { createLocalNetworkLab, deliverSnapshots, queueSnapshot } from '/editor-network.js';
+import { createDraftDiff } from '/editor-package.js';
 import { GameRoom } from '/solo-game.mjs';
 import { animationFrame, frameSourceRect, morphFrame } from '/player-animation.js';
 
@@ -12,6 +13,7 @@ const inspector = document.querySelector('#inspector');
 const segmentList = document.querySelector('#segment-list');
 const simulationReadout = document.querySelector('#simulation-readout');
 const importer = document.querySelector('#draft-import');
+const packageImporter = document.querySelector('#package-import');
 const localPlayerCount = document.querySelector('#local-player-count');
 const latencyInput = document.querySelector('#lab-latency');
 const lossInput = document.querySelector('#lab-loss');
@@ -22,6 +24,7 @@ const animationCtx = animationCanvas.getContext('2d');
 const animationCharacter = document.querySelector('#animation-character');
 const animationState = document.querySelector('#animation-state');
 let originalLevel;
+let sourceDraft;
 let history;
 let activeLayer = 'collision';
 let brush = 'paint';
@@ -114,7 +117,8 @@ function editAt(point) {
   updateInspector(); draw();
 }
 function resetDraft() {
-  history = createHistory(createEditorDraft(originalLevel, 'marathon'));
+  sourceDraft = sourceDraft ?? createEditorDraft(originalLevel, 'marathon');
+  history = createHistory(structuredClone(sourceDraft));
   selected = undefined; view = { x: 0, y: 150, scale: 0.55 }; setStatus('已恢复为原始 marathon 草稿'); updateInspector(); draw();
 }
 function resetSimulation(replayMode = false) {
@@ -215,8 +219,10 @@ document.addEventListener('click', (event) => {
   if (action === 'playback') { resetSimulation(true); running = true; }
   if (action === 'sim-reset') resetSimulation();
   if (action === 'test-package') {
-    const link = document.createElement('a'); const url = URL.createObjectURL(new Blob([exportTestPackage({ draft: history.current, replay, note: '从 /dev 导出的物理复现包' })], { type: 'application/json' }));
+    const diff = createDraftDiff(sourceDraft, history.current);
+    const link = document.createElement('a'); const url = URL.createObjectURL(new Blob([exportTestPackage({ draft: history.current, replay, diff, parameters: { localPlayers: Number(localPlayerCount.value), latencyMs: lab.latencyMs, lossPercent: lab.lossPercent }, note: '从 /dev 导出的物理复现包，请人工审核后再提交 Git' })], { type: 'application/json' }));
     link.href = url; link.download = 'gswitch-test-package.json'; link.click(); URL.revokeObjectURL(url);
+    setStatus(`测试包已生成：新增 ${diff.addedColliders.length} 格，删除 ${diff.removedColliders.length} 格`);
   }
   updateInspector(); draw();
 });
@@ -225,6 +231,14 @@ importer.addEventListener('change', async () => {
   try { history = createHistory(parseEditorDraft(await importer.files[0].text())); setStatus('已导入本地草稿'); renderSegments(); updateInspector(); draw(); }
   catch (error) { setStatus(error.message); }
   importer.value = '';
+});
+packageImporter.addEventListener('change', async () => {
+  if (!packageImporter.files?.[0]) return;
+  try {
+    const pack = parseTestPackage(await packageImporter.files[0].text());
+    history = createHistory(pack.draft); replay = pack.replay; setStatus(`已导入测试包：${pack.note || '无备注'}`); renderSegments(); updateInspector(); draw();
+  } catch (error) { setStatus(error.message); }
+  packageImporter.value = '';
 });
 addEventListener('keydown', (event) => { if (event.code === 'Space' && !event.repeat) { event.preventDefault(); flipSimulation(); } });
 load().catch((error) => { setStatus(error.message); validation.textContent = error.message; });

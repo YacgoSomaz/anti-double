@@ -19,9 +19,9 @@ function validateReplay(replay) {
   return replay.events.every((event, index) => event?.type === 'flip' && Number.isInteger(event.tick) && event.tick > 0 && (!index || event.tick > replay.events[index - 1].tick));
 }
 
-export function exportTestPackage({ draft, replay, note = '' }) {
+export function exportTestPackage({ draft, replay, parameters = {}, diff = null, note = '' }) {
   if (!draft || typeof draft !== 'object' || !validateReplay(replay)) throw new TypeError('测试包无效');
-  return JSON.stringify({ version: EDITOR_TEST_PACKAGE_VERSION, createdAt: new Date().toISOString(), note: String(note).slice(0, 500), draft, replay }, null, 2);
+  return JSON.stringify({ version: EDITOR_TEST_PACKAGE_VERSION, createdAt: new Date().toISOString(), note: String(note).slice(0, 500), draft, parameters, diff, replay }, null, 2);
 }
 
 export function parseTestPackage(text) {
