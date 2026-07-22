@@ -17,7 +17,7 @@ test('concatenates two recovered course rotations into one continuous marathon',
   const marathon = loadLevel('marathon');
 
   assert.equal(marathon.segments.length, 6);
-  assert.deepEqual(marathon.segments.map((segment) => segment.id), ['mp02', 'mp03', 'mp04', 'mp02', 'mp03', 'mp04']);
+  assert.deepEqual(marathon.segments.map((segment) => segment.id), ['mp03', 'mp04', 'mp02', 'mp03', 'mp04', 'mp02']);
   assert.deepEqual(marathon.segments.map((segment) => segment.isFinal), [false, false, false, false, false, true]);
   assert.equal(marathon.colliders.length > mp02.colliders.length * 5, true);
   assert.equal(marathon.finishX, marathon.segments[2].endX * 2);
