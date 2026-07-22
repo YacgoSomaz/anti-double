@@ -8,7 +8,7 @@ import { projectVisual } from '/visual-projection.js';
 import { contactsForPlayer, hitboxForPlayer, playerContactsForPlayer, predictTrajectory } from '/editor-inspector.js';
 import { resolveEditorGesture } from '/editor-input.js';
 import { cellFromWorld } from '/editor-grid.js';
-import { resolveEditorShortcut } from '/editor-selection.js';
+import { preserveSelectionOnDrag, resolveEditorShortcut } from '/editor-selection.js';
 import { preserveSelectIndex } from '/editor-form.js';
 import { addVisual, removeSelectedObjects, uniqueVisualAssets } from '/editor-assets.js';
 
@@ -516,7 +516,7 @@ canvas.addEventListener('pointerdown', (event) => {
   if (gesture.type === 'drag-visual') {
     const index = gesture.index; const additive = event.ctrlKey || event.metaKey; const wasSelected = selectedVisuals.includes(index);
     if (additive) { selectVisual(index, true); if (wasSelected) { updateInspector(); draw(); return; } }
-    else selectVisual(index, false);
+    else if (!preserveSelectionOnDrag(selectedVisuals, index, false)) selectVisual(index, false);
     const position = worldAt(point);
     visualDrag = { items: selectedVisuals.map((itemIndex) => { const item = history.current.visuals[itemIndex]; return { index: itemIndex, x: item.x, y: item.y, offsetX: position.x - item.x, offsetY: position.y - item.y }; }) };
     canvas.setPointerCapture(event.pointerId); updateInspector(); draw(); return;

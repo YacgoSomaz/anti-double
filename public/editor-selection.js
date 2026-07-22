@@ -14,3 +14,7 @@ export function toggleSelection(indices, index, additive = false) {
   else next.add(index);
   return [...next].sort((left, right) => left - right);
 }
+
+export function preserveSelectionOnDrag(indices, index, additive = false) {
+  return !additive && indices.length > 1 && indices.includes(index);
+}
