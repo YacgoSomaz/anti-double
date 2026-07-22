@@ -97,7 +97,7 @@ test('phase item grants three seconds of terrain and player collision immunity',
   assert.equal(player.x > 100, true);
 });
 
-test('speed boost increases only the collecting runner velocity', () => {
+test('speed control slows only the collecting runner velocity', () => {
   const level = {
     ...openLevel,
     itemSpawns: [{ id: 'speed-1', type: ITEM_TYPES.speedBoost, x: 100, y: 100 }]
@@ -108,7 +108,7 @@ test('speed boost increases only the collecting runner velocity', () => {
   room.start('a');
 
   room.tick(1 / 40);
-  const [boosted, normal] = room.snapshot().players;
-  assert.equal(boosted.speedBoostTicks, 119);
-  assert.equal(boosted.vx > normal.vx, true);
+  const [slowed, normal] = room.snapshot().players;
+  assert.equal(slowed.speedBoostTicks, 119);
+  assert.equal(slowed.vx < normal.vx, true);
 });
