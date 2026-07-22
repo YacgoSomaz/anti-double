@@ -417,7 +417,7 @@ function renderLobby() {
 }
 function decodeCompactRaceState(message) {
   const knownPlayers = new Map(state.players.map((player) => [player.slot, player]));
-  const itemTypes = ['gravity_burst', 'phase', 'speed_boost'];
+  const itemTypes = ['gravity_burst', 'phase', 'speed_boost', 'size_up', 'size_down'];
   return {
     ...message,
     phase: Array.isArray(message.r) ? 'results' : 'playing',
@@ -428,11 +428,12 @@ function decodeCompactRaceState(message) {
     serverTickIntervalMs: Number.isInteger(message.d) ? message.d / 10 : undefined,
     items: Array.isArray(message.o) ? message.o.map(([type, x, y]) => ({ type: itemTypes[type - 1], x: x / 100, y: y / 100, active: true })) : [],
     results: Array.isArray(message.r) ? message.r.map(([slot, rank, outcome, score]) => ({ slot, rank, outcome: outcome ? 'finished' : 'eliminated', score: Math.max(0, Number(score) || 0) })) : [],
-    players: message.p.map(([slot, x, y, vx, vy, gravity, flags, phaseTicks = 0, speedBoostTicks = 0]) => ({
+    players: message.p.map(([slot, x, y, vx, vy, gravity, flags, phaseTicks = 0, speedBoostTicks = 0, sizeScaleCode = 100]) => ({
       ...knownPlayers.get(slot),
       slot, x: x / 100, y: y / 100, vx: vx / 100, vy: vy / 100, gravity,
       finished: Boolean(flags & 1), eliminated: Boolean(flags & 2), blockedX: Boolean(flags & 4),
-      phaseTicks, speedBoostTicks
+      phaseTicks, speedBoostTicks,
+      sizeScale: Number.isFinite(Number(sizeScaleCode)) && Number(sizeScaleCode) > 0 ? Number(sizeScaleCode) / 100 : 1
     }))
   };
 }
@@ -649,13 +650,13 @@ function drawEliminationBoundary(now) {
   ctx.drawImage(eliminationBoundary, frame * frameWidth, 0, frameWidth, eliminationBoundary.naturalHeight, x - 3, -74, ELIMINATION_BOUNDARY_GLOW_WIDTH, 650);
   ctx.restore();
 }
-const ITEM_ICON_INDEX = Object.freeze({ gravity_burst: 0, phase: 1, speed_boost: 2 });
+const ITEM_ICON_INDEX = Object.freeze({ gravity_burst: 0, phase: 1, speed_boost: 2, size_up: 3, size_down: 4 });
 // The orange speed icon now acts as a brake pickup; the cool blue halo makes
 // that control effect distinguishable from the gravity and phase pickups.
-const ITEM_GLOW_COLORS = Object.freeze({ gravity_burst: '#ff65e8', phase: '#55f6ff', speed_boost: '#7ab8ff' });
+const ITEM_GLOW_COLORS = Object.freeze({ gravity_burst: '#ff65e8', phase: '#55f6ff', speed_boost: '#7ab8ff', size_up: '#ffd35a', size_down: '#a77bff' });
 function drawItems(items, camera, viewport, now) {
   if (!itemIconSheet.complete || !itemIconSheet.naturalWidth) return;
-  const frameWidth = itemIconSheet.naturalWidth / 3;
+  const frameWidth = itemIconSheet.naturalWidth / 5;
   const frameHeight = itemIconSheet.naturalHeight;
   const size = 58;
   ctx.save();

@@ -174,7 +174,7 @@ test('encodes four-player race snapshots into a compact packet suitable for 40 H
 
   assert.deepEqual(packet, {
     type: 'state', compact: true, tick: 40, c: [530, 21189],
-    p: [[1, 32530, 11102, 21189, 32076, 1, 0, 0, 0], [2, 32530, 15102, 21189, -32075, -1, 0, 0, 0], [3, 32530, 19102, 21189, 32076, 1, 0, 0, 0], [4, 32530, 23102, 21189, -32075, -1, 0, 0, 0]]
+    p: [[1, 32530, 11102, 21189, 32076, 1, 0, 0, 0, 100], [2, 32530, 15102, 21189, -32075, -1, 0, 0, 0, 100], [3, 32530, 19102, 21189, 32076, 1, 0, 0, 0, 100], [4, 32530, 23102, 21189, -32075, -1, 0, 0, 0, 100]]
   });
   assert.equal(Buffer.byteLength(JSON.stringify(packet)) < 250, true);
 });
@@ -185,11 +185,11 @@ test('encodes active item effects in the compact race packet', () => {
     cameraX: 10,
     cameraSpeed: 120,
     items: [{ id: 'phase-1', type: 'phase', x: 320, y: 190, active: true }],
-    players: [{ slot: 1, x: 100, y: 100, vx: 150, vy: 0, gravity: 1, finished: false, eliminated: false, blockedX: false, phaseTicks: 119, speedBoostTicks: 0 }]
+    players: [{ slot: 1, x: 100, y: 100, vx: 150, vy: 0, gravity: 1, finished: false, eliminated: false, blockedX: false, phaseTicks: 119, speedBoostTicks: 0, sizeScale: 1 }]
   });
 
   assert.deepEqual(packet.o, [[2, 32000, 19000]]);
-  assert.deepEqual(packet.p[0], [1, 10000, 10000, 15000, 0, 1, 0, 119, 0]);
+  assert.deepEqual(packet.p[0], [1, 10000, 10000, 15000, 0, 1, 0, 119, 0, 100]);
 });
 
 test('keeps only nearby active pickups in compact race packets', () => {

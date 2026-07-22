@@ -48,7 +48,7 @@ function loadMarathon() {
     ...authored,
     world: authored.world ?? world,
     openingMorphTicks: Number.isFinite(authored.openingMorphTicks) ? authored.openingMorphTicks : OPENING_INTRO_TICKS,
-    itemConfig: authored.itemConfig ?? { seed: 44052, count: 230, minimumSpacing: 420 },
+    itemConfig: authored.itemConfig ?? { seed: 44052, count: 115, minimumSpacing: 420 },
     playerPhysics: authored.playerPhysics ?? playerPhysics,
     colliders: authored.colliders.map((collider) => ({ ...collider })),
     spawns: authored.spawns.map((spawn) => ({ ...spawn })),

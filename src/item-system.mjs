@@ -1,22 +1,28 @@
 export const ITEM_TYPES = Object.freeze({
   gravityBurst: 'gravity_burst',
   phase: 'phase',
-  speedBoost: 'speed_boost'
+  speedBoost: 'speed_boost',
+  sizeUp: 'size_up',
+  sizeDown: 'size_down'
 });
 
 export const ITEM_TYPE_CODES = Object.freeze({
   [ITEM_TYPES.gravityBurst]: 1,
   [ITEM_TYPES.phase]: 2,
-  [ITEM_TYPES.speedBoost]: 3
+  [ITEM_TYPES.speedBoost]: 3,
+  [ITEM_TYPES.sizeUp]: 4,
+  [ITEM_TYPES.sizeDown]: 5
 });
 
 export const ITEM_EFFECT_TICKS = Object.freeze({
   phase: 120,
-  speedBoost: 120
+  speedBoost: 120,
+  sizeUp: 120,
+  sizeDown: 120
 });
 
-const ITEM_TYPE_ORDER = Object.freeze([ITEM_TYPES.gravityBurst, ITEM_TYPES.phase, ITEM_TYPES.speedBoost]);
-const DEFAULT_COUNT = 200;
+const ITEM_TYPE_ORDER = Object.freeze([ITEM_TYPES.gravityBurst, ITEM_TYPES.phase, ITEM_TYPES.speedBoost, ITEM_TYPES.sizeUp, ITEM_TYPES.sizeDown]);
+const DEFAULT_COUNT = 115;
 const DEFAULT_SEED = 44052;
 const ITEM_HALF_SIZE = 29;
 const DEFAULT_ITEM_TOP = -90;

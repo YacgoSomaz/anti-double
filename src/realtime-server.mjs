@@ -176,7 +176,8 @@ export function encodeRaceState(snapshot, tickIntervalMs) {
       player.gravity,
       (player.finished ? 1 : 0) | (player.eliminated ? 2 : 0) | (player.blockedX ? 4 : 0),
       Math.max(0, Math.floor(player.phaseTicks ?? 0)),
-      Math.max(0, Math.floor(player.speedBoostTicks ?? 0))
+      Math.max(0, Math.floor(player.speedBoostTicks ?? 0)),
+      Math.max(0, Math.round((Number(player.sizeScale) || 1) * 100))
     ])
   };
 }

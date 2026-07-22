@@ -39,6 +39,8 @@ const ITEM_PICKUP_RADIUS_Y = 56;
 // it gives the collector a short, controllable speed reduction instead of
 // pushing the already accelerating camera beyond a human-readable pace.
 const SPEED_CONTROL_MULTIPLIER = 0.65;
+const SIZE_UP_MULTIPLIER = 1.28;
+const SIZE_DOWN_MULTIPLIER = 0.72;
 const CHARACTERS = ['blue', 'green', 'yellow', 'red'];
 const DEFAULT_DEBUG_TUNING = Object.freeze({ speedMultiplier: 1, cameraSpeedMultiplier: 1, recoveryMultiplier: 1, gravityMultiplier: 1, hitboxWidth: PLAYER_WIDTH, hitboxHeight: PLAYER_HEIGHT, eliminationMargin: 60 });
 
@@ -100,10 +102,9 @@ export class GameRoom {
     const previousTuning = this.#debugTuning;
     this.#debugTuning = normaliseDebugTuning(value);
     for (const player of this.#players.values()) {
-      player.hitbox.width = this.#debugTuning.hitboxWidth;
-      player.hitbox.height = this.#debugTuning.hitboxHeight;
-      player.hitbox.offsetX = PLAYER_OFFSET_X + (PLAYER_WIDTH - player.hitbox.width) / 2;
-      player.hitbox.offsetY = playerOffsetY(player.gravity, player.hitbox.height);
+      player.baseHitboxWidth = this.#debugTuning.hitboxWidth;
+      player.baseHitboxHeight = this.#debugTuning.hitboxHeight;
+      this.#setPlayerSize(player, player.sizeTicks > 0 ? player.sizeScale : 1);
       player.startSpeedX *= this.#debugTuning.speedMultiplier / previousTuning.speedMultiplier;
       if (this.#phase === 'lobby') { player.speedX = player.startSpeedX; player.vx = player.startSpeedX; }
     }
@@ -125,6 +126,8 @@ export class GameRoom {
       speedX: spawn.speedX * this.#debugTuning.speedMultiplier, startSpeedX: spawn.speedX * this.#debugTuning.speedMultiplier, character: CHARACTERS[slot - 1], name: playerName(name, slot), ready: Boolean(ready),
       gravity: spawn.gravity, finished: false, eliminated: false, outcomeTick: null, blockedX: false, recoveringCameraPosition: false, cameraRecoveryBoost: false, hasReachedCameraCentre: Math.abs(spawn.x - CAMERA_TARGET_SCREEN_X) <= CAMERA_TARGET_TOLERANCE, cameraSafetyFrames: 0, flipWallGuard: 0,
       phaseTicks: 0, speedBoostTicks: 0,
+      sizeTicks: 0, sizeScale: 1,
+      baseHitboxWidth: this.#debugTuning.hitboxWidth, baseHitboxHeight: this.#debugTuning.hitboxHeight,
       hitbox: { width: this.#debugTuning.hitboxWidth, height: this.#debugTuning.hitboxHeight, offsetX: PLAYER_OFFSET_X + (PLAYER_WIDTH - this.#debugTuning.hitboxWidth) / 2, offsetY: playerOffsetY(spawn.gravity, this.#debugTuning.hitboxHeight) }
     };
     this.#players.set(id, player);
@@ -296,6 +299,10 @@ export class GameRoom {
     if (player.flipWallGuard > 0) player.flipWallGuard -= 1;
     if (player.phaseTicks > 0) player.phaseTicks -= 1;
     if (player.speedBoostTicks > 0) player.speedBoostTicks -= 1;
+    if (player.sizeTicks > 0) {
+      player.sizeTicks -= 1;
+      if (player.sizeTicks === 0) this.#setPlayerSize(player, 1);
+    }
     if (this.#level.finishX && player.x >= this.#level.finishX) {
       player.finished = true;
       player.outcomeTick = this.#tick;
@@ -333,6 +340,21 @@ export class GameRoom {
   #cameraAcceleration() { return HORIZONTAL_ACCELERATION * this.#debugTuning.cameraSpeedMultiplier; }
   #effectiveCameraSpeed(speed) {
     return this.#speedControlTicks > 0 ? speed * SPEED_CONTROL_MULTIPLIER : speed;
+  }
+  #setPlayerSize(player, scale) {
+    const previousHeight = player.hitbox?.height ?? player.baseHitboxHeight ?? this.#debugTuning.hitboxHeight;
+    const previousOffsetY = player.hitbox?.offsetY ?? playerOffsetY(player.gravity, previousHeight);
+    const centreY = player.y + previousOffsetY + previousHeight / 2;
+    const nextScale = Number.isFinite(Number(scale)) ? Number(scale) : 1;
+    const baseWidth = player.baseHitboxWidth ?? this.#debugTuning.hitboxWidth;
+    const baseHeight = player.baseHitboxHeight ?? this.#debugTuning.hitboxHeight;
+    player.sizeScale = nextScale;
+    player.hitbox.width = Math.max(14, Math.round(baseWidth * nextScale));
+    player.hitbox.height = Math.max(18, Math.round(baseHeight * nextScale));
+    player.hitbox.offsetX = PLAYER_OFFSET_X + (PLAYER_WIDTH - player.hitbox.width) / 2;
+    player.hitbox.offsetY = playerOffsetY(player.gravity, player.hitbox.height);
+    player.y = centreY - player.hitbox.offsetY - player.hitbox.height / 2;
+    player.worldContactDirty = true;
   }
   #leftEscapeScreenX() {
     const margin = Number(this.#level.elimination?.leftMargin);
@@ -666,6 +688,12 @@ export class GameRoom {
           if (runner.finished || runner.eliminated) continue;
           runner.speedBoostTicks = Math.max(runner.speedBoostTicks, ITEM_EFFECT_TICKS.speedBoost);
         }
+      } else if (item.type === ITEM_TYPES.sizeUp) {
+        player.sizeTicks = Math.max(player.sizeTicks, ITEM_EFFECT_TICKS.sizeUp);
+        this.#setPlayerSize(player, SIZE_UP_MULTIPLIER);
+      } else if (item.type === ITEM_TYPES.sizeDown) {
+        player.sizeTicks = Math.max(player.sizeTicks, ITEM_EFFECT_TICKS.sizeDown);
+        this.#setPlayerSize(player, SIZE_DOWN_MULTIPLIER);
       }
     }
   }

@@ -2,7 +2,7 @@
 const versions = Object.freeze({
   "assets/effects/checkpoint-beamlight.png": "13cefe84bbe3fb09",
   "assets/effects/elimination-boundary.png": "03264a6f31c8a5b2",
-  "assets/items/item-icons-sheet.png": "6be457c0c3593f43",
+  "assets/items/item-icons-sheet.png": "4cb1877564b336ce",
   "assets/menu/loading-splash.png": "7358057f72ba7f61",
   "assets/menu/menu-background.png": "9c2f8628688aab01",
   "assets/menu/multi-end.png": "7ae74d08f482a948",
