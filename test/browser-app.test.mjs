@@ -23,9 +23,14 @@ test('serves the playable browser client with strict security headers', async (c
   assert.match(editorHtml, /游戏引擎/);
   assert.match(editorHtml, /选择 \/ 移动/);
   assert.match(editorHtml, /name="editor-tool"/);
+  assert.match(editorHtml, /data-editor-action="copy"/);
+  assert.match(editorHtml, /Ctrl\/Cmd\+C\/V/);
   const editorScript = await fetch(`http://127.0.0.1:${port}/editor.js`);
   assert.equal(editorScript.status, 200);
   assert.match(await editorScript.text(), /createLocalNetworkLab/);
+  const editorSelection = await fetch(`http://127.0.0.1:${port}/editor-selection.js`);
+  assert.equal(editorSelection.status, 200);
+  assert.match(await editorSelection.text(), /resolveEditorShortcut/);
   const animationScript = await fetch(`http://127.0.0.1:${port}/player-animation.js`);
   assert.equal(animationScript.status, 200);
 

@@ -8,6 +8,7 @@ import { projectVisual } from '/visual-projection.js';
 import { contactsForPlayer, hitboxForPlayer, playerContactsForPlayer, predictTrajectory } from '/editor-inspector.js';
 import { resolveEditorGesture } from '/editor-input.js';
 import { cellFromWorld } from '/editor-grid.js';
+import { resolveEditorShortcut } from '/editor-selection.js';
 
 const canvas = document.querySelector('#editor-canvas');
 const ctx = canvas.getContext('2d');
@@ -61,7 +62,11 @@ let pan;
 let view = { x: 0, y: 150, scale: 0.55 };
 let selected;
 let selectedVisual;
+let selectedCells = [];
+let selectedVisuals = [];
 let visualDrag;
+let editorClipboard;
+let pasteSerial = 0;
 let visualMaps = new Map();
 let running = false;
 let simulation;
@@ -107,16 +112,81 @@ function visualAt(point) {
   }
   return -1;
 }
+function cellKey(cell) { return `${cell.x}:${cell.y}`; }
+function cellFromKey(key) { const [x, y] = String(key).split(':').map(Number); return { x, y }; }
+function commitDraft(next, message) {
+  const valid = validateEditorDraft(next);
+  if (!valid.valid) throw new TypeError(valid.errors.join('；'));
+  history = { current: next, undoStack: [...history.undoStack, history.current], redoStack: [] };
+  if (message) setStatus(message);
+}
+function clearSelection() {
+  selected = undefined; selectedVisual = undefined; selectedCells = []; selectedVisuals = [];
+}
+function syncSelection() {
+  const validCells = new Set(history.current.colliders.map(cellKey));
+  selectedCells = selectedCells.filter((key) => validCells.has(key));
+  selected = selectedCells.length ? cellFromKey(selectedCells.at(-1)) : undefined;
+  selectedVisuals = selectedVisuals.filter((index) => history.current.visuals?.[index]);
+  selectedVisual = selectedVisuals.at(-1);
+}
+function selectCell(cell, additive = false) {
+  const key = cellKey(cell); const exists = history.current.colliders.some((candidate) => cellKey(candidate) === key);
+  if (!exists) { if (!additive) { selected = undefined; selectedCells = []; } return false; }
+  if (!additive) selectedCells = [key];
+  else selectedCells = selectedCells.includes(key) ? selectedCells.filter((candidate) => candidate !== key) : [...selectedCells, key];
+  selected = selectedCells.length ? cellFromKey(selectedCells.at(-1)) : undefined;
+  return true;
+}
+function selectVisual(index, additive = false) {
+  if (index < 0) { if (!additive) { selectedVisual = undefined; selectedVisuals = []; } return false; }
+  if (!additive) selectedVisuals = [index];
+  else selectedVisuals = selectedVisuals.includes(index) ? selectedVisuals.filter((candidate) => candidate !== index) : [...selectedVisuals, index];
+  selectedVisual = selectedVisuals.at(-1);
+  return selectedVisuals.includes(index);
+}
+function copySelection() {
+  if (activeLayer === 'collision' && selectedCells.length) {
+    editorClipboard = { kind: 'collision', cells: selectedCells.map(cellFromKey) };
+    pasteSerial = 0;
+    setStatus(`已复制 ${selectedCells.length} 个碰撞格`); return true;
+  }
+  if (activeLayer === 'visual' && selectedVisuals.length) {
+    editorClipboard = { kind: 'visual', visuals: selectedVisuals.map((index) => structuredClone(history.current.visuals[index])).filter(Boolean) };
+    pasteSerial = 0;
+    setStatus(`已复制 ${editorClipboard.visuals.length} 个装饰素材`); return true;
+  }
+  setStatus('没有可复制的选中对象'); return false;
+}
+function pasteSelection() {
+  if (!editorClipboard) { setStatus('剪贴板为空'); return false; }
+  pasteSerial += 1; const offset = pasteSerial;
+  const next = structuredClone(history.current);
+  if (editorClipboard.kind === 'collision') {
+    const pasted = editorClipboard.cells.map((cell) => ({ x: cell.x + offset, y: cell.y }));
+    const existing = new Set(next.colliders.map(cellKey));
+    next.colliders.push(...pasted.filter((cell) => !existing.has(cellKey(cell))));
+    selectedCells = pasted.map(cellKey); selected = pasted.at(-1);
+    commitDraft(next, `已粘贴 ${pasted.length} 个碰撞格`);
+  } else {
+    const pasted = editorClipboard.visuals.map((visual) => ({ ...visual, x: visual.x + offset * 20, y: visual.y + offset * 20 }));
+    const firstIndex = next.visuals.length; next.visuals.push(...pasted);
+    selectedVisuals = pasted.map((_, index) => firstIndex + index); selectedVisual = selectedVisuals.at(-1);
+    commitDraft(next, `已粘贴 ${pasted.length} 个装饰素材`);
+  }
+  updateInspector(); draw(); return true;
+}
 function drawVisuals() {
   const visuals = history.current.visuals ?? [];
   for (let index = 0; index < visuals.length; index += 1) {
-    const item = visuals[index]; const preview = visualDrag?.index === index ? { ...item, x: visualDrag.x, y: visualDrag.y } : item; const box = visualScreen(preview);
+    const dragItem = visualDrag?.items?.find((candidate) => candidate.index === index);
+    const item = visuals[index]; const preview = dragItem ? { ...item, x: dragItem.x, y: dragItem.y } : item; const box = visualScreen(preview);
     if (box.x > canvas.width || box.y > canvas.height || box.x + box.width < 0 || box.y + box.height < 0) continue;
     let image = visualImages.get(item.assetFile);
     if (!image) { image = new Image(); image.src = `/assets/visual/${item.assetFile}`; visualImages.set(item.assetFile, image); }
     if (image.complete && image.naturalWidth) ctx.drawImage(image, box.x, box.y, box.width, box.height);
     else { ctx.fillStyle = '#34596880'; ctx.fillRect(box.x, box.y, box.width, box.height); }
-    if (selectedVisual === index) { ctx.save(); ctx.strokeStyle = '#ffdf6b'; ctx.lineWidth = 3; ctx.strokeRect(box.x, box.y, box.width, box.height); ctx.restore(); }
+    if (selectedVisuals.includes(index)) { ctx.save(); ctx.strokeStyle = index === selectedVisual ? '#fff' : '#ffdf6b'; ctx.lineWidth = index === selectedVisual ? 3 : 2; ctx.setLineDash(index === selectedVisual ? [] : [5, 3]); ctx.strokeRect(box.x, box.y, box.width, box.height); ctx.restore(); }
   }
 }
 function setStatus(value) { status.textContent = value; }
@@ -196,7 +266,7 @@ function logCollisionEvents(state) {
 function updateInspector() {
   const draft = history.current; const valid = validateEditorDraft(draft);
   validation.textContent = valid.valid ? `草稿有效\n${draft.colliders.length} 个碰撞格\n撤销 ${history.undoStack.length} · 重做 ${history.redoStack.length}` : valid.errors.join('\n');
-  const selection = selected ? `碰撞格 (${selected.x}, ${selected.y})` : selectedVisual !== undefined ? `装饰 ${history.current.visuals?.[selectedVisual]?.imageId ?? ''}` : '尚未选择对象';
+  const selection = selectedCells.length > 1 ? `碰撞格 ${selectedCells.length} 个` : selected ? `碰撞格 (${selected.x}, ${selected.y})` : selectedVisuals.length > 1 ? `装饰 ${selectedVisuals.length} 个` : selectedVisual !== undefined ? `装饰 ${history.current.visuals?.[selectedVisual]?.imageId ?? ''}` : '尚未选择对象';
   const selectedDecoration = selectedVisual !== undefined ? draft.visuals?.[selectedVisual] : null;
   const inspectorRows = [['选择', selection], ['图层', activeLayer], ['格尺寸', `${courseCell()} px`], ['终点', `${Math.round(draft.finishX)} px`], ['出生点', String(draft.spawns.length)]];
   if (selectedDecoration) { inspectorRows.push(['坐标', `${Math.round(selectedDecoration.x)}, ${Math.round(selectedDecoration.y)}`]); inspectorRows.push(['尺寸', `${Math.round(selectedDecoration.width)}×${Math.round(selectedDecoration.height)}`]); }
@@ -263,34 +333,34 @@ function draw() {
   }
   const physicsPlayerState = activePhysicsPlayer();
   if (physicsPlayerState) { const tuning = simulation?.room?.debugTuning?.() ?? {}; const box = hitboxForPlayer(physicsPlayerState, { width: Number(tuning.hitboxWidth) || 37, height: Number(tuning.hitboxHeight) || 48, offsetX: 16, normalOffsetY: 19, invertedOffsetY: 9 }); const left = view.x + box.left * view.scale; const top = view.y + box.top * view.scale; ctx.save(); ctx.setLineDash([4, 3]); ctx.strokeStyle = '#ffeb70'; ctx.lineWidth = 2; ctx.strokeRect(left, top, (box.right - box.left) * view.scale, (box.bottom - box.top) * view.scale); ctx.restore(); }
-  if (selected) { const box = cellScreen(selected); ctx.lineWidth = 3; ctx.strokeStyle = '#fff'; ctx.strokeRect(box.x + 1, box.y + 1, box.size - 2, box.size - 2); }
+  for (const key of selectedCells) { const box = cellScreen(cellFromKey(key)); ctx.lineWidth = 3; ctx.strokeStyle = key === (selected ? cellKey(selected) : '') ? '#fff' : '#ffdf6b'; ctx.setLineDash(key === (selected ? cellKey(selected) : '') ? [] : [5, 3]); ctx.strokeRect(box.x + 1, box.y + 1, box.size - 2, box.size - 2); }
 }
 function editAt(point) {
   if (activeLayer === 'spawn') {
     const position = worldAt(point); let nearest = -1; let distance = Infinity;
     history.current.spawns.forEach((spawn, index) => { const candidate = Math.hypot(position.x - spawn.x, position.y - spawn.y); if (candidate < distance) { distance = candidate; nearest = index; } });
-    if (distance < 90) { spawnIndex.value = String(nearest); selected = undefined; updateInspector(); draw(); }
+    if (distance < 90) { spawnIndex.value = String(nearest); selected = undefined; selectedCells = []; updateInspector(); draw(); }
     return;
   }
   if (activeLayer === 'visual') {
-    selectedVisual = visualAt(point); selected = undefined; updateInspector(); draw();
+    selectVisual(visualAt(point)); selected = undefined; selectedCells = []; updateInspector(); draw();
     return;
   }
   if (activeLayer !== 'collision') return;
-  const cell = cellAt(point); selected = cell;
+  const cell = cellAt(point); selectCell(cell);
   history = applyColliderEdit(history, { ...cell, solid: editorTool === 'paint' });
   updateInspector(); draw();
 }
 function selectAt(point) {
   if (activeLayer === 'spawn') { editAt(point); return; }
   if (activeLayer !== 'collision') return;
-  selected = cellAt(point); updateInspector(); draw();
+  selectCell(cellAt(point)); updateInspector(); draw();
 }
 function resetDraft() {
   sourceDraft = sourceDraft ?? createEditorDraft(originalLevel, 'marathon');
   history = createHistory(structuredClone(sourceDraft));
   eventLog.length = 0; renderCollisionLog();
-  selected = undefined; selectedVisual = undefined; visualDrag = undefined; view = { x: 0, y: 150, scale: 0.55 }; setStatus('已恢复为原始 marathon 草稿'); updateInspector(); draw();
+  clearSelection(); visualDrag = undefined; view = { x: 0, y: 150, scale: 0.55 }; setStatus('已恢复为原始 marathon 草稿'); updateInspector(); draw();
 }
 function resetSimulation(replayMode = false) {
   const room = new GameRoom(history.current);
@@ -401,8 +471,12 @@ canvas.addEventListener('pointerdown', (event) => {
   const gesture = resolveEditorGesture({ activeLayer, tool: editorTool, button: event.button, visualHit: visualAt(point) });
   if (gesture.type === 'pan') { pan = { point, view: { ...view } }; canvas.setPointerCapture(event.pointerId); return; }
   if (gesture.type === 'drag-visual') {
-    const index = gesture.index; selectedVisual = index; const item = history.current.visuals[index]; const position = worldAt(point);
-    visualDrag = { index, x: item.x, y: item.y, offsetX: position.x - item.x, offsetY: position.y - item.y }; canvas.setPointerCapture(event.pointerId); updateInspector(); draw(); return;
+    const index = gesture.index; const additive = event.ctrlKey || event.metaKey; const wasSelected = selectedVisuals.includes(index);
+    if (additive) { selectVisual(index, true); if (wasSelected) { updateInspector(); draw(); return; } }
+    else selectVisual(index, false);
+    const position = worldAt(point);
+    visualDrag = { items: selectedVisuals.map((itemIndex) => { const item = history.current.visuals[itemIndex]; return { index: itemIndex, x: item.x, y: item.y, offsetX: position.x - item.x, offsetY: position.y - item.y }; }) };
+    canvas.setPointerCapture(event.pointerId); updateInspector(); draw(); return;
   }
   if (gesture.type === 'paint-collision') { painting = true; canvas.setPointerCapture(event.pointerId); editAt(point); return; }
   if (gesture.type === 'select-cell' || gesture.type === 'select-spawn') { selectAt(point); canvas.setPointerCapture(event.pointerId); }
@@ -410,10 +484,10 @@ canvas.addEventListener('pointerdown', (event) => {
 canvas.addEventListener('pointermove', (event) => {
   const point = pointAt(event);
   if (pan) { view.x = pan.view.x + point.x - pan.point.x; view.y = pan.view.y + point.y - pan.point.y; draw(); return; }
-  if (visualDrag) { const position = worldAt(point); visualDrag.x = position.x - visualDrag.offsetX; visualDrag.y = position.y - visualDrag.offsetY; draw(); return; }
+  if (visualDrag) { const position = worldAt(point); visualDrag.items.forEach((item) => { item.x = position.x - item.offsetX; item.y = position.y - item.offsetY; }); draw(); return; }
   if (painting) editAt(point);
 });
-canvas.addEventListener('pointerup', (event) => { if (visualDrag) { try { history = updateEditorProperty(history, { path: ['visuals', visualDrag.index, 'x'], value: visualDrag.x }); history = updateEditorProperty(history, { path: ['visuals', visualDrag.index, 'y'], value: visualDrag.y }); setStatus(`已移动装饰：${history.current.visuals[visualDrag.index].imageId}`); } catch (error) { setStatus(error.message); } visualDrag = undefined; updateInspector(); draw(); } painting = false; pan = undefined; canvas.releasePointerCapture?.(event.pointerId); });
+canvas.addEventListener('pointerup', (event) => { if (visualDrag) { try { const next = structuredClone(history.current); visualDrag.items.forEach((item) => { next.visuals[item.index] = { ...next.visuals[item.index], x: item.x, y: item.y }; }); commitDraft(next, `已移动 ${visualDrag.items.length} 个装饰素材`); } catch (error) { setStatus(error.message); } visualDrag = undefined; updateInspector(); draw(); } painting = false; pan = undefined; canvas.releasePointerCapture?.(event.pointerId); });
 canvas.addEventListener('wheel', (event) => {
   event.preventDefault(); const point = pointAt(event); const world = worldAt(point); const next = Math.max(0.08, Math.min(3, view.scale * (event.deltaY < 0 ? 1.12 : 0.89)));
   view = { scale: next, x: point.x - world.x * next, y: point.y - world.y * next }; draw();
@@ -424,7 +498,7 @@ document.addEventListener('click', (event) => {
   if (!layerButton || !history) return;
   activeLayer = layerButton.dataset.editorLayer;
   document.querySelectorAll('[data-editor-layer]').forEach((button) => button.classList.toggle('active', button === layerButton));
-  selected = undefined; if (activeLayer !== 'visual') selectedVisual = undefined;
+  selected = undefined; selectedCells = []; if (activeLayer !== 'visual') { selectedVisual = undefined; selectedVisuals = []; }
   setStatus(activeLayer === 'visual' ? '装饰层：左键拖动素材，空白处拖动画布；中键/右键也可平移' : `当前图层：${activeLayer === 'spawn' ? '出生点' : '碰撞层'}；当前工具：${editorTool === 'select' ? '选择/移动' : editorTool === 'paint' ? '画方块' : '擦方块'}`);
   updateInspector(); draw();
 });
@@ -440,8 +514,10 @@ animationSpeed.addEventListener('input', updateAnimationConfig);
 document.addEventListener('click', (event) => {
   const action = event.target.dataset.editorAction;
   if (!action || !history) return;
-  if (action === 'undo') history = undo(history);
-  if (action === 'redo') history = redo(history);
+  if (action === 'undo') { history = undo(history); syncSelection(); }
+  if (action === 'redo') { history = redo(history); syncSelection(); }
+  if (action === 'copy') copySelection();
+  if (action === 'paste') pasteSelection();
   if (action === 'reset') resetDraft();
   if (action === 'export') downloadDraft();
   if (action === 'run') { if (!simulation) resetSimulation(); running = true; }
@@ -485,6 +561,17 @@ packageImporter.addEventListener('change', async () => {
   } catch (error) { setStatus(error.message); }
   packageImporter.value = '';
 });
-addEventListener('keydown', (event) => { if (event.code === 'Space' && !event.repeat) { event.preventDefault(); flipSimulation(); } });
+addEventListener('keydown', (event) => {
+  if (event.code === 'Space' && !event.repeat && !['INPUT', 'TEXTAREA', 'SELECT'].includes(event.target?.tagName)) { event.preventDefault(); flipSimulation(); return; }
+  if (['INPUT', 'TEXTAREA', 'SELECT'].includes(event.target?.tagName)) return;
+  const action = resolveEditorShortcut(event);
+  if (!action || !history) return;
+  event.preventDefault();
+  if (action === 'undo') history = undo(history);
+  if (action === 'redo') history = redo(history);
+  if (action === 'copy') copySelection();
+  if (action === 'paste') pasteSelection();
+  updateInspector(); draw();
+});
 load().catch((error) => { setStatus(error.message); validation.textContent = error.message; });
 requestAnimationFrame(advanceLoop);
