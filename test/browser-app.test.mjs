@@ -99,6 +99,10 @@ test('ships a Chinese original-style opening menu and animated end screen', asyn
   assert.match(app, /OPENING_BEAM_THICKNESS = 64/);
   assert.match(app, /OPENING_BEAM_DURATION_MS = 900/);
   assert.match(app, /OPENING_BEAM_APPROACH_MS = 560/);
+  assert.match(app, /const targetY = y \+ PLAYER_FRAME_HEIGHT \/ 2/);
+  assert.match(app, /const headY = startY \+ \(targetY - startY\) \* easedApproach/);
+  assert.match(app, /ctx\.drawImage\(openingBeam, centreX - thickness \/ 2 \+ jitter \+ offset, tailY, thickness, length\)/);
+  assert.doesNotMatch(app, /const targetX = x \+ PLAYER_FRAME_WIDTH \/ 2/);
   assert.match(app, /isBeamPhase/);
   assert.match(app, /drawOpeningBeam/);
   assert.doesNotMatch(app, /beginRaceIntro/);
