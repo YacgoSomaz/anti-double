@@ -178,7 +178,11 @@ test('runs a solo race entirely in the browser without a room socket or coordina
   const app = await readFile(new URL('../public/app.js', import.meta.url), 'utf8');
 
   assert.match(app, /import \{ GameRoom \} from '\/solo-game\.mjs';/);
+  assert.match(app, /let bakedLevel/);
+  assert.match(app, /bakedLevel = level/);
+  assert.match(app, /map = applyEditorDraftToLevel\(bakedLevel, cachedDraft\)/);
   assert.match(app, /function startSolo\(\)/);
+  assert.match(app, /function startSolo\(\)[\s\S]{0,700}loadCachedEditorDraft\(\)/);
   assert.match(app, /applyEditorDraftToLevel/);
   assert.match(app, /loadCachedEditorDraft/);
   assert.match(app, /soloRoom\.join\('solo'/);
