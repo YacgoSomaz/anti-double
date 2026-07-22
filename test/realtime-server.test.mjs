@@ -185,6 +185,12 @@ test('adds only a compact server tick timing sample to a race packet', () => {
   assert.equal(packet.d, 274);
 });
 
+test('carries the opening-morph clock in compact packets until physics is released', () => {
+  const packet = encodeRaceState({ tick: 2, cameraX: 0, cameraSpeed: 0, introTicksRemaining: 43, players: [] });
+
+  assert.equal(packet.i, 43);
+});
+
 test('adds authoritative final placements only when a race has results', () => {
   const packet = encodeRaceState({
     tick: 120, cameraX: 30, cameraSpeed: 140, players: [],

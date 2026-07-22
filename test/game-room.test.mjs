@@ -20,6 +20,30 @@ function startRoom(room, ...ids) {
   return room;
 }
 
+test('holds players and the camera still until the recovered opening morph completes', () => {
+  const room = new GameRoom({ ...tinyLevel, openingMorphTicks: 2 });
+  room.join('a');
+  assert.equal(room.start('a').ok, true);
+
+  let snapshot = room.snapshot();
+  assert.equal(snapshot.introTicksRemaining, 2);
+  assert.equal(snapshot.cameraSpeed, 0);
+  assert.deepEqual([snapshot.players[0].x, snapshot.players[0].y, snapshot.players[0].vx, snapshot.players[0].vy], [24, 96, 0, 0]);
+  assert.equal(room.input('a', { type: 'flip', sequence: 1 }).error, 'intro_active');
+
+  room.tick(1 / 40);
+  snapshot = room.snapshot();
+  assert.equal(snapshot.introTicksRemaining, 1);
+  assert.equal(snapshot.cameraX, 0);
+  assert.deepEqual([snapshot.players[0].x, snapshot.players[0].y, snapshot.players[0].vx, snapshot.players[0].vy], [24, 96, 0, 0]);
+
+  room.tick(1 / 40);
+  snapshot = room.snapshot();
+  assert.equal(snapshot.introTicksRemaining, 0);
+  assert.equal(snapshot.cameraSpeed, 120);
+  assert.deepEqual([snapshot.players[0].x, snapshot.players[0].y, snapshot.players[0].vx, snapshot.players[0].vy], [24, 96, 120, 0]);
+});
+
 test('keeps a lobby until its first player starts, with four fixed character roles', () => {
   const room = new GameRoom(tinyLevel);
   assert.equal(room.join('a', '蓝队长').player.slot, 1);
