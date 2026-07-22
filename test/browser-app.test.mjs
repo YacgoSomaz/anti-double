@@ -96,6 +96,8 @@ test('ships a Chinese original-style opening menu and animated end screen', asyn
   assert.match(app, /introTicksRemaining/);
   assert.match(app, /传送中/);
   assert.match(app, /assets\/effects\/checkpoint-beamlight\.png/);
+  assert.match(app, /assets\/effects\/elimination-boundary\.png/);
+  assert.match(app, /drawEliminationBoundary\(now\)/);
   assert.match(app, /OPENING_BEAM_THICKNESS = 64/);
   assert.match(app, /OPENING_BEAM_DURATION_MS = 900/);
   assert.match(app, /OPENING_BEAM_APPROACH_MS = 560/);
@@ -120,7 +122,7 @@ test('ships a Chinese original-style opening menu and animated end screen', asyn
   assert.match(app, /presentationOffsetX/);
   assert.match(app, /图片加载失败/);
   assert.match(app, /image\.decode/);
-  assert.match(app, /RACE_RESOURCE_TOTAL = 14/);
+  assert.match(app, /RACE_RESOURCE_TOTAL = 15/);
   assert.match(app, /loadJson\('\/data\/mp03-visual\.json'\)/);
   assert.match(app, /loadJson\('\/data\/mp04-visual\.json'\)/);
   assert.match(app, /Promise\.all\(\[mp02, mp03, mp04\]\.map\(preloadDecorationImages\)\)/);
