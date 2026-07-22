@@ -16,7 +16,7 @@ export const ITEM_EFFECT_TICKS = Object.freeze({
 });
 
 const ITEM_TYPE_ORDER = Object.freeze([ITEM_TYPES.gravityBurst, ITEM_TYPES.phase, ITEM_TYPES.speedBoost]);
-const DEFAULT_COUNT = 36;
+const DEFAULT_COUNT = 200;
 const DEFAULT_SEED = 44052;
 
 function number(value, fallback) {
@@ -61,7 +61,7 @@ export function createItemState(level) {
   if (!level?.itemConfig || level.itemConfig.enabled === false) return [];
 
   const finishX = Math.max(1000, number(level.finishX, 10000));
-  const count = Math.round(clamp(level.itemConfig.count, 1, 64, DEFAULT_COUNT));
+  const count = Math.round(clamp(level.itemConfig.count, 1, 256, DEFAULT_COUNT));
   const seed = number(level.itemConfig.seed, DEFAULT_SEED);
   const nextRandom = random(seed);
   // Keep the first pickup close enough to the starting camera that a short
@@ -70,6 +70,8 @@ export function createItemState(level) {
   const minX = Math.min(480, Math.max(240, finishX * 0.02));
   const maxX = Math.max(minX + 300, finishX - 500);
   const minimumSpacing = Math.max(180, number(level.itemConfig.minimumSpacing, 420));
+  const spacing = (maxX - minX) / Math.max(1, count - 1);
+  const horizontalJitter = Math.min(48, spacing * 0.12);
   const positions = [];
   for (let index = 0; index < count; index += 1) {
     // Put the first pickup at the beginning of the playable stretch.  Using
@@ -79,7 +81,10 @@ export function createItemState(level) {
     const progress = index / Math.max(1, count - 1);
     let x = minX + progress * (maxX - minX);
     for (let attempt = 0; attempt < 4; attempt += 1) {
-      x += (nextRandom() - 0.5) * minimumSpacing * 0.7;
+      // Keep the horizontal jitter small enough that a long course still
+      // guarantees another pickup within roughly three seconds at starting
+      // speed; randomness should vary the lane, not create long deserts.
+      x += (nextRandom() - 0.5) * horizontalJitter;
       x = Math.min(maxX, Math.max(minX, x));
       if (positions.every((previous) => Math.abs(previous - x) >= minimumSpacing * 0.55)) break;
     }

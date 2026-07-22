@@ -11,6 +11,7 @@ const MAX_MESSAGE_BYTES = 512;
 const MAX_MESSAGES_PER_SECOND = 20;
 const PHYSICS_HZ = 40;
 const DEFAULT_RACE_BROADCAST_HZ = 40;
+const ITEM_PACKET_RANGE = 1800;
 const publicDir = resolve(fileURLToPath(new URL('../public/', import.meta.url)));
 const soloGameModule = fileURLToPath(new URL('./game-room.mjs', import.meta.url));
 const collisionIndexModule = fileURLToPath(new URL('./collision-index.mjs', import.meta.url));
@@ -166,7 +167,7 @@ export function encodeRaceState(snapshot, tickIntervalMs) {
     c: [coordinate(snapshot.cameraX), coordinate(snapshot.cameraSpeed)],
     ...(snapshot.introTicksRemaining > 0 ? { i: snapshot.introTicksRemaining } : {}),
     ...(Number.isFinite(tickIntervalMs) ? { d: Math.max(0, Math.round(tickIntervalMs * 10)) } : {}),
-    ...(snapshot.items?.length ? { o: snapshot.items.filter((item) => item.active !== false).map((item) => [ITEM_TYPE_CODES[item.type] ?? 0, coordinate(item.x), coordinate(item.y)]) } : {}),
+    ...(snapshot.items?.length ? { o: snapshot.items.filter((item) => item.active !== false && Math.abs(Number(item.x) - Number(snapshot.cameraX)) <= ITEM_PACKET_RANGE).map((item) => [ITEM_TYPE_CODES[item.type] ?? 0, coordinate(item.x), coordinate(item.y)]) } : {}),
     ...(snapshot.results?.length ? { r: snapshot.results.map(({ slot, rank, outcome, score }) => [slot, rank, outcome === 'finished' ? 1 : 0, Math.max(0, Math.floor(score ?? 0))]) } : {}),
     p: snapshot.players.map((player) => [
       player.slot,
