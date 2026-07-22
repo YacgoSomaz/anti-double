@@ -20,7 +20,10 @@ export function createEditorDraft(level, source = 'marathon') {
     source: String(source),
     tileSize: Number(level?.tileSize),
     world: clone(level?.world ?? null),
-    colliders: clone(level?.colliders ?? []),
+    // Marathon seams can contain equivalent source cells twice.  Physics treats
+    // them as one solid cell; the editor must do the same so brush erasing has
+    // a single, deterministic target.
+    colliders: [...new Map((level?.colliders ?? []).map((cell) => [cellKey(cell), clone(cell)])).values()],
     spawns: clone(level?.spawns ?? []),
     finishX: Number(level?.finishX ?? 0),
     segments: clone(level?.segments ?? [])
