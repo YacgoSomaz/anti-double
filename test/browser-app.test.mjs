@@ -319,3 +319,11 @@ test('keeps developer controls opt-in and binds them only to local solo physics'
   assert.match(devMode, /角色碰撞箱/);
   assert.match(devMode, /淘汰边界/);
 });
+
+test('keeps the next-round action above every transient overlay and clears stale result UI before returning to menu', async () => {
+  const app = await readFile(new URL('../public/app.js', import.meta.url), 'utf8');
+  const stylesheet = await readFile(new URL('../public/style.css', import.meta.url), 'utf8');
+  assert.match(app, /function showEndScreen\(player\) \{[\s\S]*overlay\.hidden = true[\s\S]*frontScreen\.hidden = true/);
+  assert.match(app, /function returnToMenu\(\) \{[\s\S]*endScreen\.hidden = true[\s\S]*frontScreen\.hidden = false/);
+  assert.match(stylesheet, /#end-screen\s*\{[^}]*z-index:4/);
+});
