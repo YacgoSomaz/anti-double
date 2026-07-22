@@ -2,3 +2,6 @@
 .property-editor select { min-width: 0; width: 100%; padding: 4px; background: #0d222c; color: #d8edf4; border: 1px solid #365665; }
 .property-editor button { width: 100%; margin-top: 7px; }
 .collision-log { max-height: 128px; overflow: auto; margin: 8px 0 0; padding-left: 18px; color: #e2b873; font: 10px/1.5 ui-monospace, Consolas, monospace; }
+.physics-editor output,
+.animation-editor output { display: block; margin-top: 6px; }
+.animation-editor input[type="text"] { font: 10px ui-monospace, Consolas, monospace; }

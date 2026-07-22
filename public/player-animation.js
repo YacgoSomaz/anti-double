@@ -11,6 +11,30 @@ const FALL_FRAMES = [19, 20, 21, 22, 13, 14, 15, 16, 17, 18];
 const MORPH_FRAMES = Array.from({ length: 22 }, (_, index) => index + 23);
 export const MORPH_DURATION_MS = 1100;
 
+const EDITABLE_ANIMATION_PRESETS = Object.freeze({
+  run: Object.freeze({ sequence: RUN_FRAMES, speed: 20 }),
+  flip: Object.freeze({ sequence: FALL_FRAMES, speed: 12 }),
+  fall: Object.freeze({ sequence: FALL_FRAMES, speed: 12 }),
+  spawn: Object.freeze({ sequence: MORPH_FRAMES, speed: 20 }),
+  morph: Object.freeze({ sequence: MORPH_FRAMES, speed: 20 }),
+  eliminate: Object.freeze({ sequence: [19, 20, 21, 22, 18, 17, 16], speed: 14 })
+});
+
+export function animationPreset(state = 'run') {
+  const preset = EDITABLE_ANIMATION_PRESETS[state] ?? EDITABLE_ANIMATION_PRESETS.run;
+  return { sequence: [...preset.sequence], speed: preset.speed };
+}
+
+export function animationFrameFromSequence(sequence, milliseconds, framesPerSecond = 20) {
+  const frames = Array.isArray(sequence) && sequence.every((frame) => Number.isInteger(frame) && frame >= 0 && frame < PLAYER_ATLAS_COLUMNS * 9)
+    ? sequence
+    : [];
+  if (!frames.length) return 0;
+  const speed = Math.max(1, Number(framesPerSecond) || 20);
+  const index = Math.floor(Math.max(0, Number(milliseconds) || 0) / (1000 / speed)) % frames.length;
+  return frames[index];
+}
+
 export function animationFrame(milliseconds, airborne = false) {
   const frames = airborne ? FALL_FRAMES : RUN_FRAMES;
   const frameDuration = airborne ? 1000 / 12 : 1000 / 20;

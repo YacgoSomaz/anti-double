@@ -22,7 +22,7 @@ test('exposes editable animation presets and loops a custom sequence at its conf
   assert.equal(animationPreset('eliminate').sequence.length > 1, true);
   assert.equal(animationFrameFromSequence([4, 7, 9], 0, 10), 4);
   assert.equal(animationFrameFromSequence([4, 7, 9], 100, 10), 7);
-  assert.equal(animationFrameFromSequence([4, 7, 9], 350, 10), 7);
+  assert.equal(animationFrameFromSequence([4, 7, 9], 350, 10), 4);
 });
 
 test('falls back safely for an empty or invalid custom animation sequence', () => {

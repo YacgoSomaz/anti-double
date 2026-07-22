@@ -14,8 +14,9 @@ test('records monotonic flip inputs and returns them at the exact physics tick',
 test('exports a portable test package containing an editor draft and replay', () => {
   const draft = { version: 1, tileSize: 34, colliders: [], spawns: [{ x: 1, y: 1, gravity: 1, speedX: 100 }] };
   const replay = recordFlip(createReplay(), 3);
-  const value = parseTestPackage(exportTestPackage({ draft, replay, note: '穿墙复现' }));
+  const value = parseTestPackage(exportTestPackage({ draft, replay, parameters: { physics: { hitboxWidth: 30 }, animation: { sequence: [19, 20], speed: 14 } }, note: '穿墙复现' }));
   assert.equal(value.note, '穿墙复现');
   assert.deepEqual(value.replay.events, [{ type: 'flip', tick: 3 }]);
+  assert.deepEqual(value.parameters.animation, { sequence: [19, 20], speed: 14 });
   assert.throws(() => parseTestPackage('{"version":2}'), /测试包/);
 });

@@ -348,3 +348,17 @@ test('routes editor layer buttons to the canvas mode and supports visual draggin
   assert.match(editor, /event\.target\.closest\('\[data-editor-layer\]'\)/);
   assert.match(editor, /visualDrag/);
 });
+
+test('ships the physics and editable animation inspectors in the standalone editor', async () => {
+  const html = await readFile(new URL('../public/dev.html', import.meta.url), 'utf8');
+  const editor = await readFile(new URL('../public/editor.js', import.meta.url), 'utf8');
+  assert.match(html, /id="physics-readout"/);
+  assert.match(html, /id="physics-hitbox-width"/);
+  assert.match(html, /id="animation-sequence"/);
+  assert.match(html, /id="animation-speed"/);
+  assert.match(html, /value="eliminate"/);
+  assert.match(editor, /predictTrajectory/);
+  assert.match(editor, /contactsForPlayer/);
+  assert.match(editor, /animationFrameFromSequence/);
+  assert.match(editor, /apply-physics/);
+});

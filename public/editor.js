@@ -3,8 +3,9 @@ import { createReplay, eventsAtTick, exportTestPackage, parseTestPackage, record
 import { createLocalNetworkLab, deliverSnapshots, queueSnapshot } from '/editor-network.js';
 import { createDraftDiff } from '/editor-package.js';
 import { GameRoom } from '/solo-game.mjs';
-import { animationFrame, frameSourceRect, morphFrame } from '/player-animation.js';
+import { animationFrameFromSequence, animationPreset, frameSourceRect } from '/player-animation.js';
 import { projectVisual } from '/visual-projection.js';
+import { contactsForPlayer, hitboxForPlayer, playerContactsForPlayer, predictTrajectory } from '/editor-inspector.js';
 
 const canvas = document.querySelector('#editor-canvas');
 const ctx = canvas.getContext('2d');
@@ -34,6 +35,16 @@ const eliminationMargin = document.querySelector('#elimination-margin');
 const eliminationTop = document.querySelector('#elimination-top');
 const eliminationBottom = document.querySelector('#elimination-bottom');
 const collisionLog = document.querySelector('#collision-log');
+const physicsPlayer = document.querySelector('#physics-player');
+const physicsHitboxWidth = document.querySelector('#physics-hitbox-width');
+const physicsHitboxHeight = document.querySelector('#physics-hitbox-height');
+const physicsGravity = document.querySelector('#physics-gravity');
+const physicsRecovery = document.querySelector('#physics-recovery');
+const physicsReadout = document.querySelector('#physics-readout');
+const animationSequence = document.querySelector('#animation-sequence');
+const animationSpeed = document.querySelector('#animation-speed');
+const animationSpeedOutput = document.querySelector('#animation-speed-output');
+const animationFrameReadout = document.querySelector('#animation-frame-readout');
 let originalLevel;
 let sourceDraft;
 let history;
@@ -57,6 +68,8 @@ let simulationLastAt = performance.now();
 let lab = createLocalNetworkLab();
 const eventLog = [];
 const visualImages = new Map();
+let animationConfig = { state: 'run', sequence: animationPreset('run').sequence, speed: animationPreset('run').speed, playing: true, elapsed: 0, lastAt: performance.now() };
+let currentTrajectory = [];
 const animationImages = new Map(['blue', 'green', 'yellow', 'red'].map((color) => {
   const image = new Image(); image.src = `/assets/players/player-${color}.png`; return [color, image];
 }));
@@ -111,6 +124,46 @@ function updatePropertyEditor() {
   finishX.value = Math.round(draft.finishX ?? 0);
   eliminationMargin.value = Math.round(draft.elimination?.leftMargin ?? 60); eliminationTop.value = Math.round(draft.elimination?.top ?? -90); eliminationBottom.value = Math.round(draft.elimination?.bottom ?? 560);
 }
+function activePhysicsPlayer() {
+  const presented = simulation?.displayState ?? simulation?.state;
+  return presented?.players?.find((player) => player.slot === Number(physicsPlayer.value)) ?? presented?.players?.[0];
+}
+function updatePhysicsInspector() {
+  const presented = simulation?.displayState ?? simulation?.state;
+  const players = presented?.players ?? [];
+  physicsPlayer.replaceChildren(...players.map((player) => { const option = document.createElement('option'); option.value = String(player.slot); option.textContent = `玩家 ${player.slot} · ${player.name}`; return option; }));
+  if (players.length && !players.some((player) => player.slot === Number(physicsPlayer.value))) physicsPlayer.value = String(players[0].slot);
+  const player = activePhysicsPlayer();
+  const tuning = simulation?.room?.debugTuning?.() ?? { hitboxWidth: 37, hitboxHeight: 48, gravityMultiplier: 1, recoveryMultiplier: 1 };
+  if (document.activeElement !== physicsHitboxWidth) physicsHitboxWidth.value = tuning.hitboxWidth;
+  if (document.activeElement !== physicsHitboxHeight) physicsHitboxHeight.value = tuning.hitboxHeight;
+  if (document.activeElement !== physicsGravity) physicsGravity.value = tuning.gravityMultiplier;
+  if (document.activeElement !== physicsRecovery) physicsRecovery.value = tuning.recoveryMultiplier;
+  if (!player) { currentTrajectory = []; physicsReadout.textContent = '尚未运行'; return; }
+  const dimensions = { width: Number(tuning.hitboxWidth) || 37, height: Number(tuning.hitboxHeight) || 48, offsetX: 16, normalOffsetY: 19, invertedOffsetY: 9 };
+  const box = hitboxForPlayer(player, dimensions);
+  const contacts = contactsForPlayer(player, history.current.colliders, levelWorld(), dimensions);
+  const playerContacts = playerContactsForPlayer(player, players, dimensions);
+  const trajectory = predictTrajectory(player, { steps: 32, gravityAcceleration: 30000 * (Number(tuning.gravityMultiplier) || 1) }); currentTrajectory = trajectory;
+  const contactText = [...contacts.map((contact) => `格(${contact.x},${contact.y})`), ...playerContacts.map((contact) => `玩家${contact.slot}`)];
+  physicsReadout.textContent = `玩家 ${player.slot} · ${player.gravity < 0 ? '反重力' : '正常重力'}\n碰撞盒 L${Math.round(box.left)} T${Math.round(box.top)} · ${Math.round(box.width)}×${Math.round(box.height)}\n速度 ${Math.round(player.vx)}, ${Math.round(player.vy)} · 接触 ${contactText.length ? contactText.join(' ') : '无'}\n预测轨迹 ${trajectory.length - 1} 帧 · ${player.blockedX ? '水平受阻' : '未受阻'}`;
+}
+function drawPrediction(trajectory) {
+  if (!history || !trajectory?.length) return;
+  ctx.save(); ctx.strokeStyle = '#8ff4ffcc'; ctx.lineWidth = 2; ctx.setLineDash([4, 5]); ctx.beginPath();
+  trajectory.forEach((point, index) => { const x = view.x + point.x * view.scale; const y = view.y + point.y * view.scale; if (index === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y); });
+  ctx.stroke(); ctx.restore();
+}
+function setAnimationPreset(state = animationState.value) {
+  const preset = animationPreset(state);
+  animationConfig = { ...animationConfig, state, sequence: preset.sequence, speed: preset.speed, elapsed: 0, lastAt: performance.now() };
+  animationSequence.value = preset.sequence.join(','); animationSpeed.value = String(preset.speed); animationSpeedOutput.textContent = `${preset.speed} fps`; drawAnimation(performance.now());
+}
+function updateAnimationConfig() {
+  const sequence = animationSequence.value.split(',').map((value) => Number(value.trim())).filter((value) => Number.isInteger(value) && value >= 0 && value < 135);
+  animationConfig = { ...animationConfig, sequence: sequence.length ? sequence : animationPreset(animationState.value).sequence, speed: Math.max(1, Number(animationSpeed.value) || 20), lastAt: performance.now() };
+  animationSpeedOutput.textContent = `${animationConfig.speed} fps`; drawAnimation(performance.now());
+}
 function renderCollisionLog() {
   collisionLog.replaceChildren(...eventLog.slice(-12).map((entry) => { const item = document.createElement('li'); item.textContent = entry; return item; }));
 }
@@ -129,7 +182,11 @@ function updateInspector() {
   const draft = history.current; const valid = validateEditorDraft(draft);
   validation.textContent = valid.valid ? `草稿有效\n${draft.colliders.length} 个碰撞格\n撤销 ${history.undoStack.length} · 重做 ${history.redoStack.length}` : valid.errors.join('\n');
   const selection = selected ? `碰撞格 (${selected.x}, ${selected.y})` : selectedVisual !== undefined ? `装饰 ${history.current.visuals?.[selectedVisual]?.imageId ?? ''}` : '尚未选择对象';
-  inspector.replaceChildren(...[['选择', selection], ['图层', activeLayer], ['格尺寸', `${courseCell()} px`], ['终点', `${Math.round(draft.finishX)} px`], ['出生点', String(draft.spawns.length)]].flatMap(([term, description]) => {
+  const selectedDecoration = selectedVisual !== undefined ? draft.visuals?.[selectedVisual] : null;
+  const inspectorRows = [['选择', selection], ['图层', activeLayer], ['格尺寸', `${courseCell()} px`], ['终点', `${Math.round(draft.finishX)} px`], ['出生点', String(draft.spawns.length)]];
+  if (selectedDecoration) { inspectorRows.push(['坐标', `${Math.round(selectedDecoration.x)}, ${Math.round(selectedDecoration.y)}`]); inspectorRows.push(['尺寸', `${Math.round(selectedDecoration.width)}×${Math.round(selectedDecoration.height)}`]); }
+  if (selected) inspectorRows.push(['碰撞', '实心碰撞格']);
+  inspector.replaceChildren(...inspectorRows.flatMap(([term, description]) => {
     const dt = document.createElement('dt'); dt.textContent = term;
     const dd = document.createElement('dd'); dd.textContent = description;
     return [dt, dd];
@@ -140,6 +197,7 @@ function updateInspector() {
     ? `${running ? '运行中' : '已暂停'} · tick ${presented.tick}\n位置 ${Math.round(player.x)}, ${Math.round(player.y)}\n速度 ${Math.round(player.vx)}, ${Math.round(player.vy)} · 镜头 ${Math.round(presented.cameraSpeed)}\n本地 ${localPlayerCount.value} 人 · 显示延迟 ${lab.latencyMs} ms · 丢包 ${lab.dropped}\n回放事件 ${replay.events.length}${recording ? ' · 正在录制' : ''}${replaying ? ' · 回放中' : ''}`
     : '尚未运行。可先画碰撞格，再按“运行”验证本地物理。';
   updatePropertyEditor();
+  updatePhysicsInspector();
 }
 function drawGrid() {
   const size = courseCell() * view.scale;
@@ -157,6 +215,8 @@ function draw() {
   drawGrid();
   const guide = (worldX, color, label) => { const x = view.x + worldX * view.scale; ctx.save(); ctx.setLineDash([8, 6]); ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke(); ctx.fillStyle = color; ctx.font = 'bold 12px Arial'; ctx.fillText(label, x + 5, 18); ctx.restore(); };
   guide(history.current.cameraTargetX ?? 320, '#23e6d2', '镜头目标');
+  const liveCamera = simulation?.displayState ?? simulation?.state;
+  if (Number.isFinite(liveCamera?.cameraX)) guide(liveCamera.cameraX + (history.current.cameraTargetX ?? 320), '#ffffffaa', '当前镜头中线');
   guide(history.current.finishX, '#ffd166', '终点');
   guide((history.current.cameraTargetX ?? 320) - 350 - (history.current.elimination?.leftMargin ?? 60), '#ff5f6d', '淘汰线');
   const world = levelWorld(); const bounds = history.current.elimination ?? { top: -90, bottom: 560 }; ctx.save(); ctx.strokeStyle = '#ff5f6d80'; ctx.setLineDash([3, 5]); for (const y of [bounds.top, bounds.bottom]) { const screenY = view.y + (world.originY - y) * view.scale; ctx.beginPath(); ctx.moveTo(0, screenY); ctx.lineTo(canvas.width, screenY); ctx.stroke(); } ctx.restore();
@@ -172,13 +232,21 @@ function draw() {
     ctx.fillStyle = spawn.gravity < 0 ? '#8dff8b' : '#3ce6df'; ctx.beginPath(); ctx.arc(x, y, 8, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = '#05303d'; ctx.font = 'bold 11px Arial'; ctx.fillText(`出生 ${spawn.gravity < 0 ? '↑' : '↓'}`, x + 10, y + 4);
   }
+  drawPrediction(currentTrajectory);
   const presented = simulation?.displayState ?? simulation?.state;
   if (presented) for (const player of presented.players) {
     const x = view.x + player.x * view.scale;
     const y = view.y + player.y * view.scale;
-    ctx.save(); ctx.translate(x + 34 * view.scale, y + 34 * view.scale); if (player.gravity < 0) ctx.scale(1, -1);
-    ctx.fillStyle = '#20dce0'; ctx.fillRect(-12 * view.scale, -18 * view.scale, 24 * view.scale, 36 * view.scale); ctx.restore();
+    const image = animationImages.get(player.character);
+    const frame = animationFrameFromSequence(animationConfig.sequence, animationConfig.elapsed, animationConfig.speed);
+    ctx.save(); ctx.translate(x + 32.5 * view.scale, y + 38.5 * view.scale); if (player.gravity < 0) ctx.scale(1, -1);
+    if (image?.complete && image.naturalWidth) { const source = frameSourceRect(frame); ctx.imageSmoothingEnabled = false; ctx.drawImage(image, source.x, source.y, source.width, source.height, -32.5 * view.scale, -38.5 * view.scale, 65 * view.scale, 77 * view.scale); }
+    else { ctx.fillStyle = '#20dce0'; ctx.fillRect(-12 * view.scale, -18 * view.scale, 24 * view.scale, 36 * view.scale); }
+    ctx.restore();
+    ctx.save(); ctx.font = 'bold 11px Arial'; ctx.textAlign = 'center'; ctx.strokeStyle = '#071319'; ctx.lineWidth = 3; ctx.fillStyle = '#f3fbff'; ctx.strokeText(player.name, x + 32.5 * view.scale, y - 4); ctx.fillText(player.name, x + 32.5 * view.scale, y - 4); ctx.restore();
   }
+  const physicsPlayerState = activePhysicsPlayer();
+  if (physicsPlayerState) { const tuning = simulation?.room?.debugTuning?.() ?? {}; const box = hitboxForPlayer(physicsPlayerState, { width: Number(tuning.hitboxWidth) || 37, height: Number(tuning.hitboxHeight) || 48, offsetX: 16, normalOffsetY: 19, invertedOffsetY: 9 }); const left = view.x + box.left * view.scale; const top = view.y + box.top * view.scale; ctx.save(); ctx.setLineDash([4, 3]); ctx.strokeStyle = '#ffeb70'; ctx.lineWidth = 2; ctx.strokeRect(left, top, (box.right - box.left) * view.scale, (box.bottom - box.top) * view.scale); ctx.restore(); }
   if (selected) { const box = cellScreen(selected); ctx.lineWidth = 3; ctx.strokeStyle = '#fff'; ctx.strokeRect(box.x + 1, box.y + 1, box.size - 2, box.size - 2); }
 }
 function editAt(point) {
@@ -242,9 +310,12 @@ function advanceLoop(now) {
 }
 function drawAnimation(now) {
   const image = animationImages.get(animationCharacter.value); if (!image?.complete || !image.naturalWidth) return;
-  const frame = animationState.value === 'morph' ? morphFrame(now % 1100) : animationFrame(now, animationState.value === 'fall');
+  if (animationConfig.playing) animationConfig.elapsed += Math.max(0, now - animationConfig.lastAt);
+  animationConfig.lastAt = now;
+  const frame = animationFrameFromSequence(animationConfig.sequence, animationConfig.elapsed, animationConfig.speed);
   const source = frameSourceRect(frame); animationCtx.clearRect(0, 0, animationCanvas.width, animationCanvas.height);
   animationCtx.imageSmoothingEnabled = false; animationCtx.drawImage(image, source.x, source.y, source.width, source.height, 77, 20, 65, 77);
+  animationFrameReadout.textContent = `帧 ${frame} · ${animationConfig.sequence.join(',')} · ${animationConfig.speed} fps`;
   animationCtx.fillStyle = '#b8e6ec'; animationCtx.font = '11px ui-monospace'; animationCtx.fillText(`帧 ${frame} · ${animationState.value}`, 8, 119);
 }
 function configureLab() {
@@ -257,6 +328,20 @@ function applyProperties() {
     for (const [path, value] of values) history = updateEditorProperty(history, { path, value });
     setStatus('场景属性已应用，并已进入撤销历史'); renderSegments(); updateInspector(); draw();
   } catch (error) { setStatus(error.message); }
+}
+function applyPhysics() {
+  try {
+    if (!simulation) resetSimulation();
+    simulation.room.setDebugTuning({
+      ...simulation.room.debugTuning(),
+      hitboxWidth: physicsHitboxWidth.value,
+      hitboxHeight: physicsHitboxHeight.value,
+      gravityMultiplier: physicsGravity.value,
+      recoveryMultiplier: physicsRecovery.value
+    });
+    advanceSimulation(1);
+    setStatus('物理参数已应用，并已执行单帧验证');
+  } catch (error) { setStatus(`物理参数无效：${error.message}`); }
 }
 function downloadDraft() {
   const link = document.createElement('a'); const url = URL.createObjectURL(new Blob([exportEditorDraft(history.current)], { type: 'application/json' }));
@@ -316,6 +401,11 @@ document.addEventListener('click', (event) => {
 spawnIndex.addEventListener('change', updatePropertyEditor);
 localPlayerCount.addEventListener('change', () => { resetSimulation(); });
 latencyInput.addEventListener('input', configureLab); lossInput.addEventListener('input', configureLab);
+physicsPlayer.addEventListener('change', updatePhysicsInspector);
+animationCharacter.addEventListener('change', () => drawAnimation(performance.now()));
+animationState.addEventListener('change', () => setAnimationPreset(animationState.value));
+animationSequence.addEventListener('input', updateAnimationConfig);
+animationSpeed.addEventListener('input', updateAnimationConfig);
 document.addEventListener('click', (event) => {
   const action = event.target.dataset.editorAction;
   if (!action || !history) return;
@@ -331,9 +421,11 @@ document.addEventListener('click', (event) => {
   if (action === 'playback') { resetSimulation(true); running = true; }
   if (action === 'sim-reset') resetSimulation();
   if (action === 'apply-properties') applyProperties();
+  if (action === 'apply-physics') applyPhysics();
+  if (action === 'animation-toggle') { animationConfig.playing = !animationConfig.playing; event.target.textContent = `动画：${animationConfig.playing ? '播放' : '暂停'}`; animationConfig.lastAt = performance.now(); }
   if (action === 'test-package') {
     const diff = createDraftDiff(sourceDraft, history.current);
-    const link = document.createElement('a'); const url = URL.createObjectURL(new Blob([exportTestPackage({ draft: history.current, replay, diff, parameters: { localPlayers: Number(localPlayerCount.value), latencyMs: lab.latencyMs, lossPercent: lab.lossPercent }, note: '从 /dev 导出的物理复现包，请人工审核后再提交 Git' })], { type: 'application/json' }));
+    const link = document.createElement('a'); const url = URL.createObjectURL(new Blob([exportTestPackage({ draft: history.current, replay, diff, parameters: { localPlayers: Number(localPlayerCount.value), latencyMs: lab.latencyMs, lossPercent: lab.lossPercent, physics: simulation?.room?.debugTuning?.() ?? null, animation: { state: animationConfig.state, sequence: animationConfig.sequence, speed: animationConfig.speed } }, note: '从 /dev 导出的物理复现包，请人工审核后再提交 Git' })], { type: 'application/json' }));
     link.href = url; link.download = 'gswitch-test-package.json'; link.click(); URL.revokeObjectURL(url);
     setStatus(`测试包已生成：新增 ${diff.addedColliders.length} 格，删除 ${diff.removedColliders.length} 格`);
   }
@@ -349,7 +441,14 @@ packageImporter.addEventListener('change', async () => {
   if (!packageImporter.files?.[0]) return;
   try {
     const pack = parseTestPackage(await packageImporter.files[0].text());
-    history = createHistory(pack.draft); replay = pack.replay; setStatus(`已导入测试包：${pack.note || '无备注'}`); renderSegments(); updateInspector(); draw();
+    history = createHistory(pack.draft); replay = pack.replay;
+    if (pack.parameters?.localPlayers) localPlayerCount.value = String(Math.min(4, Math.max(1, Number(pack.parameters.localPlayers))));
+    if (pack.parameters?.latencyMs !== undefined) latencyInput.value = String(pack.parameters.latencyMs);
+    if (pack.parameters?.lossPercent !== undefined) lossInput.value = String(pack.parameters.lossPercent);
+    configureLab();
+    if (pack.parameters?.physics) { if (!simulation) resetSimulation(); simulation.room.setDebugTuning(pack.parameters.physics); }
+    if (pack.parameters?.animation?.sequence?.length) { animationState.value = pack.parameters.animation.state ?? 'run'; animationSequence.value = pack.parameters.animation.sequence.join(','); animationSpeed.value = String(pack.parameters.animation.speed ?? 20); updateAnimationConfig(); }
+    setStatus(`已导入测试包：${pack.note || '无备注'}`); renderSegments(); updateInspector(); draw();
   } catch (error) { setStatus(error.message); }
   packageImporter.value = '';
 });
