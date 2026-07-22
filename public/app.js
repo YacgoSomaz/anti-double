@@ -10,6 +10,7 @@ import { applyRaceViewport, RACE_BACKDROP_SCALE, worldViewportBounds } from '/ra
 import { ELIMINATION_BOUNDARY_FRAME_COUNT, eliminationBoundaryFrame } from '/elimination-boundary.js';
 import { GameRoom } from '/solo-game.mjs';
 import { DEFAULT_DEV_TUNING, createDeveloperPanel, exportDevConfig, isDeveloperMode, loadDevTuning, parseDevConfig, saveDevTuning } from '/dev-mode.js';
+import { applyEditorDraftToLevel, loadCachedEditorDraft } from '/playable-map.js';
 
 const canvas = document.querySelector('#game');
 const gameShell = document.querySelector('.game-shell');
@@ -203,7 +204,9 @@ const mapLoad = Promise.all([
   loadJson('/data/marathon.json'), loadJson('/data/mp02-visual.json'),
   loadJson('/data/mp03-visual.json'), loadJson('/data/mp04-visual.json'),
 ]).then(async ([level, mp02, mp03, mp04]) => {
-  map = level;
+  const cachedDraft = loadCachedEditorDraft();
+  map = applyEditorDraftToLevel(level, cachedDraft);
+  if (cachedDraft) courseStatus.textContent = '已应用本地赛道草稿 · 单人模式使用编辑器调整';
   visualMaps = new Map([['mp02', mp02], ['mp03', mp03], ['mp04', mp04]]);
   await Promise.all([mp02, mp03, mp04].map(preloadDecorationImages));
   draw();

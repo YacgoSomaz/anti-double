@@ -269,6 +269,24 @@ test('allows the smaller shared collision box through a one-cell world gap', () 
   assert.equal(player.x > 24, true);
 });
 
+test('sweeps a fast solo runner across the full vertical path before allowing a wall crossing', () => {
+  const room = new GameRoom({
+    tileSize: 48,
+    colliders: [{ x: 2, y: 0 }],
+    // Keep the runner level with the wall so this exercises horizontal
+    // tunnelling rather than a legitimate floor landing.
+    spawns: [{ x: 40, y: -10, gravity: 1, speedX: 769.812 }]
+  });
+  room.join('solo');
+  room.setDebugTuning({ cameraSpeedMultiplier: 2 });
+  room.start('solo');
+  room.tick(1 / 40);
+
+  const player = room.snapshot().players[0];
+  assert.equal(player.blockedX, true);
+  assert.equal(player.x + player.hitbox.offsetX + player.hitbox.width <= 96, true);
+});
+
 test('keeps a runner on the newly visible lower route in the race', () => {
   const room = new GameRoom({
     tileSize: 48,

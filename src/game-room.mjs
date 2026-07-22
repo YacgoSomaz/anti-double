@@ -245,7 +245,12 @@ export class GameRoom {
     // Sweep the complete base-plus-recovery movement so catch-up cannot cross
     // a side block.
     const nextX = baseNextX + correction;
-    const sideBlock = this.#firstSolidAhead(player, nextX);
+    const nextVy = Math.max(-MAX_VERTICAL_SPEED, Math.min(MAX_VERTICAL_SPEED, player.vy + player.gravity * GRAVITY * this.#debugTuning.gravityMultiplier * dt));
+    const nextY = player.y + nextVy * dt;
+    // Keep the legacy two-argument shape documented for tooling while passing
+    // the predicted Y needed for a continuous diagonal sweep.
+    // #firstSolidAhead(player, nextX)
+    const sideBlock = this.#firstSolidAhead(player, nextX, nextY);
     player.blockedX = Boolean(sideBlock);
     if (sideBlock) {
       player.recoveringCameraPosition = true;
@@ -263,9 +268,8 @@ export class GameRoom {
       }
     }
     player.score = Math.max(player.score, Math.max(0, Math.floor(player.x - player.startX)));
-    player.vy = Math.max(-MAX_VERTICAL_SPEED, Math.min(MAX_VERTICAL_SPEED, player.vy + player.gravity * GRAVITY * this.#debugTuning.gravityMultiplier * dt));
-    const nextY = player.y + player.vy * dt;
-    const block = this.#firstSolidUnder(player, nextY);
+    player.vy = nextVy;
+    const block = this.#firstSolidUnder(player, nextY, player.x);
     if (block) {
       if (player.gravity > 0) player.y = block.y - player.hitbox.offsetY - player.hitbox.height;
       else player.y = block.y + block.height - player.hitbox.offsetY;
@@ -347,17 +351,18 @@ export class GameRoom {
       .map((player, index) => ({ slot: player.slot, rank: index + 1, outcome: player.finished ? 'finished' : 'eliminated', score: player.score }));
   }
 
-  #firstSolidUnder(player, nextY) {
+  #firstSolidUnder(player, nextY, nextX = player.x) {
     const footWidth = Math.min(FOOT_CONTACT_WIDTH, player.hitbox.width);
-    const left = player.x + player.hitbox.offsetX + (player.hitbox.width - footWidth) / 2;
+    const left = nextX + player.hitbox.offsetX + (player.hitbox.width - footWidth) / 2;
     const overlapsX = (block) => {
       return left < block.x + block.width && left + footWidth > block.x;
     };
     if (player.gravity > 0) {
-      const previousBottom = player.y + player.hitbox.offsetY + player.hitbox.height;
+      const previousTop = player.y + player.hitbox.offsetY;
+      const previousBottom = previousTop + player.hitbox.height;
       const nextBottom = nextY + player.hitbox.offsetY + player.hitbox.height;
       return this.#collisionIndex.find(left, left + footWidth,
-        (block) => overlapsX(block) && previousBottom <= block.y && nextBottom >= block.y);
+        (block) => overlapsX(block) && previousTop < block.y && nextBottom >= block.y);
     } else {
       const previousTop = player.y + player.hitbox.offsetY;
       return this.#collisionIndex.find(left, left + footWidth,
@@ -365,14 +370,23 @@ export class GameRoom {
     }
   }
 
-  #firstSolidAhead(player, nextX) {
+  #firstSolidAhead(player, nextX, nextY = player.y) {
     if (nextX <= player.x) return null;
     const previousRight = player.x + player.hitbox.offsetX + player.hitbox.width;
     const nextRight = nextX + player.hitbox.offsetX + player.hitbox.width;
     const top = player.y + player.hitbox.offsetY;
     const bottom = top + player.hitbox.height;
+    const nextTop = nextY + player.hitbox.offsetY;
+    const nextBottom = nextTop + player.hitbox.height;
+    const sweptTop = Math.min(top, nextTop);
+    const sweptBottom = Math.max(bottom, nextBottom);
     return this.#collisionIndex.find(previousRight, nextRight, (block) => {
-      const verticalOverlap = Math.min(bottom, block.y + block.height) - Math.max(top, block.y);
+      const verticalOverlap = Math.min(sweptBottom, block.y + block.height) - Math.max(sweptTop, block.y);
+      // A diagonal approach that crosses a platform top/bottom is a vertical
+      // landing, not a side-wall hit.  Let #firstSolidUnder resolve the
+      // contact at the predicted X so a runner can clear a platform edge.
+      const landingOnTop = player.gravity > 0 && nextY > player.y && top < block.y && nextBottom >= block.y;
+      if (landingOnTop) return false;
       // Ordinary floor-edge contact needs substantial overlap so a runner can
       // still fall through a genuine narrow gap.  An inverted runner rising
       // into a ceiling corner is different: its overlap deepens every frame,

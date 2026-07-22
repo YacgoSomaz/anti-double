@@ -82,6 +82,9 @@ test('serves the playable browser client with strict security headers', async (c
   const soloPhysics = await fetch(`http://127.0.0.1:${port}/solo-game.mjs`);
   assert.equal(soloPhysics.status, 200);
   assert.match(await soloPhysics.text(), /export class GameRoom/);
+  const playableMap = await fetch(`http://127.0.0.1:${port}/playable-map.js`);
+  assert.equal(playableMap.status, 200);
+  assert.match(await playableMap.text(), /applyEditorDraftToLevel/);
   const collisionIndex = await fetch(`http://127.0.0.1:${port}/collision-index.mjs`);
   assert.equal(collisionIndex.status, 200);
   assert.match(await collisionIndex.text(), /createCollisionIndex/);
@@ -176,6 +179,8 @@ test('runs a solo race entirely in the browser without a room socket or coordina
 
   assert.match(app, /import \{ GameRoom \} from '\/solo-game\.mjs';/);
   assert.match(app, /function startSolo\(\)/);
+  assert.match(app, /applyEditorDraftToLevel/);
+  assert.match(app, /loadCachedEditorDraft/);
   assert.match(app, /soloRoom\.join\('solo'/);
   assert.match(app, /soloRoom\.tick\(1 \/ 40\)/);
   assert.match(app, /soloRoom\.input\('solo'/);
