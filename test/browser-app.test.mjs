@@ -91,6 +91,9 @@ test('ships a Chinese original-style opening menu and animated end screen', asyn
   assert.match(stylesheet, /loading-splash\.png/);
   assert.match(stylesheet, /multi-end\.png/);
   assert.match(app, /showEndScreen/);
+  assert.match(app, /beginRaceIntro/);
+  assert.match(app, /MORPH_DURATION_MS/);
+  assert.match(app, /morphFrame\(introElapsed\)/);
   assert.match(app, /赛道：MP03 → MP04 → MP02/);
   assert.match(app, /renderLobby/);
   assert.match(app, /lobby-avatar/);
