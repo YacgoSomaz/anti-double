@@ -203,6 +203,19 @@ test('marks a player eliminated when their sprite leaves the multiplayer stage',
   assert.equal(room.input('a', { type: 'flip', sequence: 1 }).error, 'eliminated');
 });
 
+test('keeps a runner on the newly visible lower route in the race', () => {
+  const room = new GameRoom({
+    tileSize: 48,
+    colliders: [],
+    spawns: [{ x: 100, y: 510, gravity: 1, speedX: 0 }]
+  });
+  room.join('a');
+  room.start('a');
+  room.tick(1 / 40);
+
+  assert.equal(room.snapshot().players[0].eliminated, false);
+});
+
 test('identifies a fully completed room separately from a race that is still running', () => {
   const room = new GameRoom({
     tileSize: 48,
