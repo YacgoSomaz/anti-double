@@ -30,7 +30,7 @@ test('puts the first procedural item inside the opening playable stretch', () =>
   const level = { ...openLevel, finishX: 99892, itemConfig: { seed: 44052, count: 18, minimumSpacing: 420 } };
   const items = createItemState(level);
 
-  assert.equal(items[0].x <= 2000, true);
+  assert.equal(items[0].x <= 700, true);
   assert.equal(items.at(-1).x < level.finishX, true);
 });
 
