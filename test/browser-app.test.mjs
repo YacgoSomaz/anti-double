@@ -24,6 +24,8 @@ test('serves the playable browser client with strict security headers', async (c
   assert.match(editorHtml, /选择 \/ 移动/);
   assert.match(editorHtml, /name="editor-tool"/);
   assert.match(editorHtml, /data-editor-action="copy"/);
+  assert.match(editorHtml, /data-editor-action="delete"/);
+  assert.match(editorHtml, /id="asset-palette"/);
   assert.match(editorHtml, /Ctrl\/Cmd\+C\/V/);
   const editorScript = await fetch(`http://127.0.0.1:${port}/editor.js`);
   assert.equal(editorScript.status, 200);
@@ -34,6 +36,9 @@ test('serves the playable browser client with strict security headers', async (c
   const editorForm = await fetch(`http://127.0.0.1:${port}/editor-form.js`);
   assert.equal(editorForm.status, 200);
   assert.match(await editorForm.text(), /preserveSelectIndex/);
+  const editorAssets = await fetch(`http://127.0.0.1:${port}/editor-assets.js`);
+  assert.equal(editorAssets.status, 200);
+  assert.match(await editorAssets.text(), /uniqueVisualAssets/);
   const animationScript = await fetch(`http://127.0.0.1:${port}/player-animation.js`);
   assert.equal(animationScript.status, 200);
 

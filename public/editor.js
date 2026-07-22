@@ -10,6 +10,7 @@ import { resolveEditorGesture } from '/editor-input.js';
 import { cellFromWorld } from '/editor-grid.js';
 import { resolveEditorShortcut } from '/editor-selection.js';
 import { preserveSelectIndex } from '/editor-form.js';
+import { addVisual, removeSelectedObjects, uniqueVisualAssets } from '/editor-assets.js';
 
 const canvas = document.querySelector('#editor-canvas');
 const ctx = canvas.getContext('2d');
@@ -53,6 +54,8 @@ const timelineScrub = document.querySelector('#timeline-scrub');
 const timelineTick = document.querySelector('#timeline-tick');
 const timelineConsole = document.querySelector('#timeline-console');
 const timelineErrors = document.querySelector('#timeline-errors');
+const assetPalette = document.querySelector('#asset-palette');
+const assetSearch = document.querySelector('#asset-search');
 let originalLevel;
 let sourceDraft;
 let history;
@@ -68,6 +71,8 @@ let selectedVisuals = [];
 let visualDrag;
 let editorClipboard;
 let pasteSerial = 0;
+let paletteAssets = [];
+let paletteAsset;
 let visualMaps = new Map();
 let running = false;
 let simulation;
@@ -145,6 +150,41 @@ function selectVisual(index, additive = false) {
   else selectedVisuals = selectedVisuals.includes(index) ? selectedVisuals.filter((candidate) => candidate !== index) : [...selectedVisuals, index];
   selectedVisual = selectedVisuals.at(-1);
   return selectedVisuals.includes(index);
+}
+function activateVisualLayer() {
+  activeLayer = 'visual';
+  document.querySelectorAll('[data-editor-layer]').forEach((button) => button.classList.toggle('active', button.dataset.editorLayer === 'visual'));
+  setStatus('装饰层：点击素材后在画布空白处放置，或直接拖入画布');
+  updateInspector(); draw();
+}
+function renderAssetPalette() {
+  if (!assetPalette) return;
+  const query = String(assetSearch?.value ?? '').trim().toLowerCase();
+  const visible = paletteAssets.filter((asset) => `${asset.imageId ?? ''} ${asset.assetFile}`.toLowerCase().includes(query));
+  assetPalette.replaceChildren(...visible.map((asset) => {
+    const button = document.createElement('button'); button.type = 'button'; button.className = `asset-palette-item${paletteAsset?.assetFile === asset.assetFile ? ' active' : ''}`; button.draggable = true; button.title = `${asset.imageId ?? ''} · ${asset.assetFile}`;
+    const image = document.createElement('img'); image.alt = ''; image.src = `/assets/visual/${asset.assetFile}`; image.loading = 'lazy';
+    const label = document.createElement('span'); label.textContent = String(asset.imageId ?? asset.assetFile).replace(/PlayState_Img|\.png$/gi, ''); button.append(image, label);
+    button.addEventListener('click', () => { paletteAsset = paletteAsset?.assetFile === asset.assetFile ? undefined : asset; if (paletteAsset) activateVisualLayer(); else { setStatus('已取消素材放置'); renderAssetPalette(); } });
+    button.addEventListener('dragstart', (event) => { event.dataTransfer?.setData('application/x-gswitch-asset', asset.assetFile); event.dataTransfer?.setData('text/plain', asset.assetFile); activateVisualLayer(); });
+    return button;
+  }));
+}
+function placePaletteAsset(point, asset = paletteAsset) {
+  if (!asset) return false;
+  const position = worldAt(point); const next = addVisual(history.current, asset, { x: position.x - asset.width / 2, y: position.y - asset.height / 2 });
+  const index = next.visuals.length - 1; commitDraft(next, `已放置素材：${asset.assetFile}`); selectedVisuals = [index]; selectedVisual = index; selected = undefined; selectedCells = []; updateInspector(); draw(); return true;
+}
+function deleteSelection() {
+  if (selectedCells.length) {
+    const next = removeSelectedObjects(history.current, { collisionKeys: selectedCells });
+    commitDraft(next, `已删除 ${selectedCells.length} 个碰撞格`); clearSelection(); updateInspector(); draw(); return true;
+  }
+  if (selectedVisuals.length) {
+    const next = removeSelectedObjects(history.current, { visualIndices: selectedVisuals });
+    commitDraft(next, `已删除 ${selectedVisuals.length} 个装饰素材`); clearSelection(); updateInspector(); draw(); return true;
+  }
+  setStatus('没有可删除的选中对象'); return false;
 }
 function copySelection() {
   if (activeLayer === 'collision' && selectedCells.length) {
@@ -464,12 +504,13 @@ async function load() {
   const responses = await Promise.all(['marathon', 'mp02-visual', 'mp03-visual', 'mp04-visual'].map((name) => fetch(`/data/${name}.json`)));
   if (responses.some((response) => !response.ok)) throw new Error('无法读取赛道或装饰数据');
   const [level, mp02, mp03, mp04] = await Promise.all(responses.map((response) => response.json())); visualMaps = new Map([['mp02', mp02], ['mp03', mp03], ['mp04', mp04]]);
-  originalLevel = { ...level, visuals: flattenVisuals(level, visualMaps) }; resetDraft(); renderSegments();
+  originalLevel = { ...level, visuals: flattenVisuals(level, visualMaps) }; paletteAssets = uniqueVisualAssets(originalLevel.visuals); renderAssetPalette(); resetDraft(); renderSegments();
 }
 
 canvas.addEventListener('contextmenu', (event) => event.preventDefault());
 canvas.addEventListener('pointerdown', (event) => {
   const point = pointAt(event);
+  if (event.button === 0 && activeLayer === 'visual' && paletteAsset && visualAt(point) < 0) { placePaletteAsset(point); canvas.setPointerCapture(event.pointerId); return; }
   const gesture = resolveEditorGesture({ activeLayer, tool: editorTool, button: event.button, visualHit: visualAt(point) });
   if (gesture.type === 'pan') { pan = { point, view: { ...view } }; canvas.setPointerCapture(event.pointerId); return; }
   if (gesture.type === 'drag-visual') {
@@ -494,7 +535,14 @@ canvas.addEventListener('wheel', (event) => {
   event.preventDefault(); const point = pointAt(event); const world = worldAt(point); const next = Math.max(0.08, Math.min(3, view.scale * (event.deltaY < 0 ? 1.12 : 0.89)));
   view = { scale: next, x: point.x - world.x * next, y: point.y - world.y * next }; draw();
 }, { passive: false });
+canvas.addEventListener('dragover', (event) => event.preventDefault());
+canvas.addEventListener('drop', (event) => {
+  event.preventDefault(); const assetFile = event.dataTransfer?.getData('application/x-gswitch-asset') || event.dataTransfer?.getData('text/plain');
+  const asset = paletteAssets.find((candidate) => candidate.assetFile === assetFile); if (!asset) return;
+  activateVisualLayer(); paletteAsset = asset; renderAssetPalette(); placePaletteAsset(pointAt(event), asset);
+});
 document.addEventListener('change', (event) => { if (event.target.name === 'editor-tool') editorTool = event.target.value; if (event.target.dataset.editorLayer) { activeLayer = event.target.dataset.editorLayer; updateInspector(); } });
+assetSearch?.addEventListener('input', renderAssetPalette);
 document.addEventListener('click', (event) => {
   const layerButton = event.target.closest('[data-editor-layer]');
   if (!layerButton || !history) return;
@@ -520,6 +568,7 @@ document.addEventListener('click', (event) => {
   if (action === 'redo') { history = redo(history); syncSelection(); }
   if (action === 'copy') copySelection();
   if (action === 'paste') pasteSelection();
+  if (action === 'delete') deleteSelection();
   if (action === 'reset') resetDraft();
   if (action === 'export') downloadDraft();
   if (action === 'run') { if (!simulation) resetSimulation(); running = true; }
@@ -566,6 +615,7 @@ packageImporter.addEventListener('change', async () => {
 addEventListener('keydown', (event) => {
   if (event.code === 'Space' && !event.repeat && !['INPUT', 'TEXTAREA', 'SELECT'].includes(event.target?.tagName)) { event.preventDefault(); flipSimulation(); return; }
   if (['INPUT', 'TEXTAREA', 'SELECT'].includes(event.target?.tagName)) return;
+  if ((event.key === 'Delete' || event.key === 'Backspace') && history) { event.preventDefault(); deleteSelection(); return; }
   const action = resolveEditorShortcut(event);
   if (!action || !history) return;
   event.preventDefault();
