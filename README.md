@@ -103,6 +103,8 @@ docs/reverse-analysis.md 原始 SWF 的证据账本与逆向结论
 
 蓝色玩家可在本地使用 Zerie 的 `Tiny RPG Character Asset Pack 02` 免费版中的 `Demon_A_Walk.png`。该文件刻意不提交到仓库：按作者许可证，游戏内使用和修改允许，但不能重新分发、转售或上传素材本体。部署前应由已获取该素材包的管理员将其复制到 `public/assets/players/player-demon-a.png`。
 
+项目内的“骑乘小鬼”使用 6 帧自定义走路动画。原始绿幕帧仅保存在本机忽略目录 `artifacts/mounted-demon/source/`；用 `python tools/build-mounted-demon-skin.py <帧1> ... <帧6>` 可重新生成已提交的透明运行图集 `public/assets/players/player-mounted-demon.png`。此处理只抠除亮绿色、最近邻缩放和固定锚点，不会用 AI 重画任何动作。
+
 ## 2026-07-21 交接摘要
 
 - 正确样本为 `assets/reverse/4399-44052-32.swf`；完整导出在 `assets/reverse/ffdec-44052-20260720/`，深度解包结论见 [SWF 深度解包报告](docs/SWF_DEEP_UNPACK_REPORT.md)。这是一款重力翻转跑酷，不是射击游戏。

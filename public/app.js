@@ -59,11 +59,11 @@ try {
 } catch {}
 const colors = ['#3ce6df', '#ff626c', '#7ee66b', '#ffd75d'];
 // Leave this undefined for a first-time visitor. The authoritative room then
-// assigns the slot default (blue for P1, Demon_A for P2) instead of every new
-// connection accidentally claiming player one's visual.
+// assigns the slot default (mounted demon for P1, Demon_A for P2) instead of
+// every new connection accidentally claiming player one's visual.
 let selectedSkinId;
 try { selectedSkinId = skinById(localStorage.getItem(SKIN_STORAGE_KEY))?.id; } catch {}
-const roleNames = ['蓝色重力小子', '绿色重力小子', '黄色重力小子', '红色重力小子'];
+const roleNames = ['骑乘小鬼', '恶魔骑士', '绿色重力小子', '黄色重力小子'];
 const music = new Audio(assetUrl('assets/sounds/025_SndMusic.mp3'));
 const menuMusic = new Audio(assetUrl('assets/sounds/032_SndMenuMusic.mp3'));
 const switchSound = new Audio(assetUrl('assets/sounds/036_SndSwitch.mp3'));
@@ -450,7 +450,7 @@ function setSkinPreview(element, skinId, slot = 1) {
   element.style.setProperty('--avatar-background-size', `${visual.columns * 100}% ${visual.rows * 100}%`);
 }
 function persistSelectedSkin(skinId) {
-  selectedSkinId = skinById(skinId)?.id ?? 'demon-a';
+  selectedSkinId = skinById(skinId)?.id ?? 'mounted-demon';
   try { localStorage.setItem(SKIN_STORAGE_KEY, selectedSkinId); } catch {}
 }
 function renderSkinDialog() {

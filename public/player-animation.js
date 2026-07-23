@@ -52,6 +52,27 @@ const DEMON_A_VISUAL = Object.freeze({
   supportsMorph: false
 });
 
+const MOUNTED_DEMON_VISUAL = Object.freeze({
+  asset: 'player-mounted-demon.png',
+  fallbackAsset: 'player-blue.png',
+  columns: 6,
+  rows: 1,
+  // `build-mounted-demon-skin.py` removes the supplied green screen and packs
+  // the six original poses into these fixed-size, pixel-perfect source cells.
+  cellWidth: PLAYER_FRAME_WIDTH,
+  cellHeight: PLAYER_FRAME_HEIGHT,
+  cropX: 0,
+  cropY: 0,
+  cropWidth: PLAYER_FRAME_WIDTH,
+  cropHeight: PLAYER_FRAME_HEIGHT,
+  drawSize: Object.freeze({ width: PLAYER_FRAME_WIDTH, height: PLAYER_FRAME_HEIGHT }),
+  runFrames: Object.freeze(Array.from({ length: 6 }, (_, index) => index)),
+  airFrames: Object.freeze(Array.from({ length: 6 }, (_, index) => index)),
+  framesPerSecond: 12,
+  airFramesPerSecond: 12,
+  supportsMorph: false
+});
+
 const LEGACY_PLAYER_VISUALS = Object.freeze([
   ORIGINAL_PLAYER_VISUAL,
   Object.freeze({ ...ORIGINAL_PLAYER_VISUAL, asset: 'player-green.png', fallbackAsset: 'player-green.png' }),
@@ -60,6 +81,7 @@ const LEGACY_PLAYER_VISUALS = Object.freeze([
 ]);
 
 const PLAYER_VISUALS_BY_SKIN = Object.freeze({
+  'mounted-demon': MOUNTED_DEMON_VISUAL,
   'demon-a': DEMON_A_VISUAL,
   blue: ORIGINAL_PLAYER_VISUAL,
   green: LEGACY_PLAYER_VISUALS[1],
@@ -68,6 +90,7 @@ const PLAYER_VISUALS_BY_SKIN = Object.freeze({
 });
 
 export const PLAYER_VISUALS = Object.freeze([
+  MOUNTED_DEMON_VISUAL,
   DEMON_A_VISUAL,
   ...LEGACY_PLAYER_VISUALS.slice(1)
 ]);

@@ -2,6 +2,7 @@
 // carries only `skinId`; arbitrary URLs, sizes and animation data never come
 // from another player.
 export const PLAYER_SKINS = Object.freeze([
+  Object.freeze({ id: 'mounted-demon', name: '骑乘小鬼', asset: 'player-mounted-demon.png', visual: 'mounted-demon', columns: 6, rows: 1 }),
   Object.freeze({ id: 'demon-a', name: '恶魔骑士', asset: 'player-demon-a.png', visual: 'demon-a', columns: 8, rows: 1 }),
   Object.freeze({ id: 'blue', name: '蓝色重力小子', asset: 'player-blue.png', visual: 'blue', columns: 15, rows: 9 }),
   Object.freeze({ id: 'green', name: '绿色重力小子', asset: 'player-green.png', visual: 'green', columns: 15, rows: 9 }),
@@ -10,10 +11,9 @@ export const PLAYER_SKINS = Object.freeze([
 ]);
 
 const SKINS_BY_ID = new Map(PLAYER_SKINS.map((skin) => [skin.id, skin]));
-// Player one is temporarily back on the original blue runner. The supplied
-// mounted sprite will take this slot once its clean atlas is ready; Demon_A
-// remains available immediately as player two's default.
-const DEFAULT_SKIN_IDS = Object.freeze(['blue', 'demon-a', 'green', 'yellow']);
+// The supplied six-frame mounted demon is player one's default. Demon_A stays
+// as player two's default and all choices remain selectable in the lobby.
+const DEFAULT_SKIN_IDS = Object.freeze(['mounted-demon', 'demon-a', 'green', 'yellow']);
 
 export function skinById(value) {
   if (typeof value !== 'string') return null;
