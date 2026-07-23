@@ -103,7 +103,9 @@ docs/reverse-analysis.md 原始 SWF 的证据账本与逆向结论
 
 蓝色玩家可在本地使用 Zerie 的 `Tiny RPG Character Asset Pack 02` 免费版中的 `Demon_A_Walk.png`。该文件刻意不提交到仓库：按作者许可证，游戏内使用和修改允许，但不能重新分发、转售或上传素材本体。部署前应由已获取该素材包的管理员将其复制到 `public/assets/players/player-demon-a.png`。
 
-项目内的“骑乘小鬼”使用 6 帧自定义走路动画。原始绿幕帧仅保存在本机忽略目录 `artifacts/mounted-demon/source/`；用 `python tools/build-mounted-demon-skin.py <帧1> ... <帧6>` 可重新生成已提交的透明运行图集 `public/assets/players/player-mounted-demon.png`。此处理只抠除亮绿色、最近邻缩放和固定锚点，不会用 AI 重画任何动作。
+项目内的“黑骑士”使用 6 帧自定义走路动画；素材包中的 `Demon_A` 展示名为“恶魔小鬼”。黑骑士的原始绿幕帧仅保存在本机忽略目录 `artifacts/black-knight/source/`；用 `python tools/build-black-knight-skin.py <帧1> ... <帧6>` 可重新生成已提交的透明运行图集 `public/assets/players/player-black-knight.png`。此处理只抠除绿色、最近邻缩放和固定锚点，不会用 AI 重画任何动作。
+
+已经自带透明通道的横向动作条，可通过 `python tools/build-sprite-strip-skin.py <条带> --skin-id <id> --frame-count <数量> --source-cell-width <宽> --source-cell-height <高>` 导入。处理会保存原图、保留原始帧数，并生成统一的 65×77 运行时图集。
 
 ## 2026-07-21 交接摘要
 

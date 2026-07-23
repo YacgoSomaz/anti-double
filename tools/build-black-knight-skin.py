@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Import the six supplied mounted-demon walk frames without redrawing them.
+"""Import the six supplied Black Knight walk frames without redrawing them.
 
 The input images use a flat chroma-green backdrop.  This tool archives the
 exact imports under artifacts/ (which is deliberately Git-ignored), removes
@@ -76,9 +76,9 @@ def main() -> None:
     parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parents[1])
     args = parser.parse_args()
     root = args.root.resolve()
-    source_directory = root / "artifacts" / "mounted-demon" / "source"
+    source_directory = root / "artifacts" / "black-knight" / "source"
     source_directory.mkdir(parents=True, exist_ok=True)
-    output = root / "public" / "assets" / "players" / "player-mounted-demon.png"
+    output = root / "public" / "assets" / "players" / "player-black-knight.png"
     output.parent.mkdir(parents=True, exist_ok=True)
 
     archived = []
@@ -94,7 +94,7 @@ def main() -> None:
 
     packed.save(output, optimize=True)
     manifest = {
-        "skinId": "mounted-demon",
+        "skinId": "black-knight",
         "animation": "walk",
         "frameCount": FRAME_COUNT,
         "frameWidth": FRAME_WIDTH,

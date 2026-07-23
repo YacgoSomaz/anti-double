@@ -7,7 +7,7 @@ import {
   playerVisualForSkin
 } from '../public/player-animation.js';
 
-test('uses the six supplied mounted-demon walk frames for player one without changing the collision sprite size', () => {
+test('uses the six supplied Black Knight walk frames for player one without changing the collision sprite size', () => {
   const visual = playerVisualForSlot(1);
 
   assert.equal(visual.asset, 'player-black-knight.png');

@@ -52,8 +52,8 @@ const DEMON_A_VISUAL = Object.freeze({
   supportsMorph: false
 });
 
-const MOUNTED_DEMON_VISUAL = Object.freeze({
-  asset: 'player-mounted-demon.png',
+const BLACK_KNIGHT_VISUAL = Object.freeze({
+  asset: 'player-black-knight.png',
   fallbackAsset: 'player-blue.png',
   columns: 6,
   rows: 1,
@@ -73,6 +73,30 @@ const MOUNTED_DEMON_VISUAL = Object.freeze({
   supportsMorph: false
 });
 
+function stripVisual(asset, frameCount, framesPerSecond = 12) {
+  return Object.freeze({
+    asset,
+    fallbackAsset: 'player-blue.png',
+    columns: frameCount,
+    rows: 1,
+    cellWidth: PLAYER_FRAME_WIDTH,
+    cellHeight: PLAYER_FRAME_HEIGHT,
+    cropX: 0,
+    cropY: 0,
+    cropWidth: PLAYER_FRAME_WIDTH,
+    cropHeight: PLAYER_FRAME_HEIGHT,
+    drawSize: Object.freeze({ width: PLAYER_FRAME_WIDTH, height: PLAYER_FRAME_HEIGHT }),
+    runFrames: Object.freeze(Array.from({ length: frameCount }, (_, index) => index)),
+    airFrames: Object.freeze(Array.from({ length: frameCount }, (_, index) => index)),
+    framesPerSecond,
+    airFramesPerSecond: framesPerSecond,
+    supportsMorph: false
+  });
+}
+
+const VIOLET_WARRIOR_VISUAL = stripVisual('player-violet-warrior.png', 10);
+const SHADOW_RUNNER_VISUAL = stripVisual('player-shadow-runner.png', 8);
+
 const LEGACY_PLAYER_VISUALS = Object.freeze([
   ORIGINAL_PLAYER_VISUAL,
   Object.freeze({ ...ORIGINAL_PLAYER_VISUAL, asset: 'player-green.png', fallbackAsset: 'player-green.png' }),
@@ -81,8 +105,10 @@ const LEGACY_PLAYER_VISUALS = Object.freeze([
 ]);
 
 const PLAYER_VISUALS_BY_SKIN = Object.freeze({
-  'mounted-demon': MOUNTED_DEMON_VISUAL,
+  'black-knight': BLACK_KNIGHT_VISUAL,
   'demon-a': DEMON_A_VISUAL,
+  'violet-warrior': VIOLET_WARRIOR_VISUAL,
+  'shadow-runner': SHADOW_RUNNER_VISUAL,
   blue: ORIGINAL_PLAYER_VISUAL,
   green: LEGACY_PLAYER_VISUALS[1],
   yellow: LEGACY_PLAYER_VISUALS[2],
@@ -90,8 +116,10 @@ const PLAYER_VISUALS_BY_SKIN = Object.freeze({
 });
 
 export const PLAYER_VISUALS = Object.freeze([
-  MOUNTED_DEMON_VISUAL,
+  BLACK_KNIGHT_VISUAL,
   DEMON_A_VISUAL,
+  VIOLET_WARRIOR_VISUAL,
+  SHADOW_RUNNER_VISUAL,
   ...LEGACY_PLAYER_VISUALS.slice(1)
 ]);
 
