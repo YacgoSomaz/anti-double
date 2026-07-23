@@ -35,15 +35,15 @@ const DEMON_A_VISUAL = Object.freeze({
   fallbackAsset: 'player-blue.png',
   columns: 8,
   rows: 1,
-  cellWidth: 100,
-  cellHeight: 100,
-  // Demon_A occupies only the centre of its licensed 100 × 100 walk cells.
-  // Cropping the transparent padding preserves the original 65 × 77 player
-  // footprint on screen without touching the shared collision profile.
-  cropX: 40,
-  cropY: 35,
-  cropWidth: 26,
-  cropHeight: 28,
+  // The licensed 100 × 100 source cells are pre-cropped and nearest-neighbour
+  // scaled into this 8 × 65 × 77 local atlas. Drawing it 1:1 avoids browser
+  // interpolation blur while keeping the shared collision profile untouched.
+  cellWidth: PLAYER_FRAME_WIDTH,
+  cellHeight: PLAYER_FRAME_HEIGHT,
+  cropX: 0,
+  cropY: 0,
+  cropWidth: PLAYER_FRAME_WIDTH,
+  cropHeight: PLAYER_FRAME_HEIGHT,
   drawSize: Object.freeze({ width: PLAYER_FRAME_WIDTH, height: PLAYER_FRAME_HEIGHT }),
   runFrames: Object.freeze(Array.from({ length: 8 }, (_, index) => index)),
   airFrames: Object.freeze(Array.from({ length: 8 }, (_, index) => index)),

@@ -802,6 +802,7 @@ function draw() {
       ? frameSourceRect(frame)
       : frameSourceRectForVisual(visual, frame);
     if (sprite.complete && sprite.naturalWidth) {
+      ctx.imageSmoothingEnabled = false;
       drawPlayerSprite(ctx, sprite, source, { ...player, x, y }, visual.drawSize);
     } else { ctx.fillStyle = colors[player.slot - 1]; ctx.fillRect(x + 16, y + 19, 37, 48); }
     drawPlayerName(player, x, y);
