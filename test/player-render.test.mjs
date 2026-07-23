@@ -60,5 +60,5 @@ test('scales the skin from the same shared collision body when a size item is ac
     { width: 51, height: 60, footY: 67, collisionAligned: true }
   );
 
-  assert.deepEqual(placement, { x: 286.86, y: 310.67532467532465, width: 65.28, height: 76.8 });
+  assert.deepEqual(placement, { x: 286.86, y: 310.674025974026, width: 65.28, height: 76.8 });
 });

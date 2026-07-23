@@ -11,6 +11,14 @@ const FALL_FRAMES = [19, 20, 21, 22, 13, 14, 15, 16, 17, 18];
 const MORPH_FRAMES = Array.from({ length: 22 }, (_, index) => index + 23);
 export const MORPH_DURATION_MS = 1100;
 
+function collisionAlignedDrawSize(width, height, footY = 67) {
+  return Object.freeze({ width, height, footY, collisionAligned: true });
+}
+
+const BLACK_KNIGHT_DRAW_SIZE = collisionAlignedDrawSize(51, 60);
+const DEMON_A_DRAW_SIZE = collisionAlignedDrawSize(56, 66, 69);
+const STRIP_DRAW_SIZE = collisionAlignedDrawSize(51, 60);
+
 const ORIGINAL_PLAYER_VISUAL = Object.freeze({
   asset: 'player-blue.png',
   fallbackAsset: 'player-blue.png',
@@ -44,7 +52,7 @@ const DEMON_A_VISUAL = Object.freeze({
   cropY: 0,
   cropWidth: PLAYER_FRAME_WIDTH,
   cropHeight: PLAYER_FRAME_HEIGHT,
-  drawSize: Object.freeze({ width: PLAYER_FRAME_WIDTH, height: PLAYER_FRAME_HEIGHT }),
+  drawSize: DEMON_A_DRAW_SIZE,
   runFrames: Object.freeze(Array.from({ length: 8 }, (_, index) => index)),
   airFrames: Object.freeze(Array.from({ length: 8 }, (_, index) => index)),
   framesPerSecond: 12,
@@ -65,7 +73,7 @@ const BLACK_KNIGHT_VISUAL = Object.freeze({
   cropY: 0,
   cropWidth: PLAYER_FRAME_WIDTH,
   cropHeight: PLAYER_FRAME_HEIGHT,
-  drawSize: Object.freeze({ width: PLAYER_FRAME_WIDTH, height: PLAYER_FRAME_HEIGHT }),
+  drawSize: BLACK_KNIGHT_DRAW_SIZE,
   runFrames: Object.freeze(Array.from({ length: 6 }, (_, index) => index)),
   airFrames: Object.freeze(Array.from({ length: 6 }, (_, index) => index)),
   framesPerSecond: 12,
@@ -85,7 +93,7 @@ function stripVisual(asset, frameCount, framesPerSecond = 12) {
     cropY: 0,
     cropWidth: PLAYER_FRAME_WIDTH,
     cropHeight: PLAYER_FRAME_HEIGHT,
-    drawSize: Object.freeze({ width: PLAYER_FRAME_WIDTH, height: PLAYER_FRAME_HEIGHT }),
+    drawSize: STRIP_DRAW_SIZE,
     runFrames: Object.freeze(Array.from({ length: frameCount }, (_, index) => index)),
     airFrames: Object.freeze(Array.from({ length: frameCount }, (_, index) => index)),
     framesPerSecond,
