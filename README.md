@@ -87,6 +87,8 @@ docs/reverse-analysis.md 原始 SWF 的证据账本与逆向结论
 
 `assets/reverse/` 和 `public/assets/` 含来自原 Flash 游戏的逆向/提取资源，仅用于本项目的兼容性与复刻研究。发布、再分发或商业使用前，仓库所有者必须自行确认拥有相应的著作权授权；无授权时应将仓库设为私有，或移除这些资源并改用自有资源。
 
+蓝色玩家可在本地使用 Zerie 的 `Tiny RPG Character Asset Pack 02` 免费版中的 `Demon_A_Walk.png`。该文件刻意不提交到仓库：按作者许可证，游戏内使用和修改允许，但不能重新分发、转售或上传素材本体。部署前应由已获取该素材包的管理员将其复制到 `public/assets/players/player-demon-a.png`。
+
 ## 2026-07-21 交接摘要
 
 - 正确样本为 `assets/reverse/4399-44052-32.swf`；完整导出在 `assets/reverse/ffdec-44052-20260720/`，深度解包结论见 [SWF 深度解包报告](docs/SWF_DEEP_UNPACK_REPORT.md)。这是一款重力翻转跑酷，不是射击游戏。
