@@ -4,6 +4,7 @@ import { animationFrameForVisual, frameSourceRect, frameSourceRectForVisual, MOR
 import { PLAYER_SKINS, defaultSkinForSlot, skinById } from '/skin-library.js';
 import { advanceCamera, reconcileCamera } from '/camera.js';
 import { advancePresentation, presentationOffset } from '/player-presentation.js';
+import { advancePlayerAnimationClock, playerAnimationRate } from '/player-animation-clock.js';
 import { drawPlayerSprite } from '/player-render.js';
 import { createFrameTimingMonitor, createPacketTimingMonitor, formatDiagnostics } from '/network-diagnostics.js';
 import { createLatestRaceStateBuffer } from '/latest-race-state.js';
@@ -64,6 +65,7 @@ const colors = ['#3ce6df', '#ff626c', '#7ee66b', '#ffd75d'];
 // every new connection accidentally claiming player one's visual.
 let selectedSkinId;
 let skinDialogMode = 'lobby';
+const playerAnimationClocks = new Map();
 try { selectedSkinId = skinById(localStorage.getItem(SKIN_STORAGE_KEY))?.id; } catch {}
 const roleNames = ['黑骑士', '恶魔小鬼', '绿色重力小子', '黄色重力小子'];
 const music = new Audio(assetUrl('assets/sounds/025_SndMusic.mp3'));
@@ -677,6 +679,14 @@ function renderPlayer(player, now) {
   const position = advancePresentation(player, now - stateReceivedAt, state.cameraSpeed);
   return { ...player, ...position };
 }
+function animationElapsedForPlayer(player, now) {
+  return advancePlayerAnimationClock(
+    playerAnimationClocks,
+    player.slot,
+    now,
+    playerAnimationRate(player, state.cameraSpeed)
+  );
+}
 function drawPlayerName(player, x, y) {
   const labelY = player.gravity < 0 ? y + PLAYER_FRAME_HEIGHT + 12 : y - 6;
   ctx.save();
@@ -874,7 +884,7 @@ function draw() {
     const visual = playerVisualForSkin(skinId, player.slot);
     const frame = state.introTicksRemaining > 0 && visual.supportsMorph
       ? morphFrame(morphElapsed)
-      : animationFrameForVisual(visual, state.introTicksRemaining > 0 ? morphElapsed : now, player.vy !== 0);
+      : animationFrameForVisual(visual, state.introTicksRemaining > 0 ? morphElapsed : animationElapsedForPlayer(player, now), player.vy !== 0);
     const source = visual.supportsMorph && state.introTicksRemaining > 0
       ? frameSourceRect(frame)
       : frameSourceRectForVisual(visual, frame);
