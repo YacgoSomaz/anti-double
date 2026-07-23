@@ -6,8 +6,8 @@ import {
   playerVisualForSlot
 } from '../public/player-animation.js';
 
-test('uses the licensed Demon_A walk sheet for the blue player without changing its physics-sized display box', () => {
-  const visual = playerVisualForSlot(1);
+test('keeps the licensed Demon_A walk sheet as player two while player one awaits its new skin', () => {
+  const visual = playerVisualForSlot(2);
 
   assert.equal(visual.asset, 'player-demon-a.png');
   assert.deepEqual(visual.drawSize, { width: 65, height: 77 });

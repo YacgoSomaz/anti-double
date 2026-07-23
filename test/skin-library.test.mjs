@@ -7,8 +7,9 @@ test('ships a whitelist of selectable player skins with an immutable visual cont
   assert.deepEqual(PLAYER_SKINS.map((skin) => skin.id), ['demon-a', 'blue', 'green', 'yellow', 'red']);
   assert.equal(skinById('demon-a').asset, 'player-demon-a.png');
   assert.equal(skinById('https://untrusted.example/sprite.png'), null);
-  assert.equal(defaultSkinForSlot(1), 'demon-a');
-  assert.equal(defaultSkinForSlot(4), 'red');
+  assert.equal(defaultSkinForSlot(1), 'blue');
+  assert.equal(defaultSkinForSlot(2), 'demon-a');
+  assert.equal(defaultSkinForSlot(4), 'yellow');
 });
 
 test('keeps the server whitelist aligned with the browser skin catalogue', () => {
