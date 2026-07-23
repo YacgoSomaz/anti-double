@@ -196,6 +196,22 @@ test('opens the synchronized skin picker from the local player card instead of c
   assert.match(stylesheet, /image-rendering:pixelated/);
 });
 
+test('lets a solo player choose the same local skin before starting a browser-only race', async () => {
+  const html = await readFile(new URL('../public/index.html', import.meta.url), 'utf8');
+  const app = await readFile(new URL('../public/app.js', import.meta.url), 'utf8');
+
+  assert.match(html, /id="solo-skin"/);
+  assert.match(app, /openSkinDialog\('solo'\)/);
+  assert.match(app, /skinDialogMode === 'solo'/);
+  assert.match(app, /persistSelectedSkin\(skin\.id\)/);
+});
+
+test('uses each skin atlas column count for final-ranking first-frame portraits', async () => {
+  const stylesheet = await readFile(new URL('../public/style.css', import.meta.url), 'utf8');
+
+  assert.match(stylesheet, /\.rank-avatar[^\n]*var\(--avatar-background-size,1500% 900%\)/);
+});
+
 test('lets the server assign each newly joined player its slot default until they choose a skin', async () => {
   const app = await readFile(new URL('../public/app.js', import.meta.url), 'utf8');
 

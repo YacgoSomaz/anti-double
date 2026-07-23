@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 import {
   animationFrameForVisual,
   frameSourceRectForVisual,
@@ -40,4 +41,16 @@ test('keeps the licensed Demon_A walk sheet as player two while player one await
   assert.deepEqual(frameSourceRectForVisual(visual, 7), { x: 455, y: 0, width: 65, height: 77 });
   assert.equal(animationFrameForVisual(visual, 0), 0);
   assert.equal(animationFrameForVisual(visual, 1000 / 12), 1);
+});
+
+test('packs custom sprites with a ten-pixel transparent contact pad instead of putting their feet below the collision floor', async () => {
+  const [blackKnightBuilder, stripBuilder] = await Promise.all([
+    readFile(new URL('../tools/build-black-knight-skin.py', import.meta.url), 'utf8'),
+    readFile(new URL('../tools/build-sprite-strip-skin.py', import.meta.url), 'utf8')
+  ]);
+
+  assert.match(blackKnightBuilder, /CONTACT_Y = 67/);
+  assert.match(stripBuilder, /CONTACT_Y = 67/);
+  assert.match(blackKnightBuilder, /CONTACT_Y - sprite\.height/);
+  assert.match(stripBuilder, /CONTACT_Y - sprite\.height/);
 });
