@@ -20,6 +20,10 @@ from PIL import Image
 
 FRAME_WIDTH = 65
 FRAME_HEIGHT = 77
+# The shared normal-gravity hitbox ends at y=67 (offset 19 + height 48).
+# Preserve a ten-pixel transparent pad below every custom sprite so a visual
+# foot never appears inside a platform while its physics body is standing on it.
+CONTACT_Y = 67
 FRAME_COUNT = 6
 
 
@@ -58,11 +62,11 @@ def pack_frame(frame: Image.Image) -> Image.Image:
     """Centre every original pose and keep its bottom contact point aligned."""
     left, top, right, bottom = visible_bounds(frame)
     sprite = frame.crop((left, top, right, bottom))
-    scale = min(FRAME_WIDTH / sprite.width, FRAME_HEIGHT / sprite.height)
+    scale = min(FRAME_WIDTH / sprite.width, CONTACT_Y / sprite.height)
     size = (max(1, round(sprite.width * scale)), max(1, round(sprite.height * scale)))
     sprite = sprite.resize(size, Image.Resampling.NEAREST)
     cell = Image.new("RGBA", (FRAME_WIDTH, FRAME_HEIGHT))
-    cell.alpha_composite(sprite, ((FRAME_WIDTH - sprite.width) // 2, FRAME_HEIGHT - sprite.height))
+    cell.alpha_composite(sprite, ((FRAME_WIDTH - sprite.width) // 2, CONTACT_Y - sprite.height))
     return cell
 
 
@@ -99,7 +103,7 @@ def main() -> None:
         "frameCount": FRAME_COUNT,
         "frameWidth": FRAME_WIDTH,
         "frameHeight": FRAME_HEIGHT,
-        "processing": "bright green chroma key; transparent RGBA; nearest-neighbour resize; bottom-centred frame anchor",
+        "processing": "green chroma key; transparent RGBA; nearest-neighbour resize; y=67 collision-contact anchor",
         "sourceFrames": archived,
         "runtimeAtlas": {"file": output.name, "sha256": sha256(output)},
     }

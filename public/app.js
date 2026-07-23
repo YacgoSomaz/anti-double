@@ -20,6 +20,7 @@ const room = document.querySelector('#room');
 const nickname = document.querySelector('#nickname');
 const join = document.querySelector('#menu-start');
 const soloStart = document.querySelector('#solo-start');
+const soloSkin = document.querySelector('#solo-skin');
 const flip = document.querySelector('#flip');
 const soundToggle = document.querySelector('#sound-toggle');
 const pageRefresh = document.querySelector('#page-refresh');
@@ -62,6 +63,7 @@ const colors = ['#3ce6df', '#ff626c', '#7ee66b', '#ffd75d'];
 // assigns the slot default (Black Knight for P1, Demon_A for P2) instead of
 // every new connection accidentally claiming player one's visual.
 let selectedSkinId;
+let skinDialogMode = 'lobby';
 try { selectedSkinId = skinById(localStorage.getItem(SKIN_STORAGE_KEY))?.id; } catch {}
 const roleNames = ['黑骑士', '恶魔小鬼', '绿色重力小子', '黄色重力小子'];
 const music = new Audio(assetUrl('assets/sounds/025_SndMusic.mp3'));
@@ -248,6 +250,7 @@ Promise.all([mapLoad, ...[...sprites, ...Object.values(scene), openingBeam, elim
   join.textContent = '开始联机';
   soloStart.disabled = false;
   soloStart.textContent = '单人开始';
+  soloSkin.disabled = false;
   updateLobbyProgress();
   sendReady();
   signalRaceReady();
@@ -259,6 +262,7 @@ Promise.all([mapLoad, ...[...sprites, ...Object.values(scene), openingBeam, elim
   resourcesFailed = true;
   join.textContent = '资源加载失败';
   soloStart.textContent = '资源加载失败';
+  soloSkin.textContent = '资源加载失败';
   setStatus('资源加载失败，请刷新重试');
   if (!frontScreen.hidden) frontScreen.dataset.phase = 'menu';
 });
@@ -455,11 +459,14 @@ function persistSelectedSkin(skinId) {
 }
 function renderSkinDialog() {
   const localPlayer = state.players.find((player) => player.slot === localSlot);
-  const activeSkinId = playerSkinId(localPlayer, localSlot);
+  const choosingSoloSkin = skinDialogMode === 'solo';
+  const activeSkinId = choosingSoloSkin
+    ? (skinById(selectedSkinId)?.id ?? defaultSkinForSlot(1))
+    : playerSkinId(localPlayer, localSlot);
   skinDialogOptions.replaceChildren(...PLAYER_SKINS.map((skin) => {
     const choice = document.createElement('button');
     choice.type = 'button'; choice.className = 'skin-choice'; choice.dataset.skinId = skin.id;
-    choice.disabled = state.phase !== 'lobby' || socket?.readyState !== WebSocket.OPEN;
+    choice.disabled = !choosingSoloSkin && (state.phase !== 'lobby' || socket?.readyState !== WebSocket.OPEN);
     choice.setAttribute('aria-pressed', String(skin.id === activeSkinId));
     const preview = document.createElement('span'); preview.className = 'skin-preview'; setSkinPreview(preview, skin.id, localSlot);
     const label = document.createElement('span'); label.textContent = skin.name;
@@ -467,15 +474,26 @@ function renderSkinDialog() {
     return choice;
   }));
 }
-function openSkinDialog() {
-  if (!localSlot || state.phase !== 'lobby') return;
+function openSkinDialog(mode = 'lobby') {
+  const choosingSoloSkin = mode === 'solo';
+  if (choosingSoloSkin) {
+    if (!raceReady) return setStatus('皮肤仍在加载');
+  } else if (!localSlot || state.phase !== 'lobby') return;
+  skinDialogMode = choosingSoloSkin ? 'solo' : 'lobby';
   renderSkinDialog();
   if (!skinDialog.open) skinDialog.showModal();
 }
 function closeSkinDialog() { if (skinDialog.open) skinDialog.close(); }
 function selectSkin(skinId) {
   const skin = skinById(skinId);
-  if (!skin || state.phase !== 'lobby' || socket?.readyState !== WebSocket.OPEN) return;
+  if (!skin) return;
+  if (skinDialogMode === 'solo') {
+    persistSelectedSkin(skin.id);
+    closeSkinDialog();
+    setStatus(`单人皮肤已选择：${skin.name}`, true);
+    return;
+  }
+  if (state.phase !== 'lobby' || socket?.readyState !== WebSocket.OPEN) return;
   persistSelectedSkin(skin.id);
   socket.send(JSON.stringify({ type: 'select_skin', skinId: skin.id }));
   closeSkinDialog();
@@ -870,7 +888,7 @@ function draw() {
   ctx.restore();
   ctx.fillStyle='#fff'; ctx.font='bold 16px Arial'; ctx.fillText(String(Math.floor(state.tick ?? 0)).padStart(3, '0'), 590, 24);
 }
-join.addEventListener('click', connect); soloStart.addEventListener('click', startSolo); lobbyStart.addEventListener('click', startMatch); nextRound.addEventListener('click', returnToMenu); flip.addEventListener('click', sendFlip); soundToggle.addEventListener('click', toggleSound); pageRefresh.addEventListener('click', () => location.reload()); canvas.addEventListener('click', sendFlip); lobbyPlayers.addEventListener('click', (event) => { if (event.target.closest('[data-skin-action="open"]')) openSkinDialog(); }); skinDialogOptions.addEventListener('click', (event) => { const choice = event.target.closest('[data-skin-id]'); if (choice) selectSkin(choice.dataset.skinId); }); skinDialogClose.addEventListener('click', closeSkinDialog);
+join.addEventListener('click', connect); soloStart.addEventListener('click', startSolo); soloSkin.addEventListener('click', () => openSkinDialog('solo')); lobbyStart.addEventListener('click', startMatch); nextRound.addEventListener('click', returnToMenu); flip.addEventListener('click', sendFlip); soundToggle.addEventListener('click', toggleSound); pageRefresh.addEventListener('click', () => location.reload()); canvas.addEventListener('click', sendFlip); lobbyPlayers.addEventListener('click', (event) => { if (event.target.closest('[data-skin-action="open"]')) openSkinDialog(); }); skinDialogOptions.addEventListener('click', (event) => { const choice = event.target.closest('[data-skin-id]'); if (choice) selectSkin(choice.dataset.skinId); }); skinDialogClose.addEventListener('click', closeSkinDialog);
 fullscreen.addEventListener('click', () => {
   if (document.fullscreenElement) document.exitFullscreen?.();
   else gameShell.requestFullscreen?.();

@@ -13,6 +13,9 @@ from PIL import Image
 
 FRAME_WIDTH = 65
 FRAME_HEIGHT = 77
+# Match the shared collision body's normal-gravity contact edge; retain the
+# lower ten rows as transparent padding for both normal and inverted gravity.
+CONTACT_Y = 67
 
 
 def sha256(path: Path) -> str:
@@ -25,11 +28,11 @@ def sprite_cell(sheet: Image.Image, index: int, cell_width: int, cell_height: in
     if bounds is None:
         raise ValueError(f"frame {index} is completely transparent")
     sprite = source.crop(bounds)
-    scale = min(FRAME_WIDTH / sprite.width, FRAME_HEIGHT / sprite.height)
+    scale = min(FRAME_WIDTH / sprite.width, CONTACT_Y / sprite.height)
     size = (max(1, round(sprite.width * scale)), max(1, round(sprite.height * scale)))
     sprite = sprite.resize(size, Image.Resampling.NEAREST)
     cell = Image.new("RGBA", (FRAME_WIDTH, FRAME_HEIGHT))
-    cell.alpha_composite(sprite, ((FRAME_WIDTH - sprite.width) // 2, FRAME_HEIGHT - sprite.height))
+    cell.alpha_composite(sprite, ((FRAME_WIDTH - sprite.width) // 2, CONTACT_Y - sprite.height))
     return cell
 
 

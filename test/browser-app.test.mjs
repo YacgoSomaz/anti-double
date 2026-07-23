@@ -187,7 +187,7 @@ test('opens the synchronized skin picker from the local player card instead of c
   assert.doesNotMatch(html, /id="skin-picker"/);
   assert.match(app, /type: 'select_skin', skinId: skin\.id/);
   assert.match(app, /skinId:selectedSkinId/);
-  assert.match(app, /function openSkinDialog\(\)/);
+  assert.match(app, /function openSkinDialog\(/);
   assert.match(app, /function closeSkinDialog\(\)/);
   assert.match(app, /data-skin-action="open"/);
   assert.match(app, /playerVisualForSkin\(skinId, player\.slot\)/);
