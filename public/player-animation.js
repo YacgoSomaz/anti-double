@@ -59,13 +59,26 @@ const LEGACY_PLAYER_VISUALS = Object.freeze([
   Object.freeze({ ...ORIGINAL_PLAYER_VISUAL, asset: 'player-red.png', fallbackAsset: 'player-red.png' })
 ]);
 
+const PLAYER_VISUALS_BY_SKIN = Object.freeze({
+  'demon-a': DEMON_A_VISUAL,
+  blue: ORIGINAL_PLAYER_VISUAL,
+  green: LEGACY_PLAYER_VISUALS[1],
+  yellow: LEGACY_PLAYER_VISUALS[2],
+  red: LEGACY_PLAYER_VISUALS[3]
+});
+
 export const PLAYER_VISUALS = Object.freeze([
   DEMON_A_VISUAL,
   ...LEGACY_PLAYER_VISUALS.slice(1)
 ]);
 
 export function playerVisualForSlot(slot = 1) {
-  return PLAYER_VISUALS[Math.max(0, Math.min(PLAYER_VISUALS.length - 1, Number(slot) - 1 || 0))];
+  return playerVisualForSkin(defaultSkinForSlot(slot), slot);
+}
+
+export function playerVisualForSkin(skinId, slot = 1) {
+  const selected = skinById(skinId)?.id ?? defaultSkinForSlot(slot);
+  return PLAYER_VISUALS_BY_SKIN[selected] ?? PLAYER_VISUALS[0];
 }
 
 export function animationFrameForVisual(visual, milliseconds, airborne = false) {
@@ -122,3 +135,4 @@ export function morphFrame(milliseconds) {
 export function frameSourceRect(frame) {
   return frameSourceRectForVisual(ORIGINAL_PLAYER_VISUAL, frame);
 }
+import { defaultSkinForSlot, skinById } from './skin-library.js';

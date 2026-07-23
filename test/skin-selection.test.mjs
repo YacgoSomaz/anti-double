@@ -33,5 +33,5 @@ test('rejects skin changes after the authoritative race begins', () => {
   matches.join('SKINS', 'player-1');
   matches.start('player-1');
 
-  assert.deepEqual(matches.selectSkin('player-1', 'green'), { ok: false, error: 'match_started' });
+  assert.deepEqual(matches.selectSkin('player-1', 'green'), { ok: false, error: 'match_started', room: 'SKINS' });
 });

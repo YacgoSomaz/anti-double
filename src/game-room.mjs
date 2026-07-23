@@ -1,5 +1,6 @@
 import { createCollisionIndex } from './collision-index.mjs';
 import { createItemState, ITEM_EFFECT_TICKS, ITEM_TYPES } from './item-system.mjs';
+import { defaultSkinForSlot, skinById } from './skin-library.mjs';
 
 const PLAYER_WIDTH = 37;
 const PLAYER_HEIGHT = 48;
@@ -113,7 +114,7 @@ export class GameRoom {
 
   debugTuning() { return { ...this.#debugTuning }; }
 
-  join(id, name, ready = true) {
+  join(id, name, ready = true, skinId) {
     if (this.#players.has(id)) return { ok: true, player: { ...this.#players.get(id) } };
     if (this.#phase !== 'lobby') return { ok: false, error: this.#phase === 'results' ? 'match_finished' : 'match_started' };
     if (this.#players.size >= 4) return { ok: false, error: 'room_full' };
@@ -123,7 +124,7 @@ export class GameRoom {
     const player = {
       id, slot, x: spawn.x, y: spawn.y, vx: spawn.speedX * this.#debugTuning.speedMultiplier, vy: 0, startX: spawn.x, score: 0,
       previousX: spawn.x, previousY: spawn.y,
-      speedX: spawn.speedX * this.#debugTuning.speedMultiplier, startSpeedX: spawn.speedX * this.#debugTuning.speedMultiplier, character: CHARACTERS[slot - 1], name: playerName(name, slot), ready: Boolean(ready),
+      speedX: spawn.speedX * this.#debugTuning.speedMultiplier, startSpeedX: spawn.speedX * this.#debugTuning.speedMultiplier, character: CHARACTERS[slot - 1], skinId: skinById(skinId)?.id ?? defaultSkinForSlot(slot), name: playerName(name, slot), ready: Boolean(ready),
       gravity: spawn.gravity, finished: false, eliminated: false, outcomeTick: null, blockedX: false, recoveringCameraPosition: false, cameraRecoveryBoost: false, hasReachedCameraCentre: Math.abs(spawn.x - CAMERA_TARGET_SCREEN_X) <= CAMERA_TARGET_TOLERANCE, cameraSafetyFrames: 0, flipWallGuard: 0,
       phaseTicks: 0, speedBoostTicks: 0,
       sizeTicks: 0, sizeScale: 1,
@@ -210,6 +211,16 @@ export class GameRoom {
     this.#eliminatePlayersOutsideView();
     if (this.#speedControlTicks > 0) this.#speedControlTicks -= 1;
     return this.snapshot();
+  }
+
+  selectSkin(id, skinId) {
+    const player = this.#players.get(id);
+    if (!player) return { ok: false, error: 'not_in_match' };
+    if (this.#phase !== 'lobby') return { ok: false, error: this.#phase === 'results' ? 'match_finished' : 'match_started' };
+    const selected = skinById(skinId);
+    if (!selected) return { ok: false, error: 'invalid_skin' };
+    player.skinId = selected.id;
+    return { ok: true, skinId: selected.id };
   }
 
   snapshot() {

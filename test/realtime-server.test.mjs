@@ -162,6 +162,30 @@ test('keeps remote players in a host-controlled lobby, then starts one authorita
   assert.equal(Number.isInteger(first.d), true);
 });
 
+test('synchronizes only whitelisted lobby skin choices before a race starts', async (context) => {
+  const realtime = createRealtimeServer({ level: tinyLevel, autoTick: false });
+  realtime.server.listen(0, '127.0.0.1');
+  await once(realtime.server, 'listening');
+  const { port } = realtime.server.address();
+  const one = await client(port);
+  const two = await client(port);
+  context.after(() => { one.close(); two.close(); realtime.close(); });
+
+  one.send({ type: 'join', room: 'SKIN1', name: '一号', skinId: 'blue' });
+  await one.waitFor((message) => message.type === 'joined');
+  two.send({ type: 'join', room: 'SKIN1', name: '二号', skinId: 'green' });
+  await two.waitFor((message) => message.type === 'joined');
+  await one.waitFor((message) => message.type === 'state' && message.players.length === 2);
+
+  one.send({ type: 'select_skin', skinId: 'red' });
+  assert.deepEqual(await one.waitFor((message) => message.type === 'skin_selected'), { type: 'skin_selected', skinId: 'red' });
+  const synced = await two.waitFor((message) => message.type === 'state' && message.players.find((player) => player.slot === 1)?.skinId === 'red');
+  assert.deepEqual(synced.players.map((player) => player.skinId), ['red', 'green']);
+
+  one.send({ type: 'select_skin', skinId: 'purple' });
+  assert.equal((await one.waitFor((message) => message.type === 'error')).error, 'invalid_skin');
+});
+
 test('encodes four-player race snapshots into a compact packet suitable for 40 Hz broadcast', () => {
   const players = Array.from({ length: 4 }, (_, index) => ({
     id: `internal-${index}`, slot: index + 1, x: 325.297295119375, y: 111.018875 + index * 40,

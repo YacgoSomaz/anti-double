@@ -1,6 +1,7 @@
 import { buildVisualDrawList, visibleDrawList } from '/visual-cache.js';
 import { assetUrl } from '/asset-urls.js';
-import { animationFrameForVisual, frameSourceRect, frameSourceRectForVisual, MORPH_DURATION_MS, morphFrame, playerVisualForSlot, PLAYER_FRAME_HEIGHT, PLAYER_FRAME_WIDTH } from '/player-animation.js';
+import { animationFrameForVisual, frameSourceRect, frameSourceRectForVisual, MORPH_DURATION_MS, morphFrame, playerVisualForSkin, PLAYER_FRAME_HEIGHT, PLAYER_FRAME_WIDTH } from '/player-animation.js';
+import { PLAYER_SKINS, defaultSkinForSlot, skinById } from '/skin-library.js';
 import { advanceCamera, reconcileCamera } from '/camera.js';
 import { advancePresentation, presentationOffset } from '/player-presentation.js';
 import { drawPlayerSprite } from '/player-render.js';
@@ -42,7 +43,9 @@ const lobbyStart = document.querySelector('#lobby-start');
 const lobbyProgress = document.querySelector('#lobby-progress');
 const lobbyProgressLabel = document.querySelector('#lobby-progress-label');
 const lobbyProgressBar = document.querySelector('#lobby-progress-bar');
+const skinPicker = document.querySelector('#skin-picker');
 const NICKNAME_STORAGE_KEY = 'gswitch-online:nickname';
+const SKIN_STORAGE_KEY = 'gswitch-online:skin-id';
 try {
   const savedNickname = localStorage.getItem(NICKNAME_STORAGE_KEY);
   if (savedNickname) nickname.value = savedNickname.slice(0, 12);
@@ -53,7 +56,8 @@ try {
   });
 } catch {}
 const colors = ['#3ce6df', '#ff626c', '#7ee66b', '#ffd75d'];
-const playerVisuals = [1, 2, 3, 4].map(playerVisualForSlot);
+let selectedSkinId = 'demon-a';
+try { selectedSkinId = skinById(localStorage.getItem(SKIN_STORAGE_KEY))?.id ?? selectedSkinId; } catch {}
 const roleNames = ['蓝色重力小子', '绿色重力小子', '黄色重力小子', '红色重力小子'];
 const music = new Audio(assetUrl('assets/sounds/025_SndMusic.mp3'));
 const menuMusic = new Audio(assetUrl('assets/sounds/032_SndMenuMusic.mp3'));
@@ -126,10 +130,14 @@ async function waitForImage(image) {
   // blank runners on browsers that decode PNGs after their load event.
   if (typeof image.decode === 'function') await image.decode();
 }
-const sprites = playerVisuals.map((visual) => loadImage(
-  assetUrl(`assets/players/${visual.asset}`),
-  visual.asset === visual.fallbackAsset ? '' : assetUrl(`assets/players/${visual.fallbackAsset}`)
-));
+const spriteBySkin = new Map(PLAYER_SKINS.map((skin) => {
+  const visual = playerVisualForSkin(skin.id);
+  return [skin.id, loadImage(
+    assetUrl(`assets/players/${visual.asset}`),
+    visual.asset === visual.fallbackAsset ? '' : assetUrl(`assets/players/${visual.fallbackAsset}`)
+  )];
+}));
+const sprites = [...spriteBySkin.values()];
 const scene = {
   background: loadImage(assetUrl('assets/scene/background.png')),
   cityFar: loadImage(assetUrl('assets/scene/city-far.png')),
@@ -313,7 +321,7 @@ async function connect() {
     if (socket !== connection || localSlot) return;
     abandonJoin('加入房间超时，请重试');
   }, 8000);
-  connection.addEventListener('open', () => connection.send(JSON.stringify({ type:'join', room:roomCode, name:nickname.value })));
+  connection.addEventListener('open', () => connection.send(JSON.stringify({ type:'join', room:roomCode, name:nickname.value, skinId:selectedSkinId })));
   connection.addEventListener('message', ({ data }) => {
     let message;
     try { message = JSON.parse(data); } catch { abandonJoin('服务响应异常，请重试'); return; }
@@ -348,7 +356,7 @@ async function startSolo() {
   sequence = 0; localSlot = 1; roomCode = undefined; showingEnd = false; soloAccumulator = 0; soloLastAt = performance.now();
   soloRoom = new GameRoom(map);
   if (developerMode) soloRoom.setDebugTuning(devTuning);
-  soloRoom.join('solo', nickname.value, true);
+  soloRoom.join('solo', nickname.value, true, selectedSkinId);
   soloRoom.start('solo');
   state = soloRoom.snapshot();
   stateReceivedAt = soloLastAt; cameraX = state.cameraX; cameraUpdatedAt = soloLastAt;
@@ -414,14 +422,47 @@ function renderLobby() {
     label.textContent = player?.name ?? `角色 ${slot}`;
     const avatar = document.createElement('span');
     avatar.className = 'lobby-avatar';
-    if (player) avatar.style.setProperty('--avatar-image', `url(${assetUrl(`assets/players/${spriteSources[slot - 1]}`)})`);
+    if (player) setSkinPreview(avatar, player.skinId, slot);
     const role = document.createElement('em');
-    role.textContent = player ? `${roleNames[slot - 1]} · ${player.ready ? '已就绪' : '加载中'}` : '等待加入';
+    role.textContent = player ? `${skinById(player.skinId)?.name ?? roleNames[slot - 1]} · ${player.ready ? '已就绪' : '加载中'}` : '等待加入';
     item.append(label, avatar, role);
     if (slot === state.hostSlot) { const host = document.createElement('b'); host.textContent = '房主'; item.append(host); }
     return item;
   }));
+  renderSkinPicker();
   lobbyStart.disabled = !raceReady || state.phase !== 'lobby' || !isHost || !allReady || socket?.readyState !== WebSocket.OPEN;
+}
+function playerSkinId(player, slot = player?.slot) { return skinById(player?.skinId)?.id ?? defaultSkinForSlot(slot); }
+function setSkinPreview(element, skinId, slot = 1) {
+  const resolvedSkinId = skinById(skinId)?.id ?? defaultSkinForSlot(slot);
+  const visual = playerVisualForSkin(resolvedSkinId, slot);
+  element.style.setProperty('--avatar-image', `url(${assetUrl(`assets/players/${visual.asset}`)})`);
+  element.style.setProperty('--avatar-background-size', `${visual.columns * 100}% ${visual.rows * 100}%`);
+}
+function persistSelectedSkin(skinId) {
+  selectedSkinId = skinById(skinId)?.id ?? 'demon-a';
+  try { localStorage.setItem(SKIN_STORAGE_KEY, selectedSkinId); } catch {}
+}
+function renderSkinPicker() {
+  const localPlayer = state.players.find((player) => player.slot === localSlot);
+  const activeSkinId = playerSkinId(localPlayer, localSlot);
+  skinPicker.replaceChildren(...PLAYER_SKINS.map((skin) => {
+    const choice = document.createElement('button');
+    choice.type = 'button'; choice.className = 'skin-choice'; choice.dataset.skinId = skin.id;
+    choice.disabled = state.phase !== 'lobby' || socket?.readyState !== WebSocket.OPEN;
+    choice.setAttribute('aria-pressed', String(skin.id === activeSkinId));
+    const preview = document.createElement('span'); preview.className = 'skin-preview'; setSkinPreview(preview, skin.id, localSlot);
+    const label = document.createElement('span'); label.textContent = skin.name;
+    choice.append(preview, label);
+    return choice;
+  }));
+}
+function selectSkin(skinId) {
+  const skin = skinById(skinId);
+  if (!skin || state.phase !== 'lobby' || socket?.readyState !== WebSocket.OPEN) return;
+  persistSelectedSkin(skin.id);
+  socket.send(JSON.stringify({ type: 'select_skin', skinId: skin.id }));
+  setStatus(`正在选择皮肤：${skin.name}`, true);
 }
 function decodeCompactRaceState(message) {
   const knownPlayers = new Map(state.players.map((player) => [player.slot, player]));
@@ -531,7 +572,7 @@ function renderRankings(results) {
     item.setAttribute('aria-label', `第 ${result.rank} 名：${player?.name ?? `玩家 ${result.slot}`}`);
     const avatar = document.createElement('span');
     avatar.className = 'rank-avatar';
-    avatar.style.setProperty('--avatar-image', `url(${assetUrl(`assets/players/${spriteSources[(player?.slot ?? result.slot) - 1]}`)})`);
+    setSkinPreview(avatar, player?.skinId, player?.slot ?? result.slot);
     const score = document.createElement('span');
     score.className = 'rank-score';
     score.textContent = `${Math.max(0, Math.floor(result.score ?? 0))} 分`;
@@ -785,7 +826,8 @@ function draw() {
     if (player.phaseTicks > 0) ctx.globalAlpha = 0.48 + Math.sin(now / 70) * 0.12;
     const x = player.x - camera;
     const y = player.y;
-    const sprite = sprites[player.slot - 1];
+    const skinId = playerSkinId(player);
+    const sprite = spriteBySkin.get(skinId);
     const openingElapsed = OPENING_SEQUENCE_DURATION_MS - Math.max(0, Number(state.introTicksRemaining) || 0) * 25;
     const isBeamPhase = state.introTicksRemaining > 0 && openingElapsed < OPENING_BEAM_DURATION_MS;
     if (isBeamPhase) {
@@ -794,7 +836,7 @@ function draw() {
       continue;
     }
     const morphElapsed = Math.max(0, openingElapsed - OPENING_BEAM_DURATION_MS);
-    const visual = playerVisualForSlot(player.slot);
+    const visual = playerVisualForSkin(skinId, player.slot);
     const frame = state.introTicksRemaining > 0 && visual.supportsMorph
       ? morphFrame(morphElapsed)
       : animationFrameForVisual(visual, state.introTicksRemaining > 0 ? morphElapsed : now, player.vy !== 0);
@@ -811,7 +853,7 @@ function draw() {
   ctx.restore();
   ctx.fillStyle='#fff'; ctx.font='bold 16px Arial'; ctx.fillText(String(Math.floor(state.tick ?? 0)).padStart(3, '0'), 590, 24);
 }
-join.addEventListener('click', connect); soloStart.addEventListener('click', startSolo); lobbyStart.addEventListener('click', startMatch); nextRound.addEventListener('click', returnToMenu); flip.addEventListener('click', sendFlip); soundToggle.addEventListener('click', toggleSound); pageRefresh.addEventListener('click', () => location.reload()); canvas.addEventListener('click', sendFlip);
+join.addEventListener('click', connect); soloStart.addEventListener('click', startSolo); lobbyStart.addEventListener('click', startMatch); nextRound.addEventListener('click', returnToMenu); flip.addEventListener('click', sendFlip); soundToggle.addEventListener('click', toggleSound); pageRefresh.addEventListener('click', () => location.reload()); canvas.addEventListener('click', sendFlip); skinPicker.addEventListener('click', (event) => { const choice = event.target.closest('[data-skin-id]'); if (choice) selectSkin(choice.dataset.skinId); });
 fullscreen.addEventListener('click', () => {
   if (document.fullscreenElement) document.exitFullscreen?.();
   else gameShell.requestFullscreen?.();

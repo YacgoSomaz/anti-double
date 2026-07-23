@@ -177,6 +177,20 @@ test('ships a Chinese original-style opening menu and animated end screen', asyn
   assert.match(stylesheet, /data-phase="lobby"/);
 });
 
+test('shows a synchronized skin picker in the lobby and keeps rendering independent from fixed player slots', async () => {
+  const html = await readFile(new URL('../public/index.html', import.meta.url), 'utf8');
+  const stylesheet = await readFile(new URL('../public/style.css', import.meta.url), 'utf8');
+  const app = await readFile(new URL('../public/app.js', import.meta.url), 'utf8');
+
+  assert.match(html, /id="skin-picker"/);
+  assert.match(app, /type: 'select_skin', skinId: skin\.id/);
+  assert.match(app, /skinId:selectedSkinId/);
+  assert.match(app, /function renderSkinPicker\(\)/);
+  assert.match(app, /playerVisualForSkin\(skinId, player\.slot\)/);
+  assert.match(stylesheet, /\.skin-picker/);
+  assert.match(stylesheet, /image-rendering:pixelated/);
+});
+
 test('runs a solo race entirely in the browser without a room socket or coordinate packets', async () => {
   const app = await readFile(new URL('../public/app.js', import.meta.url), 'utf8');
 

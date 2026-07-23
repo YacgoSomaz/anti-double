@@ -11,13 +11,13 @@ export class MatchManager {
     this.#level = level;
   }
 
-  join(roomCode, id, name, ready = true) {
+  join(roomCode, id, name, ready = true, skinId) {
     const room = String(roomCode ?? '').trim().toUpperCase();
     if (!ROOM_CODE.test(room)) return { ok: false, error: 'invalid_room' };
     if (this.#memberships.get(id) === room) return { ...this.#rooms.get(room).join(id, name, ready), room };
     this.leave(id);
     const game = this.#rooms.get(room) ?? new GameRoom(this.#level);
-    const result = game.join(id, name, ready);
+    const result = game.join(id, name, ready, skinId);
     if (!result.ok) return result;
     this.#rooms.set(room, game);
     this.#memberships.set(id, room);
@@ -61,6 +61,12 @@ export class MatchManager {
       recipients: [...this.#memberships.entries()].filter(([, membership]) => membership === room).map(([id]) => id),
       snapshot: game.snapshot()
     };
+  }
+
+  selectSkin(id, skinId) {
+    const room = this.#memberships.get(id);
+    if (!room) return { ok: false, error: 'not_in_match' };
+    return { ...this.#rooms.get(room).selectSkin(id, skinId), room };
   }
 
   closeCompletedRoom(room) {

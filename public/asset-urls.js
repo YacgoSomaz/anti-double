@@ -7,6 +7,7 @@ const versions = Object.freeze({
   "assets/menu/menu-background.png": "9c2f8628688aab01",
   "assets/menu/multi-end.png": "7ae74d08f482a948",
   "assets/players/player-blue.png": "cb211f812d131abb",
+  "assets/players/player-demon-a.png": "9d334326f59227b2",
   "assets/players/player-green.png": "7a25655e5f9ceaa7",
   "assets/players/player-red.png": "14a7b2f33103e59e",
   "assets/players/player-yellow.png": "6ded9b4bbdff55ea",

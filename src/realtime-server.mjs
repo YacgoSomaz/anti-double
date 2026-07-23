@@ -16,6 +16,7 @@ const publicDir = resolve(fileURLToPath(new URL('../public/', import.meta.url)))
 const soloGameModule = fileURLToPath(new URL('./game-room.mjs', import.meta.url));
 const collisionIndexModule = fileURLToPath(new URL('./collision-index.mjs', import.meta.url));
 const itemSystemModule = fileURLToPath(new URL('./item-system.mjs', import.meta.url));
+const skinLibraryModule = fileURLToPath(new URL('./skin-library.mjs', import.meta.url));
 const editorPage = fileURLToPath(new URL('../public/dev.html', import.meta.url));
 const mimeTypes = new Map([
   ['.html', 'text/html; charset=utf-8'],
@@ -78,7 +79,8 @@ function decode(buffer) {
 function parseInput(value) {
   try {
     const data = JSON.parse(value);
-    if (data?.type === 'join' && typeof data.room === 'string' && (data.name === undefined || typeof data.name === 'string')) return { type: 'join', room: data.room, name: data.name };
+    if (data?.type === 'join' && typeof data.room === 'string' && (data.name === undefined || typeof data.name === 'string') && (data.skinId === undefined || (typeof data.skinId === 'string' && data.skinId.length <= 32))) return { type: 'join', room: data.room, name: data.name, skinId: data.skinId };
+    if (data?.type === 'select_skin' && typeof data.skinId === 'string' && data.skinId.length <= 32) return { type: 'select_skin', skinId: data.skinId };
     if (data?.type === 'ready') return { type: 'ready' };
     if (data?.type === 'start') return { type: 'start' };
     if (data?.type === 'flip' && Number.isInteger(data.sequence) && data.sequence > 0 && data.sequence <= 1000000000) return { type: 'flip', sequence: data.sequence };
@@ -240,6 +242,7 @@ export function createRealtimeServer({ level, autoTick = true, raceBroadcastHz =
       ['/solo-game.mjs', soloGameModule],
       ['/collision-index.mjs', collisionIndexModule],
       ['/item-system.mjs', itemSystemModule],
+      ['/skin-library.mjs', skinLibraryModule],
       ['/dev', editorPage]
     ]);
     const candidate = virtualModules.get(pathname)
@@ -332,7 +335,7 @@ export function createRealtimeServer({ level, autoTick = true, raceBroadcastHz =
           const input = parseInput(frame.value);
           if (!input) { send(id, { type: 'error', error: 'invalid_message' }); continue; }
           if (input.type === 'join') {
-            const result = matches.join(input.room, id, input.name, false);
+            const result = matches.join(input.room, id, input.name, false, input.skinId);
             if (!result.ok) send(id, { type: 'error', error: result.error });
             else {
               const { id: ignored, ...player } = result.player;
@@ -344,6 +347,13 @@ export function createRealtimeServer({ level, autoTick = true, raceBroadcastHz =
             if (!result.ok) send(id, { type: 'error', error: result.error });
             else {
               send(id, { type: 'ready_ok' });
+              broadcast(matches.roomState(result.room));
+            }
+          } else if (input.type === 'select_skin') {
+            const result = matches.selectSkin(id, input.skinId);
+            if (!result.ok) send(id, { type: 'error', error: result.error });
+            else {
+              send(id, { type: 'skin_selected', skinId: result.skinId });
               broadcast(matches.roomState(result.room));
             }
           } else if (input.type === 'start') {
