@@ -10,7 +10,10 @@ export const PLAYER_SKINS = Object.freeze([
 ]);
 
 const SKINS_BY_ID = new Map(PLAYER_SKINS.map((skin) => [skin.id, skin]));
-const DEFAULT_SKIN_IDS = Object.freeze(['demon-a', 'green', 'yellow', 'red']);
+// Player one is temporarily back on the original blue runner. The supplied
+// mounted sprite will take this slot once its clean atlas is ready; Demon_A
+// remains available immediately as player two's default.
+const DEFAULT_SKIN_IDS = Object.freeze(['blue', 'demon-a', 'green', 'yellow']);
 
 export function skinById(value) {
   if (typeof value !== 'string') return null;

@@ -43,7 +43,9 @@ const lobbyStart = document.querySelector('#lobby-start');
 const lobbyProgress = document.querySelector('#lobby-progress');
 const lobbyProgressLabel = document.querySelector('#lobby-progress-label');
 const lobbyProgressBar = document.querySelector('#lobby-progress-bar');
-const skinPicker = document.querySelector('#skin-picker');
+const skinDialog = document.querySelector('#skin-dialog');
+const skinDialogOptions = document.querySelector('#skin-dialog-options');
+const skinDialogClose = document.querySelector('#skin-dialog-close');
 const NICKNAME_STORAGE_KEY = 'gswitch-online:nickname';
 const SKIN_STORAGE_KEY = 'gswitch-online:skin-id';
 try {
@@ -56,8 +58,11 @@ try {
   });
 } catch {}
 const colors = ['#3ce6df', '#ff626c', '#7ee66b', '#ffd75d'];
-let selectedSkinId = 'demon-a';
-try { selectedSkinId = skinById(localStorage.getItem(SKIN_STORAGE_KEY))?.id ?? selectedSkinId; } catch {}
+// Leave this undefined for a first-time visitor. The authoritative room then
+// assigns the slot default (blue for P1, Demon_A for P2) instead of every new
+// connection accidentally claiming player one's visual.
+let selectedSkinId;
+try { selectedSkinId = skinById(localStorage.getItem(SKIN_STORAGE_KEY))?.id; } catch {}
 const roleNames = ['蓝色重力小子', '绿色重力小子', '黄色重力小子', '红色重力小子'];
 const music = new Audio(assetUrl('assets/sounds/025_SndMusic.mp3'));
 const menuMusic = new Audio(assetUrl('assets/sounds/032_SndMenuMusic.mp3'));
@@ -321,7 +326,7 @@ async function connect() {
     if (socket !== connection || localSlot) return;
     abandonJoin('加入房间超时，请重试');
   }, 8000);
-  connection.addEventListener('open', () => connection.send(JSON.stringify({ type:'join', room:roomCode, name:nickname.value, skinId:selectedSkinId })));
+  connection.addEventListener('open', () => connection.send(JSON.stringify({ type:'join', room:roomCode, name:nickname.value, ...(selectedSkinId ? { skinId:selectedSkinId } : {}) })));
   connection.addEventListener('message', ({ data }) => {
     let message;
     try { message = JSON.parse(data); } catch { abandonJoin('服务响应异常，请重试'); return; }
@@ -356,7 +361,7 @@ async function startSolo() {
   sequence = 0; localSlot = 1; roomCode = undefined; showingEnd = false; soloAccumulator = 0; soloLastAt = performance.now();
   soloRoom = new GameRoom(map);
   if (developerMode) soloRoom.setDebugTuning(devTuning);
-  soloRoom.join('solo', nickname.value, true, selectedSkinId);
+  soloRoom.join('solo', nickname.value, true, selectedSkinId ?? defaultSkinForSlot(1));
   soloRoom.start('solo');
   state = soloRoom.snapshot();
   stateReceivedAt = soloLastAt; cameraX = state.cameraX; cameraUpdatedAt = soloLastAt;
@@ -426,10 +431,15 @@ function renderLobby() {
     const role = document.createElement('em');
     role.textContent = player ? `${skinById(player.skinId)?.name ?? roleNames[slot - 1]} · ${player.ready ? '已就绪' : '加载中'}` : '等待加入';
     item.append(label, avatar, role);
+    if (player?.slot === localSlot) {
+      const skinAction = document.createElement('button');
+      skinAction.type = 'button'; skinAction.className = 'skin-open-button'; skinAction.dataset.skinAction = 'open'; skinAction.textContent = '选择皮肤';
+      item.append(skinAction);
+    }
     if (slot === state.hostSlot) { const host = document.createElement('b'); host.textContent = '房主'; item.append(host); }
     return item;
   }));
-  renderSkinPicker();
+  if (skinDialog.open) renderSkinDialog();
   lobbyStart.disabled = !raceReady || state.phase !== 'lobby' || !isHost || !allReady || socket?.readyState !== WebSocket.OPEN;
 }
 function playerSkinId(player, slot = player?.slot) { return skinById(player?.skinId)?.id ?? defaultSkinForSlot(slot); }
@@ -443,10 +453,10 @@ function persistSelectedSkin(skinId) {
   selectedSkinId = skinById(skinId)?.id ?? 'demon-a';
   try { localStorage.setItem(SKIN_STORAGE_KEY, selectedSkinId); } catch {}
 }
-function renderSkinPicker() {
+function renderSkinDialog() {
   const localPlayer = state.players.find((player) => player.slot === localSlot);
   const activeSkinId = playerSkinId(localPlayer, localSlot);
-  skinPicker.replaceChildren(...PLAYER_SKINS.map((skin) => {
+  skinDialogOptions.replaceChildren(...PLAYER_SKINS.map((skin) => {
     const choice = document.createElement('button');
     choice.type = 'button'; choice.className = 'skin-choice'; choice.dataset.skinId = skin.id;
     choice.disabled = state.phase !== 'lobby' || socket?.readyState !== WebSocket.OPEN;
@@ -457,11 +467,18 @@ function renderSkinPicker() {
     return choice;
   }));
 }
+function openSkinDialog() {
+  if (!localSlot || state.phase !== 'lobby') return;
+  renderSkinDialog();
+  if (!skinDialog.open) skinDialog.showModal();
+}
+function closeSkinDialog() { if (skinDialog.open) skinDialog.close(); }
 function selectSkin(skinId) {
   const skin = skinById(skinId);
   if (!skin || state.phase !== 'lobby' || socket?.readyState !== WebSocket.OPEN) return;
   persistSelectedSkin(skin.id);
   socket.send(JSON.stringify({ type: 'select_skin', skinId: skin.id }));
+  closeSkinDialog();
   setStatus(`正在选择皮肤：${skin.name}`, true);
 }
 function decodeCompactRaceState(message) {
@@ -853,7 +870,7 @@ function draw() {
   ctx.restore();
   ctx.fillStyle='#fff'; ctx.font='bold 16px Arial'; ctx.fillText(String(Math.floor(state.tick ?? 0)).padStart(3, '0'), 590, 24);
 }
-join.addEventListener('click', connect); soloStart.addEventListener('click', startSolo); lobbyStart.addEventListener('click', startMatch); nextRound.addEventListener('click', returnToMenu); flip.addEventListener('click', sendFlip); soundToggle.addEventListener('click', toggleSound); pageRefresh.addEventListener('click', () => location.reload()); canvas.addEventListener('click', sendFlip); skinPicker.addEventListener('click', (event) => { const choice = event.target.closest('[data-skin-id]'); if (choice) selectSkin(choice.dataset.skinId); });
+join.addEventListener('click', connect); soloStart.addEventListener('click', startSolo); lobbyStart.addEventListener('click', startMatch); nextRound.addEventListener('click', returnToMenu); flip.addEventListener('click', sendFlip); soundToggle.addEventListener('click', toggleSound); pageRefresh.addEventListener('click', () => location.reload()); canvas.addEventListener('click', sendFlip); lobbyPlayers.addEventListener('click', (event) => { if (event.target.closest('[data-skin-action="open"]')) openSkinDialog(); }); skinDialogOptions.addEventListener('click', (event) => { const choice = event.target.closest('[data-skin-id]'); if (choice) selectSkin(choice.dataset.skinId); }); skinDialogClose.addEventListener('click', closeSkinDialog);
 fullscreen.addEventListener('click', () => {
   if (document.fullscreenElement) document.exitFullscreen?.();
   else gameShell.requestFullscreen?.();

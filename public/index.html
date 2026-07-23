@@ -29,13 +29,17 @@
               <strong>房间 <span id="lobby-room">—</span></strong>
               <p id="lobby-hint">正在同步房间成员…</p>
               <div id="lobby-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="lobby-progress-label">赛道资源 0%</span><i><b id="lobby-progress-bar"></b></i></div>
-              <div id="skin-picker" class="skin-picker" role="group" aria-label="选择皮肤"></div>
               <ol id="lobby-players"></ol>
               <button id="lobby-start" disabled>房主开始比赛</button>
             </div>
           </div>
         </div>
         <div id="overlay" hidden><strong>正在加入房间</strong><span>正在建立联机连接…</span></div>
+        <dialog id="skin-dialog" aria-labelledby="skin-dialog-title">
+          <div class="skin-dialog-heading"><strong id="skin-dialog-title">选择皮肤</strong><button id="skin-dialog-close" type="button" aria-label="关闭皮肤选择">×</button></div>
+          <p>仅改变外观，不改变碰撞和速度。</p>
+          <div id="skin-dialog-options" role="group" aria-label="可选皮肤"></div>
+        </dialog>
         <div id="spectator-banner" hidden>已淘汰 · 正在观战，等待本局结束</div>
         <div id="end-screen" hidden>
           <ol id="end-rankings" aria-label="本局排名"></ol>

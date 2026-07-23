@@ -196,6 +196,14 @@ test('opens the synchronized skin picker from the local player card instead of c
   assert.match(stylesheet, /image-rendering:pixelated/);
 });
 
+test('lets the server assign each newly joined player its slot default until they choose a skin', async () => {
+  const app = await readFile(new URL('../public/app.js', import.meta.url), 'utf8');
+
+  assert.match(app, /let selectedSkinId;/);
+  assert.match(app, /selectedSkinId = skinById\(localStorage\.getItem\(SKIN_STORAGE_KEY\)\)\?\.id;/);
+  assert.match(app, /type:'join', room:roomCode, name:nickname\.value, \.\.\.\(selectedSkinId \? \{ skinId:selectedSkinId \} : \{\}\)/);
+});
+
 test('runs a solo race entirely in the browser without a room socket or coordinate packets', async () => {
   const app = await readFile(new URL('../public/app.js', import.meta.url), 'utf8');
 
