@@ -1,6 +1,6 @@
 import { buildVisualDrawList, visibleDrawList } from '/visual-cache.js';
 import { assetUrl } from '/asset-urls.js';
-import { animationFrame, frameSourceRect, MORPH_DURATION_MS, morphFrame, PLAYER_FRAME_HEIGHT, PLAYER_FRAME_WIDTH } from '/player-animation.js';
+import { animationFrameForVisual, frameSourceRect, frameSourceRectForVisual, MORPH_DURATION_MS, morphFrame, playerVisualForSlot, PLAYER_FRAME_HEIGHT, PLAYER_FRAME_WIDTH } from '/player-animation.js';
 import { advanceCamera, reconcileCamera } from '/camera.js';
 import { advancePresentation, presentationOffset } from '/player-presentation.js';
 import { drawPlayerSprite } from '/player-render.js';
@@ -53,7 +53,7 @@ try {
   });
 } catch {}
 const colors = ['#3ce6df', '#ff626c', '#7ee66b', '#ffd75d'];
-const spriteSources = ['player-blue.png', 'player-green.png', 'player-yellow.png', 'player-red.png'];
+const playerVisuals = [1, 2, 3, 4].map(playerVisualForSlot);
 const roleNames = ['蓝色重力小子', '绿色重力小子', '黄色重力小子', '红色重力小子'];
 const music = new Audio(assetUrl('assets/sounds/025_SndMusic.mp3'));
 const menuMusic = new Audio(assetUrl('assets/sounds/032_SndMenuMusic.mp3'));
@@ -104,9 +104,14 @@ function toggleSound() {
   else { music.pause(); menuMusic.pause(); }
   updateSoundToggle();
 }
-function loadImage(source) {
+function loadImage(source, fallbackSource = '') {
   const image = new Image();
   image.addEventListener('load', draw);
+  if (fallbackSource) image.addEventListener('error', () => {
+    if (image.dataset.fallbackUsed) return;
+    image.dataset.fallbackUsed = 'true';
+    image.src = fallbackSource;
+  }, { once: true });
   image.src = source;
   return image;
 }
@@ -121,7 +126,10 @@ async function waitForImage(image) {
   // blank runners on browsers that decode PNGs after their load event.
   if (typeof image.decode === 'function') await image.decode();
 }
-const sprites = spriteSources.map((source) => loadImage(assetUrl(`assets/players/${source}`)));
+const sprites = playerVisuals.map((visual) => loadImage(
+  assetUrl(`assets/players/${visual.asset}`),
+  visual.asset === visual.fallbackAsset ? '' : assetUrl(`assets/players/${visual.fallbackAsset}`)
+));
 const scene = {
   background: loadImage(assetUrl('assets/scene/background.png')),
   cityFar: loadImage(assetUrl('assets/scene/city-far.png')),
@@ -786,11 +794,15 @@ function draw() {
       continue;
     }
     const morphElapsed = Math.max(0, openingElapsed - OPENING_BEAM_DURATION_MS);
-    const source = frameSourceRect(state.introTicksRemaining > 0
+    const visual = playerVisualForSlot(player.slot);
+    const frame = state.introTicksRemaining > 0 && visual.supportsMorph
       ? morphFrame(morphElapsed)
-      : animationFrame(now, player.vy !== 0));
+      : animationFrameForVisual(visual, state.introTicksRemaining > 0 ? morphElapsed : now, player.vy !== 0);
+    const source = visual.supportsMorph && state.introTicksRemaining > 0
+      ? frameSourceRect(frame)
+      : frameSourceRectForVisual(visual, frame);
     if (sprite.complete && sprite.naturalWidth) {
-      drawPlayerSprite(ctx, sprite, source, { ...player, x, y });
+      drawPlayerSprite(ctx, sprite, source, { ...player, x, y }, visual.drawSize);
     } else { ctx.fillStyle = colors[player.slot - 1]; ctx.fillRect(x + 16, y + 19, 37, 48); }
     drawPlayerName(player, x, y);
     ctx.restore();

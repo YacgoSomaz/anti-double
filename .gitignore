@@ -8,5 +8,6 @@ artifacts/
 !.env.example
 __pycache__/
 *.py[cod]
+/public/assets/players/player-demon-a.png
 .DS_Store
 Thumbs.db

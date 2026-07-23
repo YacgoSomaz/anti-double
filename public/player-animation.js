@@ -11,6 +11,81 @@ const FALL_FRAMES = [19, 20, 21, 22, 13, 14, 15, 16, 17, 18];
 const MORPH_FRAMES = Array.from({ length: 22 }, (_, index) => index + 23);
 export const MORPH_DURATION_MS = 1100;
 
+const ORIGINAL_PLAYER_VISUAL = Object.freeze({
+  asset: 'player-blue.png',
+  fallbackAsset: 'player-blue.png',
+  columns: PLAYER_ATLAS_COLUMNS,
+  rows: 9,
+  cellWidth: PLAYER_FRAME_WIDTH,
+  cellHeight: PLAYER_FRAME_HEIGHT,
+  cropX: 0,
+  cropY: 0,
+  cropWidth: PLAYER_FRAME_WIDTH,
+  cropHeight: PLAYER_FRAME_HEIGHT,
+  drawSize: Object.freeze({ width: PLAYER_FRAME_WIDTH, height: PLAYER_FRAME_HEIGHT }),
+  runFrames: RUN_FRAMES,
+  airFrames: FALL_FRAMES,
+  framesPerSecond: 20,
+  airFramesPerSecond: 12,
+  supportsMorph: true
+});
+
+const DEMON_A_VISUAL = Object.freeze({
+  asset: 'player-demon-a.png',
+  fallbackAsset: 'player-blue.png',
+  columns: 8,
+  rows: 1,
+  cellWidth: 100,
+  cellHeight: 100,
+  // Demon_A occupies only the centre of its licensed 100 × 100 walk cells.
+  // Cropping the transparent padding preserves the original 65 × 77 player
+  // footprint on screen without touching the shared collision profile.
+  cropX: 40,
+  cropY: 35,
+  cropWidth: 26,
+  cropHeight: 28,
+  drawSize: Object.freeze({ width: PLAYER_FRAME_WIDTH, height: PLAYER_FRAME_HEIGHT }),
+  runFrames: Object.freeze(Array.from({ length: 8 }, (_, index) => index)),
+  airFrames: Object.freeze(Array.from({ length: 8 }, (_, index) => index)),
+  framesPerSecond: 12,
+  airFramesPerSecond: 12,
+  supportsMorph: false
+});
+
+const LEGACY_PLAYER_VISUALS = Object.freeze([
+  ORIGINAL_PLAYER_VISUAL,
+  Object.freeze({ ...ORIGINAL_PLAYER_VISUAL, asset: 'player-green.png', fallbackAsset: 'player-green.png' }),
+  Object.freeze({ ...ORIGINAL_PLAYER_VISUAL, asset: 'player-yellow.png', fallbackAsset: 'player-yellow.png' }),
+  Object.freeze({ ...ORIGINAL_PLAYER_VISUAL, asset: 'player-red.png', fallbackAsset: 'player-red.png' })
+]);
+
+export const PLAYER_VISUALS = Object.freeze([
+  DEMON_A_VISUAL,
+  ...LEGACY_PLAYER_VISUALS.slice(1)
+]);
+
+export function playerVisualForSlot(slot = 1) {
+  return PLAYER_VISUALS[Math.max(0, Math.min(PLAYER_VISUALS.length - 1, Number(slot) - 1 || 0))];
+}
+
+export function animationFrameForVisual(visual, milliseconds, airborne = false) {
+  const sequence = airborne ? visual.airFrames : visual.runFrames;
+  const framesPerSecond = airborne ? visual.airFramesPerSecond : visual.framesPerSecond;
+  const index = Math.floor(Math.max(0, Number(milliseconds) || 0) / (1000 / framesPerSecond)) % sequence.length;
+  return sequence[index];
+}
+
+export function frameSourceRectForVisual(visual, frame) {
+  const maxFrame = visual.columns * visual.rows - 1;
+  const safeFrame = Math.max(0, Math.min(maxFrame, Number.isInteger(frame) ? frame : 0));
+  return {
+    x: (safeFrame % visual.columns) * visual.cellWidth + visual.cropX,
+    y: Math.floor(safeFrame / visual.columns) * visual.cellHeight + visual.cropY,
+    width: visual.cropWidth,
+    height: visual.cropHeight,
+  };
+}
+
 const EDITABLE_ANIMATION_PRESETS = Object.freeze({
   run: Object.freeze({ sequence: RUN_FRAMES, speed: 20 }),
   flip: Object.freeze({ sequence: FALL_FRAMES, speed: 12 }),
@@ -36,9 +111,7 @@ export function animationFrameFromSequence(sequence, milliseconds, framesPerSeco
 }
 
 export function animationFrame(milliseconds, airborne = false) {
-  const frames = airborne ? FALL_FRAMES : RUN_FRAMES;
-  const frameDuration = airborne ? 1000 / 12 : 1000 / 20;
-  return frames[Math.floor(milliseconds / frameDuration) % frames.length];
+  return animationFrameForVisual(ORIGINAL_PLAYER_VISUAL, milliseconds, airborne);
 }
 
 export function morphFrame(milliseconds) {
@@ -47,10 +120,5 @@ export function morphFrame(milliseconds) {
 }
 
 export function frameSourceRect(frame) {
-  return {
-    x: (frame % PLAYER_ATLAS_COLUMNS) * PLAYER_ATLAS_FRAME_WIDTH,
-    y: Math.floor(frame / PLAYER_ATLAS_COLUMNS) * PLAYER_ATLAS_FRAME_HEIGHT,
-    width: PLAYER_ATLAS_FRAME_WIDTH,
-    height: PLAYER_ATLAS_FRAME_HEIGHT,
-  };
+  return frameSourceRectForVisual(ORIGINAL_PLAYER_VISUAL, frame);
 }

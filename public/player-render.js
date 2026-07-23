@@ -1,9 +1,11 @@
 import { PLAYER_FRAME_HEIGHT, PLAYER_FRAME_WIDTH } from './player-animation.js';
 
-export function drawPlayerSprite(ctx, sprite, source, player) {
+export function drawPlayerSprite(ctx, sprite, source, player, drawSize = {}) {
   const scale = Number.isFinite(Number(player.sizeScale)) && Number(player.sizeScale) > 0 ? Number(player.sizeScale) : 1;
-  const width = PLAYER_FRAME_WIDTH * scale;
-  const height = PLAYER_FRAME_HEIGHT * scale;
+  const baseWidth = Number(drawSize.width) || PLAYER_FRAME_WIDTH;
+  const baseHeight = Number(drawSize.height) || PLAYER_FRAME_HEIGHT;
+  const width = baseWidth * scale;
+  const height = baseHeight * scale;
   const centreX = player.x + PLAYER_FRAME_WIDTH / 2;
   const centreY = player.y + PLAYER_FRAME_HEIGHT / 2;
   if (player.gravity < 0) {
